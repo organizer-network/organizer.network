@@ -1,0 +1,100 @@
+@import url("reset.css");
+@import url("border-box.css");
+@import url("source-sans/source-sans-pro.css");
+
+body {
+	/* http://markdotto.com/2018/02/07/github-system-fonts/ */
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+	font-size: 16px;
+	line-height: 1.25em;
+	color: #fff;
+	background: #222;
+}
+
+#intro {
+	width: 100vw;
+	min-height: 100vh;
+	background-image: linear-gradient(33deg, #6835E7, #4E6FFF, #1DDA4F), url("../img/bg.png");
+	background-size: 100vw 100vh, 100vw auto;
+	background-position: top center;
+	background-blend-mode: multiply;
+}
+
+.content {
+	width: 100%;
+	max-width: 750px;
+	margin: 0 auto;
+	padding: 15px;
+}
+
+form {
+	border-top: 2px solid #fff;
+	width: 100%;
+	max-width: 750px;
+	padding-bottom: 5em;
+}
+
+h1, h2, h3, h4, h5 {
+	font-family: "source sans pro", sans-serif;
+	font-weight: bold;
+	line-height: 1.5em;
+}
+
+.heading {
+	margin: 2em 0;
+}
+
+h1 {
+	font-size: 2em;
+}
+
+h2 {
+	font-size: 1.25em;
+	font-style: italic;
+}
+
+label {
+	display: block;
+	margin: 2em 0 0.5em 0;
+}
+
+input[type="email"],
+input[type="text"],
+textarea {
+	display: block;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+	font-size: 16px;
+	background: #fff;
+	padding: 10px;
+	border: 2px solid #4E6FFF;
+}
+
+input[type="email"]:focus,
+input[type="text"]:focus,
+textarea:focus {
+	border: 2px solid #1DDA4F;
+}
+
+input[type="submit"] {
+	position: relative;
+	display: block;
+	text-transform: uppercase;
+	margin-top: 2em;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+	font-weight: bold;
+	font-size: 14px;
+	padding: 14px;
+	border-radius: 4px;
+	color: #fff;
+	background: #4E6FFF;
+	cursor: pointer;
+	border: none;
+}
+
+input[type="submit"]:hover {
+	background: #6835E7;
+}
+
+input[type="submit"]:active {
+	background: #1DDA4F;
+}
