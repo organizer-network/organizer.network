@@ -98,3 +98,21 @@ input[type="submit"]:hover {
 input[type="submit"]:active {
 	background: #1DDA4F;
 }
+
+#login .loading,
+#login .email-sent {
+	display: none;
+}
+
+#login.loading .loading,
+#login.email-sent .email-sent {
+	display: block;
+	margin-top: 1.5em;
+	font-weight: bold;
+}
+
+@media screen and (min-width: 760px) {
+	.heading {
+		margin: 12em 0 2em 0;
+	}
+}
