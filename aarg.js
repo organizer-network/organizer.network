@@ -521,6 +521,14 @@ function normalize_email(email) {
 	return email.trim().toLowerCase();
 }
 
+function date(date) {
+	date = new Date(date);
+	date_formatted = date_format(date, 'mmm d, yyyy');
+	time_formatted = date_format(date, 'h:MMtt');
+	return `${date_formatted} ${time_formatted}`;
+}
+app.locals.date = date;
+
 function random(count) {
 	const chars = 'abcdefghijkmnpqrstuwxyz0123456789';
 	const rnd = crypto.randomBytes(count);
