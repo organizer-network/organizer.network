@@ -75,6 +75,7 @@ app.use(session({
 		maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days
 	}
 }));
+app.enable('trust proxy');
 
 server.listen(config.port, () => {
 	console.log(`listening on *:${config.port}`);
