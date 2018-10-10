@@ -1,0 +1,14 @@
+<div id="error">
+	<div class="content">
+		<h1>error</h1>
+		<% if (type == '404') { %>
+			<p>404 file not found. <a href="/">Try the home page?</a></p>
+		<% } else if (type == 'invalid-login') { %>
+			<p>Sorry, that login URL is invalid. <a href="/">Try logging in again?</a></p>
+		<% } else if (type == 'invalid-person') { %>
+			<p>Sorry, your account record is invalid. <a href="/">Try logging in again?</a></p>
+		<% } else if (type == 'invalid-context') { %>
+			<p>Sorry, that context record is invalid. <a href="/">Try logging in again?</a></p>
+		<% } %>
+	</div>
+</div>

@@ -129,10 +129,38 @@ input[type="submit"]:active {
 }
 
 #login.loading .loading,
-#login.email-sent .email-sent {
+#login.email-sent .email-sent,
+#login-response {
 	display: block;
 	margin-top: 1.5em;
 	font-weight: bold;
+}
+
+#error {
+	position: relative;
+	width: 100vw;
+	min-height: calc(100vh - 2em);
+	background-image: url('../img/error.gif');
+	background-size: 100% auto;
+	background-repeat: no-repeat;
+}
+
+#error h1 {
+	margin-top: 0;
+}
+
+#error .content {
+	background: rgba(0, 0, 0, 0.75);
+	border-radius: 4px;
+	transform: translateY(33%);
+	padding-top: 0;
+	width: auto;
+	padding: 15px 30px 30px 30px;
+}
+
+#context {
+	color: #333;
+	background: #fff;
 }
 
 .content {
