@@ -232,6 +232,10 @@ app.get('/login/:hash', (req, rsp) => {
 	});
 });
 
+app.get('/logout', (req, rsp) => {
+	delete req.session.person;
+	rsp.redirect('/');
+});
 
 function curr_person(req) {
 	if ('session' in req &&

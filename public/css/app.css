@@ -11,20 +11,8 @@ body {
 	background: #222;
 }
 
-#intro {
-	width: 100vw;
-	min-height: 100vh;
-	background-image: linear-gradient(33deg, #6835E7, #4E6FFF, #1DDA4F), url("../img/bg.png");
-	background-size: 100vw 100vh, 100vw auto;
-	background-position: top center;
-	background-blend-mode: multiply;
-}
-
-.content {
-	width: 100%;
-	max-width: 750px;
-	margin: 0 auto;
-	padding: 15px;
+a {
+	color: #fff;
 }
 
 form {
@@ -40,10 +28,6 @@ h1, h2, h3, h4, h5 {
 	line-height: 1.5em;
 }
 
-.heading {
-	margin: 2em 0;
-}
-
 h1 {
 	font-size: 2em;
 }
@@ -51,6 +35,18 @@ h1 {
 h2 {
 	font-size: 1.25em;
 	font-style: italic;
+}
+
+ul {
+	margin: 1em 0;
+}
+
+li {
+	margin-top: 0.5em;
+}
+
+ul li::before {
+	content: "→ ";
 }
 
 label {
@@ -99,6 +95,22 @@ input[type="submit"]:active {
 	background: #1DDA4F;
 }
 
+#intro {
+	width: 100vw;
+	min-height: 100vh;
+	background-image: linear-gradient(33deg, #6835E7, #4E6FFF, #1DDA4F), url("../img/bg.png");
+	background-size: 100vw 100vh, 100vw auto;
+	background-position: top center;
+	background-blend-mode: multiply;
+}
+
+#intro .options {
+	border-top: 2px solid #fff;
+	width: 100%;
+	max-width: 750px;
+	padding: 2em 0 5em 0;
+}
+
 #login .loading,
 #login .email-sent {
 	display: none;
@@ -109,6 +121,17 @@ input[type="submit"]:active {
 	display: block;
 	margin-top: 1.5em;
 	font-weight: bold;
+}
+
+.content {
+	width: 100%;
+	max-width: 750px;
+	margin: 0 auto;
+	padding: 15px;
+}
+
+.heading {
+	margin: 2em 0;
 }
 
 @media screen and (min-width: 760px) {
