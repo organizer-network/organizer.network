@@ -72,7 +72,7 @@ app.use(session({
 	saveUninitialized: false,
 	proxy: true,
 	cookie: {
-		secure: true,
+		secure: false,
 		maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days
 	}
 }));
