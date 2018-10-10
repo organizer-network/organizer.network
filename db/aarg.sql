@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS person (
 	email VARCHAR(255),
 	name VARCHAR(255),
 	slug VARCHAR(255),
+	context_id INTEGER,
 	created TIMESTAMP
 );
 CREATE UNIQUE INDEX person_idx ON person (email, slug);
@@ -11,6 +12,7 @@ CREATE TABLE IF NOT EXISTS context (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(255),
 	slug VARCHAR(255),
+	topic TEXT,
 	created TIMESTAMP
 );
 

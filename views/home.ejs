@@ -5,9 +5,10 @@
 			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
 		</div>
 		<div class="options">
-			<p>Hello, <a href="/<%= person.slug %>"><%= person.name || person.email %></a>.</p>
+			<p>Hello, <%= person.name || person.email %>.</p>
 			<ul>
 				<li><a href="/logout">logout</a></li>
 			</ul>
+		</div>
 	</div>
 </div>

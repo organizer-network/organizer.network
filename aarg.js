@@ -85,6 +85,31 @@ const pg = require('pg');
 const db = new pg.Client(config.db_dsn);
 db.connect();
 
+db.query(`
+	SELECT id
+	FROM context
+	WHERE slug = 'commons'
+`, (err, res) => {
+
+	if (err) {
+		console.log(err);
+		return;
+	}
+
+	if (res.rows.length == 0) {
+		console.log("setting up 'commons' context");
+		db.query(`
+			INSERT INTO context (name, slug, created)
+			VALUES ('Commons', 'commons', CURRENT_TIMESTAMP)
+		`, (err) => {
+			if (err) {
+				console.log(err);
+			}
+		});
+	}
+
+});
+
 app.get('/', (req, rsp) => {
 
 	let person = curr_person(req);
@@ -92,15 +117,15 @@ app.get('/', (req, rsp) => {
 	if (person) {
 		rsp.render('page', {
 			title: 'hello',
-			view: 'intro',
+			view: 'home',
 			content: {
 				person: person
 			}
 		});
 	} else {
 		rsp.render('page', {
-			title: 'hello',
-			view: 'intro-login',
+			title: 'welcome',
+			view: 'login',
 			content: {}
 		});
 	}
@@ -218,7 +243,7 @@ app.get('/login/:hash', (req, rsp) => {
 				}
 
 				req.session.person = res.rows[0];
-				rsp.redirect(`/${res.rows[0].slug}`);
+				rsp.redirect('/');
 			});
 			delete login_hashes[id];
 			return;
