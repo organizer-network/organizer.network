@@ -9,13 +9,9 @@ module.exports = {
 		"*"
 	],
 
-	base_url: 'http://localhost:5000',
+	base_url: 'https://localhost:5000',
 	port: 5000,
 	db_dsn: "postgres://localhost:5432/aarg",
-
-	image_widths: [
-		700, 1400, 1065, 2130
-	],
 
 	session_secret: '', // openssl rand -base64 32
 

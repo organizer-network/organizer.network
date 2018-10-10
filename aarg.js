@@ -214,7 +214,6 @@ app.get('/login/:hash', (req, rsp) => {
 				}
 
 				req.session.person = res.rows[0];
-				console.log(req.session.person);
 				rsp.redirect(`/${res.rows[0].slug}`);
 			});
 			delete login_hashes[id];
