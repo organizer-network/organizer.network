@@ -64,9 +64,10 @@ $(document).ready(function() {
 	});
 
 	if ($('#context').length > 0) {
-		$('#intro').removeClass('hidden');
 		$('#intro').addClass('above');
-		document.body.scrollTo(0, $('#context').offset().top - 32);
+		$('html, body').animate({
+			scrollTop: $("#context").offset().top - 32
+		}, 500);
 	}
 
 });
