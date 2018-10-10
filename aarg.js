@@ -37,6 +37,7 @@ const date_format = require('dateformat');
 const mime = require('mime');
 const sharp = require('sharp');
 const session = require('express-session');
+const pg_session = require('connect-pg-simple')(session);
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const mkdirp = require('mkdirp');
@@ -63,6 +64,9 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(body_parser.urlencoded({ extended: false }));
 app.use(session({
+	store: new pg_session({
+		conString: config.db_dsn
+	}),
 	secret: config.session_secret,
 	resave: false,
 	saveUninitialized: false,

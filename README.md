@@ -17,6 +17,7 @@ $ cp config.js.example config.js
 $ cd ssl && openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out cert.pem -subj "/C=US/ST=New York/L=Troy/O=organizer.network/CN=localhost"
 $ createdb aarg
 $ psql aarg < db/aarg.sql
+$ psql aarg < node_modules/connect-pg-simple/table.sql
 ```
 
 Configure:
