@@ -110,26 +110,50 @@ db.query(`
 
 });
 
+function error_page(rsp, type) {
+	rsp.render('page', {
+		title: 'error',
+		view: 'error',
+		content: {
+			type: type
+		}
+	});
+}
+
 app.get('/', (req, rsp) => {
 
-	let person = curr_person(req);
+	curr_person(req)
+	.then((person) => {
 
-	if (person) {
-		rsp.render('page', {
-			title: 'hello',
-			view: 'home',
-			content: {
-				person: person
-			}
-		});
-	} else {
-		rsp.render('page', {
-			title: 'welcome',
-			view: 'login',
-			content: {}
-		});
-	}
+		if (! person) {
+			return rsp.render('page', {
+				title: 'welcome',
+				view: 'login',
+				content: {}
+			});
+		}
 
+		curr_context(person)
+		.then((context) => {
+			rsp.render('page', {
+				title: 'hello',
+				view: 'home',
+				content: {
+					person: person,
+					context: context
+				}
+			});
+		})
+		.catch((err) => {
+			console.log(err);
+			error_page(rsp, 'invalid-context');
+		});
+
+	})
+	.catch((err) => {
+		console.log(err);
+		error_page(rsp, 'invalid-person');
+	});
 });
 
 const login_hashes = {};
@@ -202,10 +226,10 @@ Thank you!`;
 
 		db.query(`
 			INSERT INTO person
-			(email, slug, created)
-			VALUES ($1, $2, CURRENT_TIMESTAMP)
+			(email, name, slug, created)
+			VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
 			RETURNING *
-		`, [email, slug], (err, res) => {
+		`, [email, email, slug], (err, res) => {
 
 			if (err) {
 				return rsp.status(500).send({
@@ -235,26 +259,18 @@ app.get('/login/:hash', (req, rsp) => {
 			`, [id], (err, res) => {
 
 				if (err || res.rows.length != 1) {
-					return rsp.render('page', {
-						title: 'login error',
-						view: 'error-login',
-						content: {}
-					});
+					return error_page(rsp, 'invalid-login');
 				}
 
 				req.session.person = res.rows[0];
-				rsp.redirect('/');
+				rsp.redirect('/#context');
 			});
 			delete login_hashes[id];
 			return;
 		}
 	}
 
-	rsp.render('page', {
-		title: 'login error',
-		view: 'error-login',
-		content: {}
-	});
+	error_page(rsp, 'invalid-login');
 });
 
 app.get('/logout', (req, rsp) => {
@@ -262,12 +278,48 @@ app.get('/logout', (req, rsp) => {
 	rsp.redirect('/');
 });
 
+app.use((req, rsp) => {
+	rsp.status(404);
+	error_page(rsp, '404');
+});
+
 function curr_person(req) {
-	if ('session' in req &&
-	    'person' in req.session) {
-		return req.session.person;
-	}
-	return null;
+	return new Promise((resolve, reject) => {
+		if ('session' in req &&
+		    'person' in req.session) {
+			db.query(`
+				SELECT *
+				FROM person
+				WHERE id = $1
+			`, [req.session.person.id], (err, res) => {
+				if (err) {
+					return reject(err);
+				}
+				resolve(res.rows[0]);
+			});
+		} else {
+			resolve(null);
+		}
+	});
+}
+
+function curr_context(person) {
+	return new Promise((resolve, reject) => {
+		if (person && person.context_id) {
+			db.query(`
+				SELECT *
+				FROM context
+				WHERE id = $1
+			`, [person.context_id], (err, res) => {
+				if (err) {
+					return reject(err);
+				}
+				resolve(res.rows[0]);
+			});
+		} else {
+			reject(null);
+		}
+	});
 }
 
 function send_email(to, subject, body) {

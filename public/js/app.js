@@ -2,6 +2,11 @@ $(document).ready(function() {
 
 	$('#login').submit(function(e) {
 		e.preventDefault();
+
+		if ($('#login').hasClass('loading')) {
+			return;
+		}
+
 		var data = $('form').serialize();
 		var url = $('form').attr('action');
 
@@ -12,8 +17,11 @@ $(document).ready(function() {
 				$('#login').addClass('email-sent');
 				$('#login input[name="email"]').val('');
 			} else {
-				$('#response').html(rsp.error);
+				$('#login-response').html(rsp.error);
 			}
+			$('#login').removeClass('loading');
+		}).fail(function() {
+			$('#login-response').html('Error connecting to server.');
 			$('#login').removeClass('loading');
 		});
 	});
