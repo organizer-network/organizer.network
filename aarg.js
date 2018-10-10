@@ -70,6 +70,7 @@ app.use(session({
 	secret: config.session_secret,
 	resave: false,
 	saveUninitialized: false,
+	proxy: true,
 	cookie: {
 		secure: true,
 		maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days
