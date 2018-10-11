@@ -286,6 +286,16 @@ form .response {
 	margin-bottom: 2em;
 }
 
+.person a {
+	color: #333;
+	text-decoration: none;
+}
+
+.person a:hover {
+	color: #4E6FFF;
+	text-decoration: underline;
+}
+
 .hidden {
 	display: none;
 }
