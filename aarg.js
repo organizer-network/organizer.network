@@ -42,6 +42,8 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const mkdirp = require('mkdirp');
 
+const person_slug_regex = /^\/[a-z0-9_][a-z0-9_]+$/;
+
 marked.setOptions({
 	gfm: true,
 	smartypants: true
@@ -266,8 +268,14 @@ app.get('/login/:hash', (req, rsp) => {
 					return error_page(rsp, 'invalid-login');
 				}
 
-				req.session.person = res.rows[0];
-				rsp.redirect('/');
+				let person = res.rows[0];
+				req.session.person = person;
+
+				let redirect = '/';
+				if (person.name == person.email) {
+					redirect = `/${person.slug}?edit=1`;
+				}
+				rsp.redirect(redirect);
 			});
 			delete login_hashes[id];
 			return;
@@ -323,6 +331,83 @@ app.post('/api/send', (req, rsp) => {
 
 });
 
+app.post('/api/profile', async (req, rsp) => {
+
+	if (! 'body' in req ||
+	    ! 'id' in req.body ||
+	    ! 'name' in req.body ||
+	    ! 'about' in req.body ||
+	    ! 'slug' in req.body ||
+	    req.body.content == '') {
+		return rsp.status(400).send({
+			ok: false,
+			error: "Please include 'id', 'name', 'about', and 'slug' params."
+		});
+	}
+
+	try {
+		var person = await curr_person(req);
+		if (person.id !== parseInt(req.body.id)) {
+			return rsp.status(403).send({
+				ok: false,
+				error: "You are only allowed to edit your own profile."
+			});
+		}
+	} catch(err) {
+		return rsp.status(400).send({
+			ok: false,
+			error: "You are unable to edit that profile."
+		});
+	}
+
+	if (req.body.name == '') {
+		return rsp.status(400).send({
+			ok: false,
+			error: "Please include a non-empty 'name'."
+		});
+	}
+
+	if (req.body.slug == '' ||
+	    ! ('/' + req.body.slug).match(person_slug_regex)) {
+		return rsp.status(400).send({
+			ok: false,
+			error: "The URL format is: at least 2 letters, numbers, or underscores."
+		});
+	}
+
+	try {
+		let person_with_slug = await get_person(req.body.slug);
+		if (person_with_slug.id !== person.id) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "That profile URL is already taken."
+			});
+		}
+	} catch(err) {}
+
+	db.query(`
+		UPDATE person
+		SET name = $1, about = $2, slug = $3
+		WHERE id = $4
+	`, [req.body.name, req.body.about, req.body.slug, req.body.id], async (err, res) => {
+
+		if (err) {
+			return rsp.status(500).send({
+				ok: false,
+				error: "Unable to update profile."
+			});
+		}
+
+		let person = await curr_person(req);
+
+		return rsp.send({
+			ok: true,
+			person: person
+		});
+
+	})
+});
+
 app.get('/api/message/:id', (req, rsp) => {
 
 	db.query(`
@@ -366,7 +451,36 @@ app.get('/api/message/:id', (req, rsp) => {
 
 });
 
-app.use((req, rsp) => {
+app.use(async (req, rsp) => {
+
+	let curr_id = null;
+	let curr = await curr_person(req);
+	if (curr) {
+		curr_id = curr.id;
+	}
+
+	if (req.path.match(person_slug_regex)) {
+		try {
+			let person = await get_person(req.path.substr(1));
+			if (person) {
+				rsp.render('page', {
+					title: person.name,
+					view: 'profile',
+					content: {
+						person: person,
+						edit: (req.query.edit == '1'),
+						base_url: config.base_url,
+						curr_id: curr_id
+					}
+				});
+			}
+		} catch(err) {
+			rsp.status(404);
+			error_page(rsp, '404');
+		}
+		return;
+	}
+
 	rsp.status(404);
 	error_page(rsp, '404');
 });
@@ -421,6 +535,25 @@ function check_membership(person, context_id) {
 				resolve(res.rows[0]);
 			}
 		});
+	});
+}
+
+function get_person(slug) {
+	return new Promise((resolve, reject) => {
+		db.query(`
+			SELECT *
+			FROM person
+			WHERE slug = $1
+		`, [slug], (err, res) => {
+			if (err) {
+				return reject(err);
+			}
+			if (res.rows.length == 0) {
+				return reject(null);
+			}
+			resolve(res.rows[0]);
+		});
+
 	});
 }
 

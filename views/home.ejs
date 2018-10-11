@@ -5,9 +5,10 @@
 			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
 		</div>
 		<div class="options">
-			<p>Hello, <%= person.name %>.</p>
+			<p>Hello, <strong><%= person.name %></strong>.</p>
 			<ul>
-				<li><a href="/logout">logout</a></li>
+				<li><a href="/<%= person.slug %>">View your profile</a>
+				<li><a href="/logout">Logout</a></li>
 			</ul>
 		</div>
 	</div>
@@ -21,6 +22,7 @@
 				<label for="content">Post a message</label>
 				<textarea id="content" name="content" cols="80" rows="3" placeholder="so shines a good deed in a weary world."></textarea>
 				<input type="submit" value="Send message">
+				<div class="response"></div>
 			</form>
 			<div id="message-list">
 				<% for (let message of context.messages) { %>

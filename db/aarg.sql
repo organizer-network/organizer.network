@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS person (
 	id SERIAL PRIMARY KEY,
 	email VARCHAR(255),
 	name VARCHAR(255),
+	about TEXT,
 	slug VARCHAR(255),
 	context_id INTEGER DEFAULT 1,
 	created TIMESTAMP

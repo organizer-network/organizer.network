@@ -49,7 +49,24 @@ ul li::before {
 
 label {
 	display: block;
-	margin: 0 0 0.5em 0;
+	margin: 2em 0 0.5em 0;
+}
+
+b, strong {
+	font-weight: bold;
+}
+
+i, em {
+	font-style: italic;
+}
+
+code {
+	font-family: menlo, monospace;
+}
+
+pre {
+	white-space: pre;
+	font-family: menlo, monospace;
 }
 
 input[type="email"],
@@ -94,6 +111,12 @@ input[type="submit"]:active {
 	background: #1DDA4F;
 }
 
+form .response {
+	display: block;
+	margin-top: 1.5em;
+	font-weight: bold;
+}
+
 #intro {
 	position: relative;
 	width: 100vw;
@@ -122,20 +145,7 @@ input[type="submit"]:active {
 #intro .options {
 	width: 100%;
 	max-width: 750px;
-	padding: 2em 0 5em 0;
-}
-
-#login .loading,
-#login .email-sent {
-	display: none;
-}
-
-#login.loading .loading,
-#login.email-sent .email-sent,
-#login-response {
-	display: block;
-	margin-top: 1.5em;
-	font-weight: bold;
+	padding: 0 0 5em 0;
 }
 
 #error {
@@ -153,7 +163,6 @@ input[type="submit"]:active {
 
 #error .content {
 	background: rgba(0, 0, 0, 0.75);
-	border-radius: 4px;
 	transform: translateY(33%);
 	padding-top: 0;
 	width: auto;
@@ -174,8 +183,39 @@ input[type="submit"]:active {
 	line-height: 1.5em;
 }
 
-#about .step-2 {
+#login .response {
+	margin-bottom: 2em;
+}
+
+#send {
 	margin-top: 2em;
+}
+
+#profile {
+	background-image: linear-gradient(120deg, #1DDA4F, #4E6FFF, #6835E7);
+}
+
+#profile input[type="submit"] {
+	background: #6835E7;
+	display: inline-block;
+	margin-right: 10px;
+}
+
+#profile input[type="submit"]:hover {
+	background: #1DDA4F;
+}
+
+#profile input[type="submit"]:active {
+	background: #fff;
+}
+
+#profile form {
+	margin-top: 2em;
+}
+
+#slug-input {
+	width: 200px;
+	display: inline-block;
 }
 
 .content {
@@ -227,8 +267,6 @@ input[type="submit"]:active {
 }
 
 .message-content {
-	white-space: pre;
-	font-family: menlo, monospace;
 	margin: 1em 0;
 }
 
@@ -241,6 +279,10 @@ input[type="submit"]:active {
 	margin: 2em 0 0 0;
 	padding: 0 0 2em 0;
 	border-bottom: 2px solid #fff;
+}
+
+.about-person {
+	margin-bottom: 2em;
 }
 
 .hidden {
@@ -264,6 +306,10 @@ input[type="submit"]:active {
 	#messages {
 		float: left;
 		width: calc(66% - 1em);
+		padding-bottom: 5em;
+	}
+
+	#profile {
 		padding-bottom: 5em;
 	}
 

@@ -1,66 +1,62 @@
-$(document).ready(function() {
-
-	$('#login').submit(function(e) {
+function form_handler(query, callback) {
+	$(query).submit(function(e) {
 		e.preventDefault();
 
-		if ($('#login').hasClass('loading')) {
+		if ($(query).hasClass('loading')) {
 			return;
 		}
 
-		var data = $('#login').serialize();
-		var url = $('#login').attr('action');
+		var data = $(query).serialize();
+		var url = $(query).attr('action');
 
-		$('#login').addClass('loading');
+		$(query + ' .response').html('Please wait...');
+		$(query).addClass('loading');
 
 		$.post(url, data, function(rsp) {
+			$(query).removeClass('loading');
 			if (rsp.ok) {
-				$('#login').addClass('email-sent');
-				$('#login input[name="email"]').val('');
+				$(query + ' .response').html('');
+				if (typeof callback == 'function') {
+					callback(rsp);
+				}
 			} else {
-				$('#login-response').html(rsp.error);
+				$(query + ' .response').html(rsp.error);
 			}
-			$('#login').removeClass('loading');
-		}).fail(function() {
-			$('#login-response').html('Error connecting to server.');
-			$('#login').removeClass('loading');
+		})
+		.fail(function(rsp) {
+			var error = 'Error connecting to server.';
+			if ('responseJSON' in rsp && 'error' in rsp.responseJSON) {
+				error = rsp.responseJSON.error;
+			}
+			$(query + ' .response').html(error);
+			$(query).removeClass('loading');
 		});
+	});
+}
+
+$(document).ready(function() {
+
+	form_handler('#login', function(rsp) {
+		$('#login .response').html('Email sent, please check your inbox.');
+		$('#login input[name="email"]').val('');
+	});
+
+	form_handler('#send', function(rsp) {
+		$('#send .response').html('Your message has been sent.');
+		$('#send textarea[name="content"]').val('');
+		$.get('/api/message/' + rsp.message_id, function(rsp) {
+			$('#message-list').prepend(rsp);
+		});
+	});
+
+	form_handler('#profile form', function(rsp) {
+		window.location = '/' + rsp.person.slug;
 	});
 
 	$("#send #content").keyup(function(e) {
 		while($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css("borderTopWidth")) + parseFloat($(this).css("borderBottomWidth"))) {
 			$(this).height($(this).height() + 1);
 		};
-	});
-
-	$('#send').submit(function(e) {
-		e.preventDefault();
-
-		if ($('#send').hasClass('loading')) {
-			return;
-		}
-
-		var data = $('#send').serialize();
-		var url = $('#send').attr('action');
-
-		$('#send').addClass('loading');
-
-		$.post(url, data, function(rsp) {
-			if (rsp.ok) {
-				$('#send').addClass('message-sent');
-				$('#send textarea[name="content"]').val('');
-
-				$.get('/api/message/' + rsp.message_id, function(rsp) {
-					$('#message-list').prepend(rsp);
-				});
-
-			} else {
-				$('#send-response').html(rsp.error);
-			}
-			$('#send').removeClass('loading');
-		}).fail(function() {
-			$('#send-response').html('Error connecting to server.');
-			$('#send').removeClass('loading');
-		});
 	});
 
 	if ($('#context').length > 0) {

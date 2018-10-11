@@ -1,0 +1,32 @@
+<div id="profile">
+	<div class="content">
+		<% if (edit) { %>
+			<div class="heading">
+				<h1>Edit your profile</h1>
+			</div>
+			<form action="/api/profile" method="post">
+				<input type="hidden" name="id" value="<%= person.id %>">
+				<label for="name-input">Display name</label>
+				<input type="text" id="name-input" name="name" value="<%= person.name %>">
+				<label for="about-input">About you</label>
+				<textarea id="about-input" name="about" rows="4" cols="80"><%= person.about %></textarea>
+				<label for="slug-input">Profile URL</label>
+				<div><code><%= base_url %>/</code><input type="text" id="slug-input" name="slug" value="<%= person.slug %>"></div>
+				<input type="submit" value="Update">
+				<a href="/<%= person.slug %>">Cancel</a>
+				<div class="response"></div>
+			</form>
+		<% } else { %>
+			<div class="heading">
+				<h1><%= person.name %></h1>
+			</div>
+			<pre class="about-person"><%= person.about %></pre>
+			<ul>
+				<% if (person.id == curr_id) { %>
+					<li><a href="?edit=1">Edit your profile</a></li>
+				<% } %>
+				<li><a href="/">Go back home</a></li>
+			</ul>
+		<% } %>
+	</div>
+</div>
