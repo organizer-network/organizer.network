@@ -463,6 +463,12 @@ app.use(async (req, rsp) => {
 		try {
 			let person = await get_person(req.path.substr(1));
 			if (person) {
+
+				if (req.query.edit == '1' &&
+				    person.name == person.email) {
+					person.name = '';
+				}
+
 				rsp.render('page', {
 					title: person.name,
 					view: 'profile',

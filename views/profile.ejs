@@ -6,6 +6,7 @@
 			</div>
 			<form action="/api/profile" method="post">
 				<input type="hidden" name="id" value="<%= person.id %>">
+				<label>Email address: <strong><%= person.email %></strong></label>
 				<label for="name-input">Display name</label>
 				<input type="text" id="name-input" name="name" value="<%= person.name %>">
 				<label for="about-input">About you</label>
