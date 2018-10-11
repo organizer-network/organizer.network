@@ -1,10 +1,10 @@
 {
   "name": "organizer.network",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Tools and strategies for social justice organizing",
-  "main": "aarg.js",
+  "main": "bzzt.js",
   "scripts": {
-    "start": "node aarg.js"
+    "start": "node bzzt.js"
   },
   "repository": {
     "type": "git",
