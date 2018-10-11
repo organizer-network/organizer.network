@@ -593,7 +593,7 @@ function curr_context(person) {
 				const context = res.rows[0];
 
 				db.query(`
-					SELECT message.*, person.name
+					SELECT message.*, person.name, person.slug
 					FROM message, person
 					WHERE message.context_id = $1
 					  AND message.person_id = person.id
