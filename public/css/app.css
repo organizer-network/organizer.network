@@ -16,7 +16,6 @@ a {
 }
 
 form {
-	border-top: 2px solid #fff;
 	width: 100%;
 	max-width: 750px;
 }
@@ -50,7 +49,7 @@ ul li::before {
 
 label {
 	display: block;
-	margin: 2em 0 0.5em 0;
+	margin: 0 0 0.5em 0;
 }
 
 input[type="email"],
@@ -121,7 +120,6 @@ input[type="submit"]:active {
 }
 
 #intro .options {
-	border-top: 2px solid #fff;
 	width: 100%;
 	max-width: 750px;
 	padding: 2em 0 5em 0;
@@ -171,11 +169,55 @@ input[type="submit"]:active {
 	padding-top: 1em;
 }
 
+#about {
+	font-size: 20px;
+	line-height: 1.5em;
+}
+
+#about .step-2 {
+	margin-top: 2em;
+}
+
 .content {
 	width: 100%;
 	max-width: 750px;
 	margin: 0 auto;
 	padding: 15px;
+}
+
+.step {
+	font-size: 18px;
+	margin-bottom: 1em;
+}
+
+.step.selected .text {
+	background: #6835E7;
+	color: #fff;
+	padding: 2px 5px;
+}
+
+.step.selected .text::before {
+	content: "→ ";
+}
+
+.step .number {
+	font-size: 16px;
+	font-weight: bold;
+	display: inline-block;
+	background: #fff;
+	color: #6835E7;
+	width: 32px;
+	height: 32px;
+	line-height: 28px;
+	border-radius: 15px;
+	text-align: center;
+	margin-right: 0.5em;
+	border: 2px solid #fff;
+}
+
+.step.selected .number {
+	background: #6835E7;
+	color: #fff;
 }
 
 .message {
@@ -196,7 +238,9 @@ input[type="submit"]:active {
 }
 
 .heading {
-	margin: 2em 0;
+	margin: 2em 0 0 0;
+	padding: 0 0 2em 0;
+	border-bottom: 2px solid #fff;
 }
 
 .hidden {
@@ -210,7 +254,7 @@ input[type="submit"]:active {
 @media screen and (min-width: 760px) {
 
 	.heading {
-		margin: 12em 0 2em 0;
+		margin: 8em 0 2em 0;
 	}
 
 	#context {
@@ -226,6 +270,15 @@ input[type="submit"]:active {
 	#members {
 		float: right;
 		width: calc(33% - 1em);
+	}
+
+	#login, #about {
+		float: left;
+		width: calc(50% - 1em);
+	}
+
+	#about {
+		float: right;
 	}
 
 	.clear {
