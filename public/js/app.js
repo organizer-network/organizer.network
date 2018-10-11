@@ -66,4 +66,10 @@ $(document).ready(function() {
 		}, 500);
 	}
 
+	$('.timestamp').each(function(el) {
+		var iso_date = $(el).html();
+		var nice_timestamp = moment(iso_date).format('MMM d, Y, h:mma');
+		$(el).html(nice_timestamp);
+	});
+
 });

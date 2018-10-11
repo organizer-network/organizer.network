@@ -655,10 +655,7 @@ function normalize_email(email) {
 }
 
 function date(date) {
-	date = new Date(date);
-	date_formatted = date_format(date, 'mmm d, yyyy');
-	time_formatted = date_format(date, 'h:MMtt');
-	return `${date_formatted} ${time_formatted}`;
+	return date_format(new Date(date), 'isoDateTime');
 }
 app.locals.date = date;
 
