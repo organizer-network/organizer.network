@@ -40,6 +40,7 @@ const session = require('express-session');
 const pg_session = require('connect-pg-simple')(session);
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const sendgrid = require('@sendgrid/mail');
 const mkdirp = require('mkdirp');
 
 const person_slug_regex = /^\/[a-z0-9_][a-z0-9_]+$/;
@@ -88,6 +89,16 @@ server.listen(config.port, () => {
 const pg = require('pg');
 const db = new pg.Client(config.db_dsn);
 db.connect();
+
+// Setup SMTP if it's configured
+if ('smtp' in config) {
+	const smtp_transport = nodemailer.createTransport(config.smtp);
+}
+
+// Setup SendGrid if it's configured
+if ('sendgrid_api_key' in config) {
+	sendgrid.setApiKey(config.sendgrid_api_key);
+}
 
 db.query(`
 	SELECT id
@@ -176,12 +187,14 @@ app.post('/api/login', (req, rsp) => {
 
 	const email = normalize_email(req.body.email);
 	const subject = 'organizer.network login link';
-	const body = `Hello ${email},
+	const body = `Hello,
 
-Here is your one-time login link (expires in 10 minutes):
+This link will log you in!
 ${login_url}
 
-Thank you!`;
+(expires in 10 minutes)
+
+<3`;
 
 	function callback(id, slug) {
 
@@ -327,6 +340,16 @@ app.post('/api/send', (req, rsp) => {
 			});
 
 		});
+	});
+
+});
+
+app.post('/api/reply', (req, rsp) => {
+
+	console.log(req.body);
+
+	rsp.send({
+		'ok': true
 	});
 
 });
@@ -504,12 +527,42 @@ function send_message(person, context_id, content) {
 				console.log(err);
 				return reject(err);
 			}
+			let message = res.rows[0];
 			if (res.rows.length == 0) {
 				reject('Could not send message.');
 			} else {
-				resolve(res.rows[0]);
+				resolve(message);
+				send_notifications(person, message);
 			}
 		});
+	});
+}
+
+function send_notifications(sender, message) {
+
+	db.query(`
+		SELECT member.id, person.email, person.name, context.name AS context_name
+		FROM member, person, context
+		WHERE member.context_id = $1
+		  AND member.person_id != $2
+		  AND person.id = member.person_id
+		  AND context.id = member.context_id
+	`, [message.context_id, message.person_id], (err, res) => {
+
+		if (err) {
+			console.log(`Error sending notifications for message ${message.id}`);
+			console.log(err);
+			return;
+		}
+
+		for (let member of res.rows) {
+			send_email(member.email, `${sender.name} sent a message to ${member.context_name}`, `${message.content}
+
+---
+Unsubscribe:
+${config.base_url}/unsubscribe/${member.id}`);
+		}
+
 	});
 }
 
@@ -640,19 +693,30 @@ function curr_context(person) {
 
 function send_email(to, subject, body) {
 	return new Promise((resolve, reject) => {
-		const transporter = nodemailer.createTransport(config.smtp);
-		const options = {
+
+		const message = {
 			from: config.email_from,
 			to: to,
 			subject: subject,
 			text: body
 		};
-		transporter.sendMail(options, (err, info) => {
-			if (err) {
-				return reject(err);
-			}
-			return resolve(info);
-		});
+
+		if ('sendgrid_api_key' in config) {
+			sendgrid.send(message)
+			.then(() => {
+				resolve();
+			})
+			.catch(err => {
+				reject(err);
+			});
+		} else if ('smtp' in config) {
+			smtp_transport.sendMail(message, (err, info) => {
+				if (err) {
+					return reject(err);
+				}
+				return resolve(info);
+			});
+		}
 	});
 }
 

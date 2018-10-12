@@ -16,6 +16,8 @@ module.exports = {
 	session_secret: '', // openssl rand -base64 32
 
 	email_from: '"Your Name" <name@example.com>',
+
+	// EITHER ... use plain vanilla SMTP
 	smtp: {
 		host: 'smtp.example.com',
 		port: 465,
@@ -25,4 +27,7 @@ module.exports = {
 			pass: 'email password'
 		}
 	}
+
+	// OR ... you can use SendGrid instead
+	// sendgrid_api_key: 'xxxxxxxxxxx'
 };
