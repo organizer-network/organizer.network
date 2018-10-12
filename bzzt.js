@@ -66,6 +66,7 @@ io.origins((origin, callback) => {
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(body_parser.urlencoded({ extended: false }));
+app.use(body_parser.json());
 app.use(session({
 	store: new pg_session({
 		conString: config.db_dsn
