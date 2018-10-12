@@ -347,7 +347,7 @@ app.post('/api/send', (req, rsp) => {
 
 app.post('/api/reply', (req, rsp) => {
 
-	console.log(req.body);
+	console.log(req);
 
 	rsp.send({
 		'ok': true
