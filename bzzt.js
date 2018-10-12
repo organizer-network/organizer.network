@@ -42,6 +42,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const sendgrid = require('@sendgrid/mail');
 const mkdirp = require('mkdirp');
+const multer = require('multer')
 
 const person_slug_regex = /^\/[a-z0-9_][a-z0-9_]+$/;
 
@@ -100,6 +101,8 @@ if ('smtp' in config) {
 if ('sendgrid_api_key' in config) {
 	sendgrid.setApiKey(config.sendgrid_api_key);
 }
+
+const upload = multer();
 
 db.query(`
 	SELECT id
@@ -345,9 +348,9 @@ app.post('/api/send', (req, rsp) => {
 
 });
 
-app.post('/api/reply', (req, rsp) => {
+app.post('/api/reply', upload.none(), (req, rsp) => {
 
-	console.log(req);
+	console.log(req.body);
 
 	rsp.send({
 		'ok': true
