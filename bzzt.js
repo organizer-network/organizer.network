@@ -532,6 +532,12 @@ function send_message(person, context_id, content) {
 			} else {
 				resolve(message);
 				send_notifications(person, message);
+				db.query(`
+					UPDATE member
+					SET updated = CURRENT_TIMESTAMP
+					WHERE person_id = $1
+					  AND context_id = $2
+				`, [person.id, context_id]);
 			}
 		});
 	});
@@ -559,7 +565,7 @@ function send_notifications(sender, message) {
 
 ---
 Unsubscribe:
-${config.base_url}/unsubscribe/${member.id}`);
+${config.base_url}/leave/${member.id}`);
 		}
 
 	});
@@ -569,8 +575,8 @@ function join_context(person, context_id) {
 	let id = random(16);
 	db.query(`
 		INSERT INTO member
-		(id, person_id, context_id)
-		VALUES ($1, $2, $3)
+		(id, person_id, context_id, created, updated)
+		VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	`, [id, person.id, context_id]);
 }
 
@@ -666,11 +672,11 @@ function curr_context(person) {
 					context.messages = res.rows;
 
 					db.query(`
-						SELECT person.name, person.slug
+						SELECT member.person_id, person.name, person.slug
 						FROM member, person
 						WHERE member.context_id = $1
 						  AND member.person_id = person.id
-						ORDER BY member.created
+						ORDER BY member.updated DESC
 					`, [context.id], (err, res) => {
 
 						if (err) {

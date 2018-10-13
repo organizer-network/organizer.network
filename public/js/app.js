@@ -34,6 +34,12 @@ function form_handler(query, callback) {
 	});
 }
 
+function format_timestamp(el) {
+	var iso_date = $(el).html();
+	var nice_timestamp = moment(iso_date).format('MMM d, Y, h:mma');
+	$(el).html(nice_timestamp);
+}
+
 $(document).ready(function() {
 
 	form_handler('#login', function(rsp) {
@@ -46,6 +52,8 @@ $(document).ready(function() {
 		$('#send textarea[name="content"]').val('');
 		$.get('/api/message/' + rsp.message_id, function(rsp) {
 			$('#message-list').prepend(rsp);
+			format_timestamp($('#message-list .message .timestamp')[0]);
+			$('#members li:eq(0)').before($('#members li.curr-person'));
 		});
 	});
 
@@ -67,9 +75,7 @@ $(document).ready(function() {
 	}
 
 	$('.timestamp').each(function(index, el) {
-		var iso_date = $(el).html();
-		var nice_timestamp = moment(iso_date).format('MMM d, Y, h:mma');
-		$(el).html(nice_timestamp);
+		format_timestamp(el);
 	});
 
 });
