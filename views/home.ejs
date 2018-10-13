@@ -13,32 +13,34 @@
 		</div>
 	</div>
 </div>
-<div id="context">
-	<div class="content">
-		<div id="messages">
-			<h2><%= context.name %></h2>
-			<form id="send" action="/api/send" method="post">
-				<input type="hidden" name="context_id" value="<%= context.id %>">
-				<textarea id="content" name="content" cols="80" rows="3" placeholder="so shines a good deed in a weary world."></textarea>
-				<input type="submit" value="Send message">
-				<div class="response"></div>
-			</form>
-			<div id="message-list">
-				<% for (let message of context.messages) { %>
-					<%- include('message', {
-						message: message
-					}); %>
-				<% } %>
+<% if (context) { %>
+	<div id="context">
+		<div class="content">
+			<div id="messages">
+				<h2><%= context.name %></h2>
+				<form id="send" action="/api/send" method="post">
+					<input type="hidden" name="context_id" value="<%= context.id %>">
+					<textarea id="content" name="content" cols="80" rows="3" placeholder="so shines a good deed in a weary world."></textarea>
+					<input type="submit" value="Send message">
+					<div class="response"></div>
+				</form>
+				<div id="message-list">
+					<% for (let message of context.messages) { %>
+						<%- include('message', {
+							message: message
+						}); %>
+					<% } %>
+				</div>
 			</div>
+			<div id="members">
+				<h2>Members</h2>
+				<ul>
+					<% for (let member of context.members) { %>
+						<li class="person<%= member.person_id == person.id ? ' curr-person' : '' %>"><a href="<%= member.slug %>"><%= name(member) %></a></li>
+					<% } %>
+				</ul>
+			</div>
+			<br class="clear">
 		</div>
-		<div id="members">
-			<h2>Members</h2>
-			<ul>
-				<% for (let member of context.members) { %>
-					<li class="person<%= member.person_id == person.id ? ' curr-person' : '' %>"><a href="<%= member.slug %>"><%= name(member) %></a></li>
-				<% } %>
-			</ul>
-		</div>
-		<br class="clear">
 	</div>
-</div>
+<% } %>

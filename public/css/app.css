@@ -170,6 +170,27 @@ form .response {
 	padding: 15px 30px 30px 30px;
 }
 
+#leave {
+	position: relative;
+	width: 100vw;
+	min-height: calc(100vh - 2em);
+	background-image: url('../img/leave.gif');
+	background-size: 100% auto;
+	background-repeat: no-repeat;
+}
+
+#leave h1 {
+	margin-top: 0;
+}
+
+#leave .content {
+	background: rgba(0, 0, 0, 0.75);
+	transform: translateY(33%);
+	padding-top: 0;
+	width: auto;
+	padding: 15px 30px 30px 30px;
+}
+
 #context {
 	color: #333;
 	background: #fff;

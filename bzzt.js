@@ -156,7 +156,7 @@ app.get('/', (req, rsp) => {
 		curr_context(person)
 		.then((context) => {
 			rsp.render('page', {
-				title: context.name,
+				title: (context && context.name) ? context.name : 'hello',
 				view: 'home',
 				content: {
 					person: person,
@@ -283,6 +283,7 @@ app.get('/login/:hash', (req, rsp) => {
 			`, [id], (err, res) => {
 
 				if (err || res.rows.length != 1) {
+					console.log(err);
 					return error_page(rsp, 'invalid-login');
 				}
 
@@ -470,6 +471,61 @@ app.get('/api/message/:id', (req, rsp) => {
 				rsp.render('message', {
 					message: message
 				});
+			});
+		});
+	});
+});
+
+app.get('/leave/:id', (req, rsp) => {
+
+	db.query(`
+		SELECT member.id, member.person_id, member.context_id, context.name AS context_name
+		FROM member, context
+		WHERE member.id = $1
+		  AND context.id = member.context_id
+	`, [req.params.id], (err, res) => {
+
+		if (err || res.rows.length == 0) {
+			if (err) {
+				console.log(err);
+			}
+			return error_page(rsp, 'leave-link-not-found');
+		}
+
+		let member = res.rows[0];
+
+		db.query(`
+			DELETE FROM member
+			WHERE id = $1
+		`, [member.id], (err, res) => {
+
+			if (err) {
+				console.log(err);
+				return error_page(rsp, 'leave-link-not-found');
+			}
+
+			rsp.render('page', {
+				title: 'goodbye',
+				view: 'leave',
+				content: {
+					context: member.context_name
+				}
+			});
+
+			db.query(`
+				SELECT context_id
+				FROM person
+				WHERE id = $1
+			`, [member.person_id], (err, res) => {
+
+				if (res.rows.length > 0 &&
+				    res.rows[0].context_id == member.context_id) {
+					db.query(`
+						UPDATE person
+						SET context_id = NULL
+						WHERE id = $1
+					`, [member.person_id]);
+				}
 
 			});
 
@@ -643,7 +699,12 @@ function curr_person(req) {
 
 function curr_context(person) {
 	return new Promise((resolve, reject) => {
-		if (person && person.context_id) {
+		if (person && 'context_id' in person) {
+
+			if (! person.context_id) {
+				return resolve(null);
+			}
+
 			db.query(`
 				SELECT *
 				FROM context
