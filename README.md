@@ -9,43 +9,66 @@ Prerequisites:
 * node.js 8/10 ([macOS](https://nodejs.org/en/), [Ubuntu](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions))
 * PostgreSQL 10.x ([macOS](https://wiki.postgresql.org/wiki/Homebrew), [Ubuntu](https://tecadmin.net/install-postgresql-server-on-ubuntu/))
 
-Quick install:
+Setup node.js packages:
 
 ```
 $ npm install
-$ cp config.js.example config.js
 ```
 
 Configure:
 
+```
+$ cp config.js.example config.js
+```
+
 * Edit `session_secret` in `config.js`
 * Edit `smtp` settings in `config.js`
 
-Setup Postgres on macOS:
+Database setup:
+
+(Ubuntu users may need to `createuser` and allow local connections, described below.)
 
 ```
-$ createdb aarg
-$ psql aarg < db/aarg.sql
-$ psql aarg < node_modules/connect-pg-simple/table.sql
+$ cd db/
+$ make setup
 ```
 
-Setup Postgres on Ubuntu:
+## Database tasks
+
+Backup (it's a good idea to automate this):
+
+```
+$ cd db/
+$ make backup
+```
+
+Migrate during upgrades:
+
+```
+$ cd db/
+$ make migrate
+```
+
+Setup a Postgres account on Ubuntu:
 
 ```
 $ sudo -u postgres createuser -d `whoami`
-$ createdb aarg
-$ psql aarg < db/aarg.sql
-$ psql aarg < node_modules/connect-pg-simple/table.sql
 ```
 
-If you want to set up Postgres to accept localhost connections, `edit /etc/postgresql/10/main/pg_hba.conf`:
+Setup Postgres to accept localhost connections on Ubuntu:
+
+Edit `edit /etc/postgresql/10/main/pg_hba.conf` with the following line change.
 
 ```
 # IPv4 local connections:
 host    all             all             127.0.0.1/32            trust
 ```
 
-If you want to use a self-signed SSL certificate (you can also comment out the `ssl` config to run on plain vanilla HTTP):
+## SSL certificates
+
+The `ssl` section of `config.js` configures your SSL certificate/key. If you comment out this part of the configuration the server will use plain vanilla HTTP.
+
+If you want to use a self-signed SSL certificate for development purposes:
 
 ```
 $ cd ssl && openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out cert.pem -subj "/C=US/ST=New York/L=Troy/O=organizer.network/CN=localhost"
