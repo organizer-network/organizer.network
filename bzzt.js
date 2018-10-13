@@ -1,5 +1,6 @@
 // organizer.network
 // v0.0.2 "bzzt"
+
 // versioning based on Tom Gauld's A Noisy Alphabet
 // http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom
 
@@ -193,7 +194,7 @@ app.post('/api/login', (req, rsp) => {
 	const subject = 'organizer.network login link';
 	const body = `Hello,
 
-This link will log you in!
+Follow this link to login:
 ${login_url}
 
 (expires in 10 minutes)
@@ -247,10 +248,10 @@ ${login_url}
 
 		db.query(`
 			INSERT INTO person
-			(email, name, slug, created)
-			VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+			(email, slug, created)
+			VALUES ($1, $2, CURRENT_TIMESTAMP)
 			RETURNING *
-		`, [email, email, slug], (err, res) => {
+		`, [email, slug], (err, res) => {
 
 			if (err) {
 				return rsp.status(500).send({
@@ -289,7 +290,7 @@ app.get('/login/:hash', (req, rsp) => {
 				req.session.person = person;
 
 				let redirect = '/';
-				if (person.name == person.email) {
+				if (! person.name) {
 					redirect = `/${person.slug}?edit=1`;
 				}
 				rsp.redirect(redirect);
@@ -438,7 +439,7 @@ app.post('/api/profile', async (req, rsp) => {
 app.get('/api/message/:id', (req, rsp) => {
 
 	db.query(`
-		SELECT message.*, person.name
+		SELECT message.*, person.name, person.slug
 		FROM message, person
 		WHERE message.id = $1
 		  AND message.person_id = person.id
@@ -490,14 +491,8 @@ app.use(async (req, rsp) => {
 		try {
 			let person = await get_person(req.path.substr(1));
 			if (person) {
-
-				if (req.query.edit == '1' &&
-				    person.name == person.email) {
-					person.name = '';
-				}
-
 				rsp.render('page', {
-					title: person.name,
+					title: person.name || 'profile',
 					view: 'profile',
 					content: {
 						person: person,
@@ -728,10 +723,13 @@ function normalize_email(email) {
 	return email.trim().toLowerCase();
 }
 
-function date(date) {
+app.locals.date = date => {
 	return date_format(new Date(date), 'isoDateTime');
-}
-app.locals.date = date;
+};
+
+app.locals.name = person => {
+	return person.name || `person ${person.slug}`;
+};
 
 function random(count) {
 	const chars = 'abcdefghijkmnpqrstuwxyz0123456789';
