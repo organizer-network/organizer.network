@@ -6,19 +6,23 @@
 				<form id="send" action="/api/send" method="post">
 					<input type="hidden" name="context_id" value="<%= context.id %>">
 					<textarea id="content" name="content" cols="80" rows="3" placeholder="so shines a good deed in a weary world."></textarea>
-					<input type="submit" value="Send message">
+					<input type="submit" value="Send message →">
 					<div class="response"></div>
 				</form>
 			<% } else { %>
 				<a href="/join/<%= context.slug %>" class="button" id="join-link">Join this group</a>
 			<% } %>
 			<div id="message-list">
-				<% for (let message of context.messages) { %>
-					<%- include('message', {
-						message: message
-					}); %>
-				<% } %>
+				<%- include('message-page', {
+					context: context
+				}) %>
 			</div>
+			<% if (context.total_messages > context.messages.length) { %>
+				<% let last_message = context.messages.pop() %>
+				<a href="#more-messages" id="more-messages" class="button" data-before-id="<%= last_message.id %>" data-group="<%= context.slug %>" data-total-messages="<%= context.total_messages %>">More messages →</a>
+			<% } else { %>
+				<a href="#more-messages" id="more-messages" class="button disabled">End of messages</a>
+			<% } %>
 		</div>
 		<div id="sidebar">
 			<h2>Members</h2>

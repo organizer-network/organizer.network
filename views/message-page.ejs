@@ -1,0 +1,7 @@
+<div class="page">
+	<% for (let message of context.messages) { %>
+		<%- include('message', {
+			message: message
+		}); %>
+	<% } %>
+</div>

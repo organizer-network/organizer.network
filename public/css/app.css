@@ -329,6 +329,16 @@ input[type="submit"]:active,
 	font-weight: bold;
 }
 
+#more-messages {
+	margin-top: 3em !important;
+}
+
+#more-messages.disabled,
+#more-messages.disabled:hover {
+	background: #808080;
+	cursor: default;
+}
+
 .content {
 	width: 100%;
 	max-width: 900px;
@@ -402,6 +412,14 @@ input[type="submit"]:active,
 
 .reply-form {
 	padding-top: 1.5em;
+}
+
+.reply-form input[type="submit"] {
+	background: #6835E7 !important;
+}
+
+.reply-form input[type="submit"]:hover {
+	background: #4E6FFF !important;
 }
 
 .message-content {

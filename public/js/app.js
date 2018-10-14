@@ -121,9 +121,12 @@
 
 		if ($('#context').length > 0) {
 			$('#intro').addClass('above');
-			$('html, body').animate({
-				scrollTop: $("#context").offset().top - 32
-			}, 500);
+			var context_top = $("#context").offset().top - 32;
+			if ($('html, body').scrollTop() < context_top) {
+				$('html, body').animate({
+					scrollTop: context_top
+				}, 500);
+			}
 		}
 
 		$('.timestamp a').each(function(index, el) {
@@ -150,6 +153,33 @@
 		});
 
 		setup_replies('.reply a');
+
+		$('#more-messages').click(function(e) {
+			e.preventDefault();
+
+			if ($('#more-messages').hasClass('disabled')) {
+				return;
+			}
+
+			var before_id = $('#more-messages').data('before-id');
+			var group = $('#more-messages').data('group');
+			$.get('/api/group/' + group + '?before_id=' + before_id, function(rsp) {
+				$('#message-list').append(rsp);
+				$('#message-list .page:last-child .timestamp a').each(function(index, el) {
+					format_timestamp(el);
+				});
+				setup_replies('#message-list .page:last-child .reply a');
+
+				var $last = $('#message-list .page:last-child .message:last-child');
+				$('#more-messages').data('before-id', $last.data('id'));
+
+				var total = parseInt($('#more-messages').data('total-messages'));
+				if ($('#message-list .message').length == total) {
+					$('#more-messages').addClass('disabled');
+					$('#more-messages').html('End of messages');
+				}
+			});
+		});
 
 	});
 

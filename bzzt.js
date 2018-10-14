@@ -553,10 +553,12 @@ app.get('/api/message/:id', async (req, rsp) => {
 	try {
 		let query = await db.query(`
 			SELECT message.*,
-			       person.name AS person_name, person.slug AS person_slug
-			FROM message, person
+			       person.name AS person_name, person.slug AS person_slug,
+			       context.slug AS context_slug
+			FROM message, person, context
 			WHERE message.id = $1
 			  AND message.person_id = person.id
+			  AND message.context_id = context.id
 		`, [req.params.id]);
 
 		if (query.rows.length == 0) {
@@ -586,7 +588,10 @@ app.get('/api/message/:id', async (req, rsp) => {
 		message.reply_count = query.rows[0].reply_count;
 
 		rsp.render('message', {
-			message: message
+			message: message,
+			context: {
+				slug: message.context_slug
+			}
 		});
 
 	} catch (err) {
@@ -649,6 +654,57 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		console.log(err.stack);
 		return error_page(rsp, '500');
 	}
+});
+
+app.get('/api/group/:slug', async (req, rsp) => {
+
+	try {
+
+		let person = await curr_person(req);
+
+		if (! person) {
+			return rsp.status(403).send({
+				ok: false,
+				error: 'You must be signed in to load group content.'
+			});
+		}
+
+		let context = await get_context(req.params.slug);
+
+		if (! context) {
+			return rsp.status(404).send({
+				ok: false,
+				error: 'Group not found.'
+			});
+		}
+
+		let member = await check_membership(person, context.id);
+
+		if (! member) {
+			return rsp.status(403).send({
+				ok: false,
+				error: 'You are not authorized to load that group content.'
+			});
+		}
+
+		let before_id = null;
+		if ('before_id' in req.query) {
+			before_id = parseInt(req.query.before_id);
+		}
+		await add_context_details(context, before_id);
+
+		rsp.render('message-page', {
+			context: context
+		});
+
+	} catch(err) {
+		console.log(err.stack);
+		rsp.status(500).send({
+			ok: false,
+			error: 'Could not load group messages.'
+		});
+	}
+
 });
 
 app.get('/leave/:id', (req, rsp) => {
@@ -974,20 +1030,37 @@ function get_contexts(person) {
 	});
 }
 
-async function add_context_details(context) {
+async function add_context_details(context, before_id) {
+
+	let before_clause = '';
+	let values = [context.id];
+	if (before_id) {
+		before_clause = 'AND message.id < $2';
+		values.push(before_id);
+	}
 
 	let query = await db.query(`
 		SELECT message.*,
 		       person.name AS person_name, person.slug AS person_slug
 		FROM message, person
 		WHERE message.context_id = $1
+		  ${before_clause}
 		  AND message.person_id = person.id
 		  AND message.in_reply_to IS NULL
 		ORDER BY message.created DESC
 		LIMIT 10
-	`, [context.id]);
+	`, values);
 
 	context.messages = query.rows;
+
+	query = await db.query(`
+		SELECT COUNT(id) AS total_messages
+		FROM message
+		WHERE context_id = $1
+		  AND in_reply_to IS NULL
+	`, [context.id]);
+
+	context.total_messages = query.rows[0].total_messages;
 
 	let ids = context.messages.map(msg => msg.id);
 	let placeholders = [];
