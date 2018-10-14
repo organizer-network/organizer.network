@@ -11,9 +11,11 @@ setup:
 migrate: bzzt
 
 backup:
+	mkdir -p $(VERSION)
 	pg_dump $(VERSION) > $(VERSION)/$(NOW).sql
 
 bzzt:
+	mkdir -p aarg
 	pg_dump aarg > aarg/$(NOW).sql
 	psql `whoami` -c "ALTER DATABASE aarg RENAME TO bzzt;"
 	psql bzzt < schema/migrate.bzzt.sql
