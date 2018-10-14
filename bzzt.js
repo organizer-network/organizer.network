@@ -694,7 +694,8 @@ function send_message(person, context_id, content) {
 function send_notifications(sender, message) {
 
 	db.query(`
-		SELECT member.id, person.email, person.name, context.name AS context_name
+		SELECT member.leave_slug, person.email, person.name,
+		       context.name AS context_name, context.slug AS context_slug
 		FROM member, person, context
 		WHERE member.context_id = $1
 		  AND member.person_id != $2
@@ -709,11 +710,14 @@ function send_notifications(sender, message) {
 		}
 
 		for (let member of res.rows) {
-			send_email(member.email, `${sender.name} sent a message to ${member.context_name}`, `${message.content}
+			send_email(member.email, `${sender.name} posted in ${member.context_name}`, `${message.content}
 
 ---
+${member.context_name}:
+${config.base_url}/group/${member.context_slug}
+
 Unsubscribe:
-${config.base_url}/leave/${member.id}`);
+${config.base_url}/leave/${member.leave_slug}`);
 		}
 
 	});
