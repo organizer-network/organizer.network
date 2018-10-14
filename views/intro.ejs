@@ -1,0 +1,36 @@
+<div id="intro">
+	<div class="content">
+		<div class="heading">
+			<h1>Organizer Network</h1>
+			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
+		</div>
+		<div class="options">
+			<h2>Hello, <%= person.name %>.</h2>
+			<ul>
+				<li><a href="/<%= person.slug %>">View your profile</a>
+				<li><a href="/logout">Logout</a></li>
+			</ul>
+		</div>
+		<div class="contexts">
+			<h2>You are a member of</h2>
+			<% if (! contexts.member_of.length) { %>
+				<p>You are not a member of any groups.</p>
+			<% } else { %>
+				<ul>
+					<% for (let context of contexts.member_of) { %>
+						<li><a href="/group/<%= context.slug %>"><%= context.name %></a></li>
+					<% } %>
+				</ul>
+			<% } %>
+			<% if (contexts.public.length) { %>
+				<h2 class="headroom">Groups you can join</h2>
+				<ul>
+					<% for (let context of contexts.public) { %>
+						<li><a href="/group/<%= context.slug %>"><%= context.name %></a></li>
+					<% } %>
+				</ul>
+			<% } %>
+		</div>
+		<br class="clear">
+	</div>
+</div>

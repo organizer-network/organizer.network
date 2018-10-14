@@ -43,8 +43,8 @@ function format_timestamp(el) {
 $(document).ready(function() {
 
 	form_handler('#login', function(rsp) {
-		$('#login .response').html('Email sent, please check your inbox.');
-		$('#login input[name="email"]').val('');
+		$('#login .response').html('✅ Email sent, please check your inbox.');
+		$('#login .controls').addClass('hidden');
 	});
 
 	form_handler('#send', function(rsp) {
@@ -57,8 +57,13 @@ $(document).ready(function() {
 		});
 	});
 
+	var first_update = ($('input[name="name"]').val() == '');
 	form_handler('#profile form', function(rsp) {
-		window.location = '/' + rsp.person.slug;
+		if (first_update) {
+			window.location = '/group/commons';
+		} else {
+			window.location = '/' + rsp.person.slug;
+		}
 	});
 
 	$("#send #content").keyup(function(e) {
@@ -76,6 +81,25 @@ $(document).ready(function() {
 
 	$('.timestamp').each(function(index, el) {
 		format_timestamp(el);
+	});
+
+	$('#invite-input').focus(function() {
+		this.select();
+		try {
+			if (document.execCommand('copy')) {
+				$('#invite-response').html('Copied to your clipboard.');
+			}
+		} catch(err) {
+		}
+	});
+
+	$('#join-link').click(function(e) {
+		if (! $(document.body).hasClass('logged-in')) {
+			e.preventDefault();
+			$('html, body').animate({
+				scrollTop: 0
+			}, 500);
+		}
 	});
 
 });

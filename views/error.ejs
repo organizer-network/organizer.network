@@ -3,6 +3,8 @@
 		<h1>error</h1>
 		<% if (type == '404') { %>
 			<p>404 file not found. <a href="/">Try the home page?</a></p>
+		<% } else if (type == '500') { %>
+			<p>500 something broked. <a href="/">Try the home page?</a></p>
 		<% } else if (type == 'invalid-login') { %>
 			<p>Sorry, that login URL is invalid. <a href="/">Try logging in again?</a></p>
 		<% } else if (type == 'invalid-person') { %>

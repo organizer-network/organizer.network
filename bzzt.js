@@ -119,8 +119,8 @@ db.query(`
 	if (res.rows.length == 0) {
 		console.log("setting up 'commons' context");
 		db.query(`
-			INSERT INTO context (name, slug, created)
-			VALUES ('Commons', 'commons', CURRENT_TIMESTAMP)
+			INSERT INTO context (name, slug, parent_id, created)
+			VALUES ('Commons', 'commons', 0, CURRENT_TIMESTAMP)
 		`, (err) => {
 			if (err) {
 				console.log(err);
@@ -140,10 +140,11 @@ function error_page(rsp, type) {
 	});
 }
 
-app.get('/', (req, rsp) => {
+app.get('/', async (req, rsp) => {
 
-	curr_person(req)
-	.then((person) => {
+	try {
+
+		let person = await curr_person(req);
 
 		if (! person) {
 			return rsp.render('page', {
@@ -153,27 +154,114 @@ app.get('/', (req, rsp) => {
 			});
 		}
 
-		curr_context(person)
-		.then((context) => {
-			rsp.render('page', {
-				title: (context && context.name) ? context.name : 'hello',
-				view: 'home',
-				content: {
-					person: person,
-					context: context
-				}
-			});
-		})
-		.catch((err) => {
-			console.log(err);
-			error_page(rsp, 'invalid-context');
+		let contexts = await get_contexts(person);
+		let member = null;
+
+		let title = 'hello';
+		if (contexts.current) {
+			title = contexts.current.name;
+			member = await check_membership(person, contexts.current.id);
+		}
+
+		rsp.render('page', {
+			title: title,
+			view: 'home',
+			content: {
+				person: person,
+				contexts: contexts,
+				member: member,
+				base_url: config.base_url
+			}
 		});
 
-	})
-	.catch((err) => {
+	} catch(err) {
 		console.log(err);
-		error_page(rsp, 'invalid-person');
-	});
+		error_page(rsp, '500');
+	}
+});
+
+app.get('/group/:slug', async (req, rsp) => {
+
+	try {
+
+		let context = await get_context(req.params.slug);
+		if (! context) {
+			return error_page(rsp, '404');
+		}
+
+		let person = await curr_person(req);
+		let member = await check_membership(person, context.id);
+		let contexts = null;
+
+		if (person) {
+			contexts = await get_contexts(person);
+			if (member && person.current_id != context.id) {
+				person.current_id = context.id;
+				db.query(`
+					UPDATE person
+					SET context_id = $1
+					WHERE id = $2
+				`, [context.id, person.id]);
+			}
+			if (! contexts.current) {
+				contexts.current = await add_context_details(context);
+			}
+		} else {
+			contexts = {
+				current: await add_context_details(context)
+			};
+		}
+
+		rsp.render('page', {
+			title: contexts.current.name,
+			view: 'home',
+			content: {
+				person: person,
+				contexts: contexts,
+				member: member,
+				base_url: config.base_url
+			}
+		});
+
+	} catch(err) {
+		console.log(err);
+		error_page(rsp, '500');
+	}
+
+});
+
+app.get('/join/:slug', async (req, rsp) => {
+
+	try {
+
+		let context = await get_context(req.params.slug);
+		if (! context) {
+			return error_page(rsp, '404');
+		}
+
+		let person = await curr_person(req);
+		if (! person) {
+			rsp.render('page', {
+				title: 'welcome',
+				view: 'login',
+				content: {
+					context: context,
+					preview_link: true
+				}
+			});
+		} else {
+			let member = await check_membership(person, context.id);
+			if (! member) {
+				join_context(person, context.id);
+			}
+			rsp.redirect(`${config.base_url}/group/${context.slug}`);
+		}
+
+	} catch(err) {
+		console.log(err);
+		return error_page(rsp, '500');
+	}
+
 });
 
 const login_hashes = {};
@@ -222,6 +310,14 @@ ${login_url}
 					error: "Error sending login email."
 				});
 			});
+
+		if ('context' in req.body) {
+			get_context(req.body.context)
+			.then(async context => {
+				let person = await get_person(slug);
+				join_context(person, context.id);
+			});
+		}
 	}
 
 	db.query(`
@@ -261,7 +357,6 @@ ${login_url}
 			}
 
 			let id = res.rows[0].id;
-			join_context(res.rows[0], 1);
 
 			return callback(id, slug);
 		});
@@ -294,7 +389,7 @@ app.get('/login/:hash', (req, rsp) => {
 				if (! person.name) {
 					redirect = `/${person.slug}?edit=1`;
 				}
-				rsp.redirect(redirect);
+				rsp.redirect(`${config.base_url}${redirect}`);
 			});
 			delete login_hashes[id];
 			return;
@@ -306,18 +401,24 @@ app.get('/login/:hash', (req, rsp) => {
 
 app.get('/logout', (req, rsp) => {
 	delete req.session.person;
-	rsp.redirect('/');
+	rsp.redirect(`${config.base_url}/`);
 });
 
 app.post('/api/send', (req, rsp) => {
 
 	if (! 'body' in req ||
-	    ! 'content' in req.body ||
-	    ! 'context_id' in req.body ||
-	    req.body.content == '') {
+	    ! 'content' in req.body) {
 		return rsp.status(400).send({
 			ok: false,
-			error: "Please include 'content' and 'context_id' params."
+			error: "You must type ~something~ in."
+		});
+	}
+
+	if (! 'body' in req ||
+	    ! 'context' in req.body) {
+		return rsp.status(400).send({
+			ok: false,
+			error: "Please include a 'context' arg."
 		});
 	}
 
@@ -328,9 +429,9 @@ app.post('/api/send', (req, rsp) => {
 	.then((person) => {
 
 		check_membership(person, context_id)
-		.then((is_member) => {
+		.then((member) => {
 
-			if (! is_member) {
+			if (! member) {
 				return rsp.status(403).send({
 					ok: false,
 					error: "You cannot send messages to that context."
@@ -459,9 +560,9 @@ app.get('/api/message/:id', (req, rsp) => {
 		.then((person) => {
 
 			check_membership(person, message.context_id)
-			.then((is_member) => {
+			.then((member) => {
 
-				if (! is_member) {
+				if (! member) {
 					return rsp.status(403).send({
 						ok: false,
 						error: 'You are not authorized to load that message.'
@@ -479,10 +580,11 @@ app.get('/api/message/:id', (req, rsp) => {
 app.get('/leave/:id', (req, rsp) => {
 
 	db.query(`
-		SELECT member.id, member.person_id, member.context_id, context.name AS context_name
+		SELECT member.leave_slug, member.person_id, member.context_id,
+		       context.name AS context_name
 		FROM member, context
-		WHERE member.id = $1
-		  AND context.id = member.context_id
+		WHERE member.leave_slug = $1
+		  AND member.context_id = context.id
 	`, [req.params.id], (err, res) => {
 
 		if (err || res.rows.length == 0) {
@@ -496,8 +598,8 @@ app.get('/leave/:id', (req, rsp) => {
 
 		db.query(`
 			DELETE FROM member
-			WHERE id = $1
-		`, [member.id], (err, res) => {
+			WHERE leave_slug = $1
+		`, [member.leave_slug], (err, res) => {
 
 			if (err) {
 				console.log(err);
@@ -513,21 +615,11 @@ app.get('/leave/:id', (req, rsp) => {
 			});
 
 			db.query(`
-				SELECT context_id
-				FROM person
+				UPDATE person
+				SET context_id = NULL
 				WHERE id = $1
-			`, [member.person_id], (err, res) => {
-
-				if (res.rows.length > 0 &&
-				    res.rows[0].context_id == member.context_id) {
-					db.query(`
-						UPDATE person
-						SET context_id = NULL
-						WHERE id = $1
-					`, [member.person_id]);
-				}
-
-			});
+				  AND context_id = $2
+			`, [member.person_id, member.context_id]);
 
 		});
 
@@ -628,16 +720,28 @@ ${config.base_url}/leave/${member.id}`);
 }
 
 function join_context(person, context_id) {
-	let id = random(16);
+
+	let leave_slug = random(16);
+	let invite_slug = random(16);
+
 	db.query(`
 		INSERT INTO member
-		(id, person_id, context_id, created, updated)
-		VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	`, [id, person.id, context_id]);
+		(person_id, context_id, leave_slug, invite_slug, created, updated)
+		VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	`, [person.id, context_id, leave_slug, invite_slug]);
+
+	db.query(`
+		UPDATE person
+		SET context_id = $1
+		WHERE id = $2
+	`, [context_id, person.id]);
 }
 
 function check_membership(person, context_id) {
 	return new Promise((resolve, reject) => {
+		if (! person) {
+			return resolve(false);
+		}
 		db.query(`
 			SELECT *
 			FROM member
@@ -697,64 +801,103 @@ function curr_person(req) {
 	});
 }
 
-function curr_context(person) {
+function get_context(slug) {
 	return new Promise((resolve, reject) => {
-		if (person && 'context_id' in person) {
+		db.query(`
+			SELECT *
+			FROM context
+			WHERE slug = $1
+		`, [slug], (err, res) => {
 
-			if (! person.context_id) {
+			if (err) {
+				console.log(err);
+				return reject();
+			}
+
+			if (res.rows.length == 0) {
 				return resolve(null);
 			}
 
-			db.query(`
+			resolve(res.rows[0]);
+		});
+	});
+}
+
+function get_contexts(person) {
+
+	return new Promise(async (resolve, reject) => {
+
+		var contexts = {};
+
+		try {
+
+			let query = await db.query(`
 				SELECT *
 				FROM context
-				WHERE id = $1
-			`, [person.context_id], (err, res) => {
+				WHERE parent_id = 0
+				ORDER BY name
+			`);
 
-				if (err) {
-					return reject(err);
-				}
+			contexts.public = query.rows;
 
-				const context = res.rows[0];
+			if (person) {
 
-				db.query(`
-					SELECT message.*, person.name, person.slug
-					FROM message, person
-					WHERE message.context_id = $1
-					  AND message.person_id = person.id
-					ORDER BY message.created DESC
-					LIMIT 10
-				`, [context.id], (err, res) => {
+				query = await db.query(`
+					SELECT context.*
+					FROM member, context
+					WHERE member.person_id = $1
+					  AND context.id = member.context_id
+				`, [person.id]);
 
-					if (err) {
-						return reject(err);
-					}
-
-					context.messages = res.rows;
-
-					db.query(`
-						SELECT member.person_id, person.name, person.slug
-						FROM member, person
-						WHERE member.context_id = $1
-						  AND member.person_id = person.id
-						ORDER BY member.updated DESC
-					`, [context.id], (err, res) => {
-
-						if (err) {
-							return reject(err);
-						}
-
-						context.members = res.rows;
-
-						resolve(context);
-					});
-
+				contexts.member_of = query.rows;
+				contexts.public = contexts.public.filter((context) => {
+					return context.id != person.context_id;
 				});
-			});
-		} else {
-			reject(null);
+
+				if (person.context_id) {
+
+					query = await db.query(`
+						SELECT *
+						FROM context
+						WHERE id = $1
+					`, [person.context_id]);
+
+					contexts.current = await add_context_details(query.rows[0]);
+				}
+			}
+
+			resolve(contexts);
+
+		} catch(err) {
+			reject(err);
 		}
 	});
+}
+
+async function add_context_details(context) {
+
+	let query = await db.query(`
+		SELECT message.*, person.name, person.slug
+		FROM message, person
+		WHERE message.context_id = $1
+		  AND message.person_id = person.id
+		ORDER BY message.created DESC
+		LIMIT 10
+	`, [context.id]);
+
+	context.messages = query.rows;
+
+	query = await db.query(`
+		SELECT member.person_id, person.name, person.slug
+		FROM member, person
+		WHERE member.context_id = $1
+		  AND member.person_id = person.id
+		ORDER BY member.updated DESC
+	`, [context.id]);
+
+	context.members = query.rows;
+
+	return context;
 }
 
 function send_email(to, subject, body) {

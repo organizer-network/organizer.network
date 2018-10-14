@@ -15,9 +15,13 @@ a {
 	color: #fff;
 }
 
+p {
+	margin-top: 1em;
+}
+
 form {
 	width: 100%;
-	max-width: 750px;
+	max-width: 100%;
 }
 
 h1, h2, h3, h4, h5 {
@@ -88,8 +92,8 @@ textarea:focus {
 	border: 2px solid #1DDA4F;
 }
 
-input[type="submit"] {
-	position: relative;
+input[type="submit"],
+.button {
 	display: block;
 	text-transform: uppercase;
 	margin-top: 2em;
@@ -102,13 +106,16 @@ input[type="submit"] {
 	background: #4E6FFF;
 	cursor: pointer;
 	border: none;
+	text-decoration: none;
 }
 
-input[type="submit"]:hover {
+input[type="submit"]:hover,
+.button:hover {
 	background: #6835E7;
 }
 
-input[type="submit"]:active {
+input[type="submit"]:active,
+.button:active {
 	background: #1DDA4F;
 }
 
@@ -145,8 +152,12 @@ form .response {
 
 #intro .options {
 	width: 100%;
-	max-width: 750px;
-	padding: 0 0 5em 0;
+	padding: 2em 0;
+}
+
+#intro .contexts {
+	width: 100%;
+	padding: 2em 0;
 }
 
 #error {
@@ -194,15 +205,82 @@ form .response {
 #context {
 	color: #333;
 	background: #fff;
+	min-height: calc(100vh - 2em);
+}
+
+#context a {
+	color: #4E6FFF;
+}
+
+#context #sidebar h2 {
+	margin-top: 1.5em;
+}
+
+#context #sidebar h2:first-child {
+	margin-top: 0;
+}
+
+#context input[type="submit"],
+#context .button {
+	color: #fff;
+	background: #4E6FFF;
+	display: inline-block;
+	margin-top: 1.5em;
+}
+
+#context input[type="submit"]:hover,
+#context .button:hover {
+	background: #6835E7;
+}
+
+#context input[type="submit"]:active,
+#context .button:active {
+	background: #333;
 }
 
 #message-list {
-	padding-top: 1em;
+	padding: 1em 0;
+	border-bottom: 2px solid #333;
 }
 
 #about {
+	padding-top: 1.5em;
 	font-size: 20px;
 	line-height: 1.5em;
+}
+
+#about h2 {
+	margin-top: 1em;
+}
+
+#about .button {
+	color: #fff;
+	background: #6835E7;
+	display: inline-block;
+	margin-top: 1.5em;
+}
+
+#about .button:hover {
+	background: #4E6FFF;
+}
+
+#login {
+	padding: 2em 0 0 0;
+}
+
+#login .controls {
+	max-height: 150px;
+	transition: max-height 0.5s ease-out;
+	overflow: hidden;
+}
+
+#login .controls label {
+	margin-top: 0;
+}
+
+#login .controls.hidden {
+	display: block;
+	max-height: 0;
 }
 
 #login .response {
@@ -240,9 +318,18 @@ form .response {
 	display: inline-block;
 }
 
+#invite-input {
+	margin-top: 1em;
+}
+
+#invite-response {
+	margin-top: 0.5em;
+	color: #666;
+}
+
 .content {
 	width: 100%;
-	max-width: 750px;
+	max-width: 900px;
 	margin: 0 auto;
 	padding: 15px;
 }
@@ -304,7 +391,7 @@ form .response {
 }
 
 .about-person {
-	margin-bottom: 2em;
+	padding: 2em 0;
 }
 
 .person a {
@@ -321,6 +408,10 @@ form .response {
 	display: none;
 }
 
+.headroom {
+	margin-top: 2em;
+}
+
 .clear {
 	display: none;
 }
@@ -328,7 +419,7 @@ form .response {
 @media screen and (min-width: 760px) {
 
 	.heading {
-		margin: 8em 0 2em 0;
+		margin: 8em 0 0 0;
 	}
 
 	#context {
@@ -345,7 +436,7 @@ form .response {
 		padding-bottom: 5em;
 	}
 
-	#members {
+	#sidebar {
 		float: right;
 		width: calc(33% - 1em);
 	}
@@ -357,6 +448,12 @@ form .response {
 
 	#about {
 		float: right;
+	}
+
+	#intro .options,
+	#intro .contexts {
+		width: 50%;
+		float: left;
 	}
 
 	.clear {

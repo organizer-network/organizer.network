@@ -1,0 +1,46 @@
+<div id="context">
+	<div class="content">
+		<div id="messages">
+			<h2><%= context.name %></h2>
+			<% if (member) { %>
+				<form id="send" action="/api/send" method="post">
+					<input type="hidden" name="context_id" value="<%= context.id %>">
+					<textarea id="content" name="content" cols="80" rows="3" placeholder="so shines a good deed in a weary world."></textarea>
+					<input type="submit" value="Send message">
+					<div class="response"></div>
+				</form>
+			<% } else { %>
+				<a href="/join/<%= context.slug %>" class="button" id="join-link">Join this group</a>
+			<% } %>
+			<div id="message-list">
+				<% for (let message of context.messages) { %>
+					<%- include('message', {
+						message: message
+					}); %>
+				<% } %>
+			</div>
+		</div>
+		<div id="sidebar">
+			<h2>Members</h2>
+			<ul id="members">
+				<% if (context.members.length == 0) { %>
+					<p>There are no members of this group.</p>
+				<% } %>
+				<% for (let m of context.members) { %>
+					<li class="person<%= person && m.person_id == person.id ? ' curr-person' : '' %>">
+						<a href="/<%= m.slug %>"><%= name(m) %></a>
+					</li>
+				<% } %>
+			</ul>
+			<% if (member) { %>
+				<h2>Invite link</h2>
+				<p>Share this link to invite others to join the group.</p>
+				<input type="text" value="<%= `${base_url}/join/${context.slug}` %>" id="invite-input">
+				<div id="invite-response"></div>
+				<h2>Ready to leave?</h2>
+				<p><a href="<%= `/leave/${member.leave_slug}` %>">Unsubscribe from this group</a></p>
+			<% } %>
+		</div>
+		<br class="clear">
+	</div>
+</div>

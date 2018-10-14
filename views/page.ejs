@@ -5,13 +5,13 @@
 		<title><%= title %></title>
 		<link rel="stylesheet" href="/css/app.css">
 	</head>
-	<body>
+	<body<% if (content.person) { %> class="logged-in"<% } %>>
 		<%- include(view, content) %>
 		<footer>
 			<div class="content">
 				<ul>
-					<li><a href="mailto:dan@phiffer.org">need help?</a></li>
-					<li><a href="https://github.com/dphiffer/organizer.network">organizer.network is open source</a></li>
+					<li><a href="mailto:dan@phiffer.org">Need help?</a></li>
+					<li><a href="https://github.com/dphiffer/organizer.network">Source code</a></li>
 				</ul>
 			</div>
 		</footer>

@@ -5,18 +5,27 @@
 			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
 		</div>
 		<form action="/api/login" method="post" id="login">
+			<% if (context) { %>
+				<input type="hidden" name="context" value="<%= context.slug %>">
+			<% } %>
 			<div class="step"><span class="number">1</span> <span class="text">Login by email</span></div>
-			<label for="email">
-				Email address
-			</label>
-			<input type="email" id="email" name="email" placeholder="email@address.com">
-			<input type="submit" value="Start →">
+			<div class="controls">
+				<label for="email">
+					Email address
+				</label>
+				<input type="email" id="email" name="email" placeholder="email@address.com">
+				<input type="submit" value="Start →">
+			</div>
 			<div class="response"></div>
 			<div class="step"><span class="number">2</span> Setup your profile</div>
 			<div class="step"><span class="number">3</span> Organize and raise hell!</div>
 		</form>
 		<div id="about">
 			We are a group of political organizers gathering on a decentralized computer network, working on a variety of social justice issues. Join us!
+			<% if (context && preview_link) { %>
+				<h2>Join: <%= context.name %></h2>
+				<a href="/group/<%= context.slug %>" class="button">Preview group</a>
+			<% } %>
 		</div>
 		<br class="clear">
 	</div>
