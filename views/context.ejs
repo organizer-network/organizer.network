@@ -28,7 +28,7 @@
 				<% } %>
 				<% for (let m of context.members) { %>
 					<li class="person<%= person && m.person_id == person.id ? ' curr-person' : '' %>">
-						<a href="/<%= m.slug %>"><%= name(m) %></a>
+						<a href="/<%= m.slug %>"><%= m.name || `person ${m.slug}` %></a>
 					</li>
 				<% } %>
 			</ul>

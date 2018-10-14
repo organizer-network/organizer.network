@@ -1,5 +1,21 @@
-<div class="message">
-	<h4 class="person"><a href="/<%= message.slug %>"><%= name(message) %></a></h4>
+<div class="message" id="<%= message.id %>">
+	<h4 class="person"><a href="/<%= message.person_slug %>"><%= message.person_name || `person ${message.person_slug}` %></a></h4>
 	<pre class="message-content"><%= message.content %></pre>
-	<div class="meta timestamp"><%= date(message.created) %></div>
+	<div class="meta reply">
+		<a href="#reply-<%= message.id %>" data-id="<%= message.id %>">
+			<%= message.reply_count %>
+			<% if (message.reply_count == 1) { %>
+				reply
+			<% } else { %>
+				replies
+			<% } %>
+		</a>
+	</div>
+	<div class="meta timestamp">
+		<a href="/group/<%= context.slug %>/<%= message.id %>">
+			<%= new Date(message.created).toISOString() %>
+		</a>
+	</div>
+	<br class="clear">
+	<div id="reply-<%= message.id %>"></div>
 </div>

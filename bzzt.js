@@ -150,7 +150,9 @@ app.get('/', async (req, rsp) => {
 			return rsp.render('page', {
 				title: 'welcome',
 				view: 'login',
-				content: {}
+				content: {
+					context: null
+				}
 			});
 		}
 
@@ -404,13 +406,14 @@ app.get('/logout', (req, rsp) => {
 	rsp.redirect(`${config.base_url}/`);
 });
 
-app.post('/api/send', (req, rsp) => {
+app.post('/api/send', async (req, rsp) => {
 
 	if (! 'body' in req ||
-	    ! 'content' in req.body) {
+	    ! 'content' in req.body ||
+	    req.body.content == '') {
 		return rsp.status(400).send({
 			ok: false,
-			error: "You must type ~something~ in."
+			error: "You gotta type something in."
 		});
 	}
 
@@ -422,32 +425,39 @@ app.post('/api/send', (req, rsp) => {
 		});
 	}
 
-	let content = req.body.content.trim();
-	let context_id = parseInt(req.body.context_id);
+	try {
 
-	curr_person(req)
-	.then((person) => {
+		let content = req.body.content.trim();
+		let context_id = parseInt(req.body.context_id);
 
-		check_membership(person, context_id)
-		.then((member) => {
+		let in_reply_to = null;
+		if ('in_reply_to' in req.body) {
+			in_reply_to = parseInt(req.body.in_reply_to);
+		}
 
-			if (! member) {
-				return rsp.status(403).send({
-					ok: false,
-					error: "You cannot send messages to that context."
-				});
-			}
+		let person = await curr_person(req);
+		let member = await check_membership(person, context_id);
 
-			send_message(person, context_id, content)
-			.then((message) => {
-				return rsp.send({
-					ok: true,
-					message_id: message.id
-				});
+		if (! member) {
+			return rsp.status(403).send({
+				ok: false,
+				error: "You cannot send messages to that context."
 			});
+		}
 
+		let message = await send_message(person, context_id, in_reply_to, content);
+		return rsp.send({
+			ok: true,
+			message: message
 		});
-	});
+
+	} catch(err) {
+		console.log(err.stack);
+		return rsp.status(500).send({
+			ok: false,
+			error: "Could not send message."
+		});
+	}
 
 });
 
@@ -538,43 +548,107 @@ app.post('/api/profile', async (req, rsp) => {
 	})
 });
 
-app.get('/api/message/:id', (req, rsp) => {
+app.get('/api/message/:id', async (req, rsp) => {
 
-	db.query(`
-		SELECT message.*, person.name, person.slug
-		FROM message, person
-		WHERE message.id = $1
-		  AND message.person_id = person.id
-	`, [req.params.id], (err, res) => {
+	try {
+		let query = await db.query(`
+			SELECT message.*,
+			       person.name AS person_name, person.slug AS person_slug
+			FROM message, person
+			WHERE message.id = $1
+			  AND message.person_id = person.id
+		`, [req.params.id]);
 
-		if (err || res.rows.length == 0) {
+		if (query.rows.length == 0) {
 			return rsp.status(404).send({
 				ok: false,
 				error: 'Message not found.'
 			});
 		}
 
-		let message = res.rows[0];
+		let message = query.rows[0];
+		let person = await curr_person(req);
+		let member = await check_membership(person, message.context_id);
 
-		curr_person(req)
-		.then((person) => {
-
-			check_membership(person, message.context_id)
-			.then((member) => {
-
-				if (! member) {
-					return rsp.status(403).send({
-						ok: false,
-						error: 'You are not authorized to load that message.'
-					});
-				}
-
-				rsp.render('message', {
-					message: message
-				});
+		if (! member) {
+			return rsp.status(403).send({
+				ok: false,
+				error: 'You are not authorized to load that message.'
 			});
+		}
+
+		query = await db.query(`
+			SELECT COUNT(id) AS reply_count
+			FROM message
+			WHERE in_reply_to = $1
+		`, [req.params.id]);
+
+		message.reply_count = query.rows[0].reply_count;
+
+		rsp.render('message', {
+			message: message
 		});
-	});
+
+	} catch (err) {
+		console.log(err.stack);
+		return error_page(rsp, '500');
+	}
+});
+
+app.get('/api/replies/:id', async (req, rsp) => {
+
+	try {
+		let query = await db.query(`
+			SELECT message.*,
+			       person.name AS person_name, person.slug AS person_slug,
+			       context.slug AS context_slug
+			FROM message, person, context
+			WHERE message.id = $1
+			  AND message.person_id = person.id
+			  AND message.context_id = context.id
+		`, [req.params.id]);
+
+		if (query.rows.length == 0) {
+			return rsp.status(404).send({
+				ok: false,
+				error: 'Message not found.'
+			});
+		}
+
+		let message = query.rows[0];
+		let person = await curr_person(req);
+		let member = await check_membership(person, message.context_id);
+
+		if (! member) {
+			return rsp.status(403).send({
+				ok: false,
+				error: 'You are not authorized to load those replies.'
+			});
+		}
+
+		query = await db.query(`
+			SELECT message.*,
+			       person.name AS person_name, person.slug AS person_slug
+			FROM message, person
+			WHERE message.in_reply_to = $1
+			  AND message.person_id = person.id
+			ORDER BY message.created
+		`, [req.params.id]);
+
+		message.replies = query.rows;
+
+		rsp.render('replies', {
+			message: message,
+			context: {
+				id: message.context_id,
+				slug: message.context_slug
+			}
+		});
+
+	} catch (err) {
+		console.log(err.stack);
+		return error_page(rsp, '500');
+	}
 });
 
 app.get('/leave/:id', (req, rsp) => {
@@ -661,23 +735,24 @@ app.use(async (req, rsp) => {
 	error_page(rsp, '404');
 });
 
-function send_message(person, context_id, content) {
+function send_message(person, context_id, in_reply_to, content) {
 	return new Promise((resolve, reject) => {
 		db.query(`
 			INSERT INTO message
-			(person_id, context_id, content, created)
-			VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+			(person_id, context_id, in_reply_to, content, created)
+			VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
 			RETURNING *
-		`, [person.id, context_id, content], (err, res) => {
+		`, [person.id, context_id, in_reply_to, content], (err, res) => {
 			if (err) {
 				console.log('Error sending message:');
 				console.log(err);
 				return reject(err);
 			}
-			let message = res.rows[0];
 			if (res.rows.length == 0) {
 				reject('Could not send message.');
 			} else {
+				let message = res.rows[0];
+				message.reply_count = 0;
 				resolve(message);
 				send_notifications(person, message);
 				db.query(`
@@ -701,23 +776,44 @@ function send_notifications(sender, message) {
 		  AND member.person_id != $2
 		  AND person.id = member.person_id
 		  AND context.id = member.context_id
-	`, [message.context_id, message.person_id], (err, res) => {
-
-		if (err) {
-			console.log(`Error sending notifications for message ${message.id}`);
-			console.log(err);
-			return;
-		}
+	`, [message.context_id, message.person_id], async (err, res) => {
 
 		for (let member of res.rows) {
-			send_email(member.email, `${sender.name} posted in ${member.context_name}`, `${message.content}
+			let subject = `${sender.name} posted in ${member.context_name}`;
+
+			try {
+				if (message.in_reply_to) {
+					let query = await db.query(`
+						SELECT content
+						FROM message
+						WHERE id = $1
+					`, [message.in_reply_to]);
+
+					subject = `Re: ${query.rows[0].content}`;
+					subject = subject.replace(/\s+/g, ' ');
+					if (subject.length > 100) {
+						subject = subject.substr(0, 100) + '...';
+					}
+				}
+			} catch(err) {
+				console.log(err.stack);
+			}
+
+			if (err) {
+				console.log(`Error sending notifications for message ${message.id}`);
+				console.log(err);
+				return;
+			}
+
+			send_email(member.email, subject, `${message.content}
 
 ---
-${member.context_name}:
-${config.base_url}/group/${member.context_slug}
+Permalink:
+${config.base_url}/group/${member.context_slug}/${message.id}
 
 Unsubscribe:
 ${config.base_url}/leave/${member.leave_slug}`);
+
 		}
 
 	});
@@ -881,15 +977,45 @@ function get_contexts(person) {
 async function add_context_details(context) {
 
 	let query = await db.query(`
-		SELECT message.*, person.name, person.slug
+		SELECT message.*,
+		       person.name AS person_name, person.slug AS person_slug
 		FROM message, person
 		WHERE message.context_id = $1
 		  AND message.person_id = person.id
+		  AND message.in_reply_to IS NULL
 		ORDER BY message.created DESC
 		LIMIT 10
 	`, [context.id]);
 
 	context.messages = query.rows;
+
+	let ids = context.messages.map(msg => msg.id);
+	let placeholders = [];
+	for (let i = 0; i < ids.length; i++) {
+		placeholders.push('$' + (i + 1));
+	}
+	placeholders = placeholders.join(', ');
+
+	query = await db.query(`
+		SELECT in_reply_to AS id,
+		       COUNT(id) AS reply_count
+		FROM message
+		WHERE in_reply_to IN (${placeholders})
+		GROUP BY in_reply_to
+	`, ids);
+
+	let replies = {};
+	for (let reply of query.rows) {
+		replies[reply.id] = reply.reply_count;
+	}
+
+	for (let message of context.messages) {
+		if (message.id in replies) {
+			message.reply_count = replies[message.id];
+		} else {
+			message.reply_count = 0;
+		}
+	}
 
 	query = await db.query(`
 		SELECT member.person_id, person.name, person.slug
@@ -936,14 +1062,6 @@ function send_email(to, subject, body) {
 function normalize_email(email) {
 	return email.trim().toLowerCase();
 }
-
-app.locals.date = date => {
-	return date_format(new Date(date), 'isoDateTime');
-};
-
-app.locals.name = person => {
-	return person.name || `person ${person.slug}`;
-};
 
 function random(count) {
 	const chars = 'abcdefghijkmnpqrstuwxyz0123456789';
