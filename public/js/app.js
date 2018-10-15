@@ -201,6 +201,12 @@
 			});
 		});
 
+		if ($('#leave').length > 0) {
+			setTimeout(function() {
+				window.location = '/';
+			}, 5000);
+		}
+
 	});
 
 })();

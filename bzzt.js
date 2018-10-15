@@ -132,7 +132,7 @@ db.query(`
 
 function error_page(rsp, type) {
 	rsp.render('page', {
-		title: 'error',
+		title: 'Error',
 		view: 'error',
 		content: {
 			type: type
@@ -148,7 +148,7 @@ app.get('/', async (req, rsp) => {
 
 		if (! person) {
 			return rsp.render('page', {
-				title: 'welcome',
+				title: 'Welcome',
 				view: 'login',
 				content: {
 					context: null
@@ -157,21 +157,17 @@ app.get('/', async (req, rsp) => {
 		}
 
 		let contexts = await get_contexts(person);
-		let member = null;
 
-		let title = 'hello';
 		if (contexts.current) {
-			title = contexts.current.name;
-			member = await check_membership(person, contexts.current.id);
+			return rsp.redirect(`/group/${contexts.current.slug}`);
 		}
 
 		rsp.render('page', {
-			title: title,
+			title: 'hello',
 			view: 'home',
 			content: {
 				person: person,
 				contexts: contexts,
-				member: member,
 				base_url: config.base_url
 			}
 		});
@@ -786,7 +782,7 @@ app.get('/leave/:id', (req, rsp) => {
 			}
 
 			rsp.render('page', {
-				title: 'goodbye',
+				title: 'Unsubscribed',
 				view: 'leave',
 				content: {
 					context: member.context_name
