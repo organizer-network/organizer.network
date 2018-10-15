@@ -867,57 +867,52 @@ function send_message(person, context_id, in_reply_to, content) {
 	});
 }
 
-function send_notifications(sender, message) {
+async function send_notifications(sender, message) {
 
-	db.query(`
-		SELECT member.leave_slug, person.email, person.name,
-		       context.name AS context_name, context.slug AS context_slug
-		FROM member, person, context
-		WHERE member.context_id = $1
-		  AND member.person_id != $2
-		  AND person.id = member.person_id
-		  AND context.id = member.context_id
-	`, [message.context_id, message.person_id], async (err, res) => {
+	try {
 
-		for (let member of res.rows) {
+		let query = await db.query(`
+			SELECT member.leave_slug, person.email, person.name,
+			       context.name AS context_name, context.slug AS context_slug
+			FROM member, person, context
+			WHERE member.context_id = $1
+			  AND member.person_id != $2
+			  AND person.id = member.person_id
+			  AND context.id = member.context_id
+		`, [message.context_id, message.person_id]);
+
+		let members = query.rows;
+
+		for (let member of members) {
 			let subject = `${sender.name} posted in ${member.context_name}`;
 
-			try {
-				if (message.in_reply_to) {
-					let query = await db.query(`
-						SELECT content
-						FROM message
-						WHERE id = $1
-					`, [message.in_reply_to]);
+			if (message.in_reply_to) {
+				query = await db.query(`
+					SELECT content
+					FROM message
+					WHERE id = $1
+				`, [message.in_reply_to]);
 
-					subject = `Re: ${query.rows[0].content}`;
-					subject = subject.replace(/\s+/g, ' ');
-					if (subject.length > 100) {
-						subject = subject.substr(0, 100) + '...';
-					}
+				subject = `Re: ${query.rows[0].content}`;
+				subject = subject.replace(/\s+/g, ' ');
+				if (subject.length > 100) {
+					subject = subject.substr(0, 100) + '...';
 				}
-			} catch(err) {
-				console.log(err.stack);
 			}
 
-			if (err) {
-				console.log(`Error sending notifications for message ${message.id}`);
-				console.log(err);
-				return;
-			}
-
-			send_email(member.email, subject, `${message.content}
+			let rsp = await send_email(member.email, subject, `${message.content}
 
 ---
-Permalink:
+Message link:
 ${config.base_url}/group/${member.context_slug}/${message.id}
 
-Unsubscribe:
+Unsubscribe from ${member.context_name}:
 ${config.base_url}/leave/${member.leave_slug}`);
-
 		}
 
-	});
+	} catch(err) {
+		console.log(err.stack);
+	}
 }
 
 function join_context(person, context_id) {
@@ -1196,8 +1191,8 @@ function send_email(to, subject, body) {
 
 		if ('sendgrid_api_key' in config) {
 			sendgrid.send(message)
-			.then(() => {
-				resolve();
+			.then((rsp) => {
+				resolve(rsp);
 			})
 			.catch(err => {
 				reject(err);
