@@ -166,7 +166,7 @@
 		});
 
 		if ($('#context').hasClass('thread')) {
-			$('.reply a').click(function(e) {
+			$('.page > .message > .reply a').click(function(e) {
 				e.preventDefault();
 			});
 			form_handler($('.reply-form'), reply_form_handler);
