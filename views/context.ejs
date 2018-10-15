@@ -1,3 +1,14 @@
+<% if (person) { %>
+	<%- include('intro', {
+		person: person,
+		contexts: contexts
+	}) %>
+<% } else { %>
+	<%- include('login', {
+		context: contexts.current,
+		preview_link: false
+	}) %>
+<% } %>
 <div id="context">
 	<div class="content">
 		<div id="messages">
@@ -18,33 +29,17 @@
 				}) %>
 			</div>
 			<% if (context.total_messages > context.messages.length) { %>
-				<% let last_message = context.messages.pop() %>
-				<a href="#more-messages" id="more-messages" class="button" data-before-id="<%= last_message.id %>" data-group="<%= context.slug %>" data-total-messages="<%= context.total_messages %>">More messages →</a>
+				<% if (! member) { %>
+					<a href="#more-messages" id="more-messages" class="button disabled">Login to view more</a>
+				<% } else { %>
+					<% let last_message = context.messages.pop() %>
+					<a href="#more-messages" id="more-messages" class="button" data-before-id="<%= last_message.id %>" data-group="<%= context.slug %>" data-total-messages="<%= context.total_messages %>">More messages →</a>
+				<% } %>
 			<% } else { %>
 				<a href="#more-messages" id="more-messages" class="button disabled">End of messages</a>
 			<% } %>
 		</div>
-		<div id="sidebar">
-			<h2>Members</h2>
-			<ul id="members">
-				<% if (context.members.length == 0) { %>
-					<p>There are no members of this group.</p>
-				<% } %>
-				<% for (let m of context.members) { %>
-					<li class="person<%= person && m.person_id == person.id ? ' curr-person' : '' %>">
-						<a href="/<%= m.slug %>"><%= m.name || `person ${m.slug}` %></a>
-					</li>
-				<% } %>
-			</ul>
-			<% if (member) { %>
-				<h2>Invite link</h2>
-				<p>Share this link to invite others to join the group.</p>
-				<input type="text" value="<%= `${base_url}/join/${context.slug}` %>" id="invite-input">
-				<div id="invite-response"></div>
-				<h2>Ready to leave?</h2>
-				<p><a href="<%= `/leave/${member.leave_slug}` %>">Unsubscribe from this group</a></p>
-			<% } %>
-		</div>
+		<%- include('sidebar') %>
 		<br class="clear">
 	</div>
 </div>

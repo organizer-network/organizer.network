@@ -1,0 +1,21 @@
+<%- include('intro', {
+	person: person,
+	contexts: contexts
+}) %>
+<div id="context" class="thread">
+	<div class="content">
+		<div id="messages">
+			<h2><%= context.name %></h2>
+			<ul>
+				<li><a href="/group/<%= context.slug %>">Back to group page</a></li>
+			</ul>
+			<div id="message-list">
+				<%- include('message-page', {
+					context: context
+				}) %>
+			</div>
+		</div>
+		<%- include('sidebar') %>
+		<br class="clear">
+	</div>
+</div>

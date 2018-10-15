@@ -216,10 +216,58 @@ app.get('/group/:slug', async (req, rsp) => {
 
 		rsp.render('page', {
 			title: contexts.current.name,
-			view: 'home',
+			view: 'context',
 			content: {
 				person: person,
 				contexts: contexts,
+				context: contexts.current,
+				member: member,
+				base_url: config.base_url
+			}
+		});
+
+	} catch(err) {
+		console.log(err);
+		error_page(rsp, '500');
+	}
+
+});
+
+app.get('/group/:slug/:id', async (req, rsp) => {
+
+	try {
+
+		let context = await get_context(req.params.slug);
+		if (! context) {
+			return error_page(rsp, '404');
+		}
+
+		let person = await curr_person(req);
+		let member = await check_membership(person, context.id);
+
+		if (! person || ! member) {
+			return rsp.redirect(`/group/${req.params.slug}`);
+		}
+
+		if (person.current_id != context.id) {
+			person.current_id = context.id;
+			db.query(`
+				UPDATE person
+				SET context_id = $1
+				WHERE id = $2
+			`, [context.id, person.id]);
+		}
+
+		let id = parseInt(req.params.id);
+		let contexts = await get_contexts(person, id);
+
+		rsp.render('page', {
+			title: contexts.current.name,
+			view: 'thread',
+			content: {
+				person: person,
+				contexts: contexts,
+				context: contexts.current,
 				member: member,
 				base_url: config.base_url
 			}
@@ -627,7 +675,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		if (! member) {
 			return rsp.status(403).send({
 				ok: false,
-				error: 'You are not authorized to load those replies.'
+				error: 'You have to be a member of the group to read replies.'
 			});
 		}
 
@@ -641,6 +689,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		`, [req.params.id]);
 
 		message.replies = query.rows;
+		await add_reply_counts(message.replies);
 
 		rsp.render('replies', {
 			message: message,
@@ -979,7 +1028,7 @@ function get_context(slug) {
 	});
 }
 
-function get_contexts(person) {
+function get_contexts(person, message_id) {
 
 	return new Promise(async (resolve, reject) => {
 
@@ -1018,7 +1067,21 @@ function get_contexts(person) {
 						WHERE id = $1
 					`, [person.context_id]);
 
-					contexts.current = await add_context_details(query.rows[0]);
+					let current = query.rows[0];
+
+					if (message_id) {
+						query = await db.query(`
+							SELECT message.*,
+							       person.slug AS person_slug, person.name AS person_name
+							FROM message, person
+							WHERE (message.id = $1 OR in_reply_to = $1)
+							  AND message.person_id = person.id
+							ORDER BY created
+						`, [message_id]);
+						current.thread = query.rows;
+					}
+
+					contexts.current = await add_context_details(current);
 				}
 			}
 
@@ -1032,62 +1095,48 @@ function get_contexts(person) {
 
 async function add_context_details(context, before_id) {
 
-	let before_clause = '';
-	let values = [context.id];
-	if (before_id) {
-		before_clause = 'AND message.id < $2';
-		values.push(before_id);
-	}
+	var query;
 
-	let query = await db.query(`
-		SELECT message.*,
-		       person.name AS person_name, person.slug AS person_slug
-		FROM message, person
-		WHERE message.context_id = $1
-		  ${before_clause}
-		  AND message.person_id = person.id
-		  AND message.in_reply_to IS NULL
-		ORDER BY message.created DESC
-		LIMIT 10
-	`, values);
+	if (context.thread) {
 
-	context.messages = query.rows;
+		context.messages = context.thread.splice(0, 1);
+		context.messages[0].replies = context.thread;
+		context.messages[0].reply_count = context.messages[0].replies.length;
+		await add_reply_counts(context.messages[0].replies);
 
-	query = await db.query(`
-		SELECT COUNT(id) AS total_messages
-		FROM message
-		WHERE context_id = $1
-		  AND in_reply_to IS NULL
-	`, [context.id]);
+	} else {
 
-	context.total_messages = query.rows[0].total_messages;
-
-	let ids = context.messages.map(msg => msg.id);
-	let placeholders = [];
-	for (let i = 0; i < ids.length; i++) {
-		placeholders.push('$' + (i + 1));
-	}
-	placeholders = placeholders.join(', ');
-
-	query = await db.query(`
-		SELECT in_reply_to AS id,
-		       COUNT(id) AS reply_count
-		FROM message
-		WHERE in_reply_to IN (${placeholders})
-		GROUP BY in_reply_to
-	`, ids);
-
-	let replies = {};
-	for (let reply of query.rows) {
-		replies[reply.id] = reply.reply_count;
-	}
-
-	for (let message of context.messages) {
-		if (message.id in replies) {
-			message.reply_count = replies[message.id];
-		} else {
-			message.reply_count = 0;
+		let before_clause = '';
+		let values = [context.id];
+		if (before_id) {
+			before_clause = 'AND message.id < $2';
+			values.push(before_id);
 		}
+
+		query = await db.query(`
+			SELECT message.*,
+			       person.name AS person_name, person.slug AS person_slug
+			FROM message, person
+			WHERE message.context_id = $1
+			  ${before_clause}
+			  AND message.person_id = person.id
+			  AND message.in_reply_to IS NULL
+			ORDER BY message.created DESC
+			LIMIT 10
+		`, values);
+
+		context.messages = query.rows;
+
+		query = await db.query(`
+			SELECT COUNT(id) AS total_messages
+			FROM message
+			WHERE context_id = $1
+			  AND in_reply_to IS NULL
+		`, [context.id]);
+
+		context.total_messages = query.rows[0].total_messages;
+
+		await add_reply_counts(context.messages);
 	}
 
 	query = await db.query(`
@@ -1101,6 +1150,42 @@ async function add_context_details(context, before_id) {
 	context.members = query.rows;
 
 	return context;
+}
+
+async function add_reply_counts(messages) {
+
+	if (messages.length == 0) {
+		return;
+	}
+
+	let ids = messages.map(msg => msg.id);
+	let placeholders = [];
+	for (let i = 0; i < ids.length; i++) {
+		placeholders.push('$' + (i + 1));
+	}
+
+	placeholders = placeholders.join(', ');
+
+	query = await db.query(`
+		SELECT in_reply_to AS id,
+			   COUNT(id) AS reply_count
+		FROM message
+		WHERE in_reply_to IN (${placeholders})
+		GROUP BY in_reply_to
+	`, ids);
+
+	let replies = {};
+	for (let reply of query.rows) {
+		replies[reply.id] = reply.reply_count;
+	}
+
+	for (let message of messages) {
+		if (message.id in replies) {
+			message.reply_count = replies[message.id];
+		} else {
+			message.reply_count = 0;
+		}
+	}
 }
 
 function send_email(to, subject, body) {

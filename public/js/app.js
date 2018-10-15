@@ -36,6 +36,27 @@
 		});
 	}
 
+	function reply_form_handler(rsp, el) {
+		$(el).find('textarea[name="content"]').val('');
+		$.get('/api/message/' + rsp.message.id, function(rsp) {
+
+			var $replies = $(el).closest('.replies');
+			var $message = $(el).closest('.message');
+
+			$replies.find('.message-list').append(rsp);
+			var $timestamp = $replies.find('.message-list .message:last-child .timestamp a');
+			format_timestamp($timestamp);
+
+			$('#members li:eq(0)').before($('#members li.curr-person'));
+			$(el).find('.response').html('');
+
+			var count = $replies.find('.message-list .message').length;
+			var label = (count == 1) ? ' reply' : ' replies';
+			$message.find('> .reply a').html(count + label);
+
+		});
+	}
+
 	function format_timestamp(el) {
 		var iso_date = $(el).html().trim();
 		var nice_timestamp = moment(iso_date).format('MMM D, YYYY, h:mma');
@@ -59,25 +80,17 @@
 						$('#reply-' + id).find('.timestamp a').each(function(index, el) {
 							format_timestamp(el);
 						});
-						form_handler($('#reply-' + id).find('form'), function(rsp, el) {
-							$(el).find('textarea[name="content"]').val('');
-							$.get('/api/message/' + rsp.message.id, function(rsp) {
-
-								var $replies = $(el).closest('.replies');
-								var $message = $(el).closest('.message');
-
-								$replies.find('.message-list').append(rsp);
-								var $timestamp = $replies.find('.message-list .message:last-child .timestamp a');
-								format_timestamp($timestamp);
-								$('#members li:eq(0)').before($('#members li.curr-person'));
-								$(el).find('.response').html('');
-
-								var count = $replies.find('.message-list .message').length;
-								var label = (count == 1) ? ' reply' : ' replies';
-								$message.find('.reply a').html(count + label);
-
-							});
-						});
+						form_handler($('#reply-' + id).find('form'), reply_form_handler);
+					})
+					.fail(function(rsp) {
+						if ('responseJSON' in rsp) {
+							rsp = rsp.responseJSON;
+						}
+						if ('error' in rsp) {
+							$('#reply-' + id).html('<div class="replies"><div class="response">' + rsp.error + '</div></div>');
+						} else {
+							$('#reply-' + id).html('<div class="replies"><div class="response">Error loading replies.</div></div>');
+						}
 					});
 				} else {
 					$('#reply-' + id).html('');
@@ -114,7 +127,7 @@
 		});
 
 		$("#send #content").keyup(function(e) {
-			while($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css("borderTopWidth")) + parseFloat($(this).css("borderBottomWidth"))) {
+			while ($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css("borderTopWidth")) + parseFloat($(this).css("borderBottomWidth"))) {
 				$(this).height($(this).height() + 1);
 			};
 		});
@@ -152,7 +165,14 @@
 			}
 		});
 
-		setup_replies('.reply a');
+		if ($('#context').hasClass('thread')) {
+			$('.reply a').click(function(e) {
+				e.preventDefault();
+			});
+			form_handler($('.reply-form'), reply_form_handler);
+		} else {
+			setup_replies('.reply a');
+		}
 
 		$('#more-messages').click(function(e) {
 			e.preventDefault();

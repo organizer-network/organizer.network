@@ -1,0 +1,21 @@
+<div id="sidebar">
+	<h2>Members</h2>
+	<ul id="members">
+		<% if (context.members.length == 0) { %>
+			<p>There are no members of this group.</p>
+		<% } %>
+		<% for (let m of context.members) { %>
+			<li class="person<%= person && m.person_id == person.id ? ' curr-person' : '' %>">
+				<a href="/<%= m.slug %>"><%= m.name || `person ${m.slug}` %></a>
+			</li>
+		<% } %>
+	</ul>
+	<% if (member) { %>
+		<h2>Invite link</h2>
+		<p>Share this link to invite others to join the group.</p>
+		<input type="text" value="<%= `${base_url}/join/${context.slug}` %>" id="invite-input">
+		<div id="invite-response"></div>
+		<h2>Ready to leave?</h2>
+		<p><a href="<%= `/leave/${member.leave_slug}` %>">Unsubscribe from this group</a></p>
+	<% } %>
+</div>

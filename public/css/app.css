@@ -241,6 +241,15 @@ input[type="submit"]:active,
 	border-bottom: 2px solid #333;
 }
 
+#context.thread #message-list {
+	padding-bottom: 0;
+	border-bottom: none;
+}
+
+#context.thread #messages {
+	padding-bottom: 1em;
+}
+
 #about {
 	padding-top: 1.5em;
 	font-size: 20px;
@@ -393,11 +402,20 @@ input[type="submit"]:active,
 	margin-top: 1em;
 }
 
+#context.thread .page > .message:first-child {
+	margin-top: 0;
+}
+
 .replies {
 	padding-left: 1.5em;
 	border-left: 4px solid #6835E7;
 	border-top: 4px solid #6835E7;
 	margin-bottom: 2em;
+}
+
+#context.thread .replies {
+	padding-left: 0;
+	border-left: 0;
 }
 
 .replies .message {
@@ -406,8 +424,8 @@ input[type="submit"]:active,
 	padding: 0.5em 0 1.5em 0;
 }
 
-.replies .reply {
-	display: none;
+#context.thread .replies .message {
+	padding: 0 0 1em 0;
 }
 
 .reply-form {
@@ -445,12 +463,18 @@ input[type="submit"]:active,
 }
 
 .reply a {
-	color: #6835E7 !important;
+	color: #999 !important;
 	text-decoration: none;
 }
 
 .reply a:hover {
+	color: #4E6FFF !important;
 	text-decoration: underline;
+}
+
+#context.thread .reply a.selected:hover {
+	text-decoration: none;
+	cursor: default;
 }
 
 .reply a.selected {
