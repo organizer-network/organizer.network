@@ -86,5 +86,5 @@ $ git clone https://github.com/organizer-network/organizer.network.git .
 
 ```
 $ cd setup
-$ sudo ./ubuntu_setup.sh
+$ ./ubuntu_setup.sh
 ```
