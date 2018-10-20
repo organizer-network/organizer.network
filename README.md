@@ -39,7 +39,7 @@ $ cp config.js.example config.js
 
 Database setup:
 
-(Ubuntu users may need to `createuser` and allow local connections before they do this, described below.)
+(Ubuntu users may need to `createuser` and allow local connections before they do this, [described below](#postgresql-on-ubuntu).)
 
 ```
 $ cd db/
@@ -52,7 +52,7 @@ Run the server:
 $ npm run
 ```
 
-Load it up in a browser! By default it can be reached from `https://localhost:5000/`. If you used a self-signed SSL certificate (described below) you will need to click through a security warning.
+Load it up in a browser! By default it can be reached from `https://localhost:5000/`. If you used a self-signed SSL certificate ([described below](#ssl-certificates)) you will need to click through a security warning.
 
 ## Versioning
 
