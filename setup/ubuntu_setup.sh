@@ -20,13 +20,14 @@ sudo apt update
 sudo apt install -y nginx nodejs postgresql postgresql-contrib build-essential jq
 sudo npm install -g pm2
 
-sudo cp /etc/postgresql/10/main/pg_hba.conf /etc/postgresql/10/main/pg_hba.conf.bak
-sudo cp "$PROJECT_PATH/pg_hba.conf" /etc/postgresql/10/main/pg_hba.conf
-sudo chown postgres:postgres /etc/postgresql/10/main/pg_hba.conf
-sudo chmod 640 /etc/postgresql/10/main/pg_hba.conf
+sudo cp /etc/postgresql/11/main/pg_hba.conf /etc/postgresql/11/main/pg_hba.conf.bak
+sudo cp "$PROJECT_PATH/setup/pg_hba.conf" /etc/postgresql/11/main/pg_hba.conf
+sudo chown postgres:postgres /etc/postgresql/11/main/pg_hba.conf
+sudo chmod 640 /etc/postgresql/11/main/pg_hba.conf
 
 sudo -u postgres createuser -d `whoami`
-sudo systemctl restart postgres
+sudo -u postgres createdb `whoami`
+sudo systemctl restart postgresql
 
 cd "$PROJECT_PATH"
 npm install
@@ -36,9 +37,12 @@ make setup
 
 cd "$PROJECT_PATH"
 cp setup/config.js.setup config.js
-SECRET=`openssl rand -base64 32`
-sed -e "s/\(db_dsn:.*\)dbname/\1$VERSION/" \
-    -e "s/session_secret:.*$/session_secret: '$SECRET',/" \
+SECRET=`openssl rand -hex 24`
+IP_ADDR=`curl -s -XPOST https://organizer.network/api/ping | jq -r ".pong"`
+BASE_URL="http://$IP_ADDR"
+sed -e "s/base_url: ''/base_url: '$BASE_URL'/" \
+    -e "s/\(db_dsn:.*\)dbname/\1$VERSION/" \
+    -e "s/session_secret: ''/session_secret: '$SECRET'/" \
     -i.bak config.js
 
 pm2 start organizer.network.js

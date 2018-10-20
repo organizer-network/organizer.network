@@ -13,7 +13,7 @@ module.exports = {
 	port: 5000,
 	db_dsn: "postgres://localhost:5432/dbname",
 
-	session_secret: '', // openssl rand -base64 32
+	session_secret: '', // openssl rand -hex 24
 
 	email_from: '"organizer.network" <replies@mail.organizer.network>',
 

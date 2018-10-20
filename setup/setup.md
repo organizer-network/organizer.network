@@ -1,10 +1,10 @@
 # Server setup
 
-I've been running the public [organizer.network](https://organizer.network/) website on [pm2](http://pm2.keymetrics.io/) behind an [nginx reverse proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/). DigitalOcean has [a tutorial](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-16-04) that might be worth looking at.
+We run the public [organizer.network](https://organizer.network/) website on [pm2](http://pm2.keymetrics.io/) behind an [nginx reverse proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/). DigitalOcean has [a tutorial](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-16-04) that might be worth looking at.
 
-I'll describe the specific setup process here as a reference.
+I'll describe the specific setup process we used as a reference.
 
-* Create a new Ubuntu 18.10 Droplet on [Digital Ocean](https://www.digitalocean.com/) (or on your preferred hosting provider). The smallest size should be sufficient.
+* Create a new Ubuntu 18.04 Droplet on [Digital Ocean](https://www.digitalocean.com/) (or on your preferred hosting provider). The smallest size should be sufficient.
 
 ![Create Droplet](1.png)
 
@@ -22,6 +22,8 @@ I'll describe the specific setup process here as a reference.
 ```
 $ ssh root@[your ip address]
 ```
+
+Accept the SSH key fingerprint by typing `yes`. You only need to do this once.
 
 Note: SSH keys will only "just work" if you use the default `id_rsa` key name. Otherwise you'll need to set a `-i ~/.ssh/[your private key]` argument for the `ssh` command.
 

@@ -13,7 +13,7 @@ _This has only been tested on macOS and Ubuntu, but there's no reason to think i
 Dependencies:
 
 * node.js 8 or 10 ([macOS](https://nodejs.org/en/), [Ubuntu](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions))
-* PostgreSQL 10.x ([macOS](https://wiki.postgresql.org/wiki/Homebrew), [Ubuntu](https://tecadmin.net/install-postgresql-server-on-ubuntu/))
+* PostgreSQL 10 or 11 ([macOS](https://wiki.postgresql.org/wiki/Homebrew), [Ubuntu](https://tecadmin.net/install-postgresql-server-on-ubuntu/))
 
 Clone the repo:
 
