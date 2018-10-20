@@ -666,14 +666,6 @@ app.get('/api/replies/:id', async (req, rsp) => {
 
 		let message = query.rows[0];
 		let person = await curr_person(req);
-		let member = await check_membership(person, message.context_id);
-
-		if (! member) {
-			return rsp.status(403).send({
-				ok: false,
-				error: 'You have to be a member of the group to read replies.'
-			});
-		}
 
 		query = await db.query(`
 			SELECT message.*,
