@@ -29,5 +29,5 @@ module.exports = {
 	}*/
 
 	// OR ... you can use SendGrid instead
-	//sendgrid_api_key: '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'
+	//sendgrid_api_key: 'xxxxxxxxxxx'
 };

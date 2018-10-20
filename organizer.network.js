@@ -95,7 +95,7 @@ db.connect();
 
 // Setup SMTP if it's configured
 if ('smtp' in config) {
-	const smtp_transport = nodemailer.createTransport(config.smtp);
+	var smtp_transport = nodemailer.createTransport(config.smtp);
 }
 
 // Setup SendGrid if it's configured
@@ -163,7 +163,7 @@ app.get('/', async (req, rsp) => {
 		}
 
 		rsp.render('page', {
-			title: 'hello',
+			title: 'Hello',
 			view: 'home',
 			content: {
 				person: person,
@@ -173,7 +173,7 @@ app.get('/', async (req, rsp) => {
 		});
 
 	} catch(err) {
-		console.log(err);
+		console.log(err.stack);
 		error_page(rsp, '500');
 	}
 });
@@ -223,7 +223,7 @@ app.get('/group/:slug', async (req, rsp) => {
 		});
 
 	} catch(err) {
-		console.log(err);
+		console.log(err.stack);
 		error_page(rsp, '500');
 	}
 
@@ -270,7 +270,7 @@ app.get('/group/:slug/:id', async (req, rsp) => {
 		});
 
 	} catch(err) {
-		console.log(err);
+		console.log(err.stack);
 		error_page(rsp, '500');
 	}
 
@@ -304,7 +304,7 @@ app.get('/join/:slug', async (req, rsp) => {
 		}
 
 	} catch(err) {
-		console.log(err);
+		console.log(err.stack);
 		return error_page(rsp, '500');
 	}
 
@@ -359,6 +359,7 @@ ${login_url}
 				});
 			})
 			.catch((err) => {
+				console.log(err.stack);
 				return rsp.status(500).send({
 					ok: false,
 					error: "Error sending login email."

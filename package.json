@@ -2,9 +2,9 @@
   "name": "organizer.network",
   "version": "0.0.3",
   "description": "Tools and strategies for social justice organizing",
-  "main": "craw.js",
+  "main": "organizer.network.js",
   "scripts": {
-    "start": "node craw.js"
+    "start": "node organizer.network.js"
   },
   "repository": {
     "type": "git",
