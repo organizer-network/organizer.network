@@ -21,7 +21,7 @@ migrate_versions:
 	psql $(TO) < schema/migrate.$(TO).sql
 	mkdir -p $(TO)
 	pg_dump $(TO) > $(TO)/$(NOW).sql
-	sed -e "s/\(db_dsn:.*\)$FROM/\1$TO/" -i.bak config.js
+	sed -e "s/\(db_dsn:.*\)$(FROM)/\1$(TO)/" -i.bak ../config.js
 
 bzzt:
 	FROM=aarg TO=bzzt make migrate_versions
