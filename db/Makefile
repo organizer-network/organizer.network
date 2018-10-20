@@ -15,10 +15,13 @@ backup:
 	pg_dump $(VERSION) > $(VERSION)/$(NOW).sql
 
 migrate_versions:
-	VERSION=$(FROM) make backup
+	mkdir -p $(FROM)
+	pg_dump $(FROM) > $(FROM)/$(NOW).sql
 	psql `whoami` -c "ALTER DATABASE $(FROM) RENAME TO $(TO);"
 	psql $(TO) < schema/migrate.$(TO).sql
-	VERSION=$(TO) make backup
+	mkdir -p $(TO)
+	pg_dump $(TO) > $(TO)/$(NOW).sql
+	sed -e "s/\(db_dsn:.*\)$FROM/\1$TO/" -i.bak config.js
 
 bzzt:
 	FROM=aarg TO=bzzt make migrate_versions
