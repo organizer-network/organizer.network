@@ -310,6 +310,14 @@ app.get('/join/:slug', async (req, rsp) => {
 
 });
 
+app.post('/api/ping', (req, rsp) => {
+	const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	return rsp.send({
+		ok: true,
+		pong: ip
+	});
+});
+
 const login_hashes = {};
 app.post('/api/login', (req, rsp) => {
 
