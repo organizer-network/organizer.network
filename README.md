@@ -6,7 +6,7 @@ _Tools and strategies for social justice organizing._
 
 It's worth pointing out that this project is still in its early days, so proceed with a sense of adventure and patience.
 
-## Setup
+## Developer setup
 
 _This has only been tested on macOS and Ubuntu, but there's no reason to think it wouldn't work on other platforms._
 
@@ -56,8 +56,8 @@ Load it up in a browser! By default it can be reached from `https://localhost:50
 
 ## Versioning
 
-Current release: __[v0.0.2 "bzzt"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.2)__
-Under development: __v0.0.3 "craw"__
+* Current release: __[v0.0.2 "bzzt"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.2)__
+* Under development: __v0.0.3 "craw"__
 
 Versions names are based on [Tom Gauld's *A Noisy Alphabet*](http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom).
 
