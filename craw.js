@@ -1,5 +1,5 @@
 // organizer.network
-// v0.0.2 "bzzt"
+// v0.0.3 "craw"
 
 // versioning based on Tom Gauld's A Noisy Alphabet
 // http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom
@@ -872,7 +872,8 @@ async function send_notifications(sender, message) {
 	try {
 
 		let query = await db.query(`
-			SELECT member.leave_slug, person.email, person.name,
+			SELECT member.leave_slug, member.person_id,
+			       person.email, person.name,
 			       context.name AS context_name, context.slug AS context_slug
 			FROM member, person, context
 			WHERE member.context_id = $1
@@ -908,6 +909,16 @@ ${config.base_url}/group/${member.context_slug}/${message.id}
 
 Unsubscribe from ${member.context_name}:
 ${config.base_url}/leave/${member.leave_slug}`);
+
+			if (rsp && rsp.length > 0 && rsp[0].headers) {
+				let email_id = rsp[0].headers['x-message-id'];
+				db.query(`
+					INSERT INTO email_tx
+					(id, message_id, person_id, created)
+					VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+				`, [email_id, message.id, member.person_id]);
+			}
+
 		}
 
 	} catch(err) {

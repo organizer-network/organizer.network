@@ -1,4 +1,4 @@
-VERSION := bzzt
+VERSION := craw
 NOW := $(shell TZ=UTC date +%Y%m%d-%H%M%S)
 
 setup:
@@ -8,16 +8,20 @@ setup:
 	mkdir -p $(VERSION)
 	pg_dump $(VERSION) > $(VERSION)/$(NOW).sql
 
-migrate: bzzt
+migrate: bzzt craw
 
 backup:
 	mkdir -p $(VERSION)
 	pg_dump $(VERSION) > $(VERSION)/$(NOW).sql
 
+migrate_versions:
+	VERSION=$(FROM) make backup
+	psql `whoami` -c "ALTER DATABASE $(FROM) RENAME TO $(TO);"
+	psql $(TO) < schema/migrate.$(TO).sql
+	VERSION=$(TO) make backup
+
 bzzt:
-	mkdir -p aarg
-	pg_dump aarg > aarg/$(NOW).sql
-	psql `whoami` -c "ALTER DATABASE aarg RENAME TO bzzt;"
-	psql bzzt < schema/migrate.bzzt.sql
-	mkdir -p bzzt
-	pg_dump bzzt > bzzt/$(NOW).sql
+	FROM=aarg TO=bzzt make migrate_versions
+
+craw:
+	FROM=bzzt TO=craw make migrate_versions
