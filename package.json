@@ -1,10 +1,10 @@
 {
   "name": "organizer.network",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Tools and strategies for social justice organizing",
-  "main": "bzzt.js",
+  "main": "craw.js",
   "scripts": {
-    "start": "node bzzt.js"
+    "start": "node craw.js"
   },
   "repository": {
     "type": "git",
