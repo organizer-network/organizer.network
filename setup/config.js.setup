@@ -1,0 +1,33 @@
+module.exports = {
+
+	/*ssl: {
+		key: "ssl/key.pem",
+		cert: "ssl/cert.pem"
+	},*/
+
+	cors_origins: [
+		"*"
+	],
+
+	base_url: '',
+	port: 5000,
+	db_dsn: "postgres://localhost:5432/dbname",
+
+	session_secret: '', // openssl rand -base64 32
+
+	email_from: '"organizer.network" <replies@mail.organizer.network>',
+
+	// EITHER ... use plain vanilla SMTP
+	/*smtp: {
+		host: 'smtp.example.com',
+		port: 465,
+		secure: true, // true for 465, false for other ports
+		auth: {
+			user: 'email username',
+			pass: 'email password'
+		}
+	}*/
+
+	// OR ... you can use SendGrid instead
+	//sendgrid_api_key: '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'
+};
