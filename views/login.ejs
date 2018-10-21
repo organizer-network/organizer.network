@@ -22,8 +22,10 @@
 		</form>
 		<div id="about">
 			We are a group of political organizers gathering on a decentralized computer network, working on a variety of social justice issues. Join us!
-			<% if (context && preview_link) { %>
+			<% if (context) { %>
 				<h2>Join: <%= context.name %></h2>
+			<% } %>
+			<% if (context && preview_link) { %>
 				<a href="/group/<%= context.slug %>" class="button">Preview group</a>
 			<% } %>
 		</div>

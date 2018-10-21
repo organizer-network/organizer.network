@@ -237,6 +237,10 @@ app.get('/group/:slug', async (req, rsp) => {
 			};
 		}
 
+		if (! member && context.parent_id != 0) {
+			return error_page(rsp, '404');
+		}
+
 		rsp.render('page', {
 			title: contexts.current.name,
 			view: 'context',
@@ -308,7 +312,7 @@ app.get('/join/:slug', async (req, rsp) => {
 	try {
 
 		let context = await get_context(req.params.slug);
-		if (! context) {
+		if (! context || context.parent_id != 0) {
 			return error_page(rsp, '404');
 		}
 
@@ -320,6 +324,39 @@ app.get('/join/:slug', async (req, rsp) => {
 				content: {
 					context: context,
 					preview_link: true
+				}
+			});
+		} else {
+			await join_context(person, context.id);
+			rsp.redirect(`${config.base_url}/group/${context.slug}`);
+		}
+
+	} catch(err) {
+		console.log(err.stack);
+		return error_page(rsp, '500');
+	}
+
+});
+
+app.get('/invite/:slug', async (req, rsp) => {
+
+	try {
+
+		let member = await get_invite(req.params.slug);
+		if (! member) {
+			return error_page(rsp, '404');
+		}
+
+		let person = await curr_person(req);
+		let context = await get_context(member.context_slug);
+
+		if (! person) {
+			rsp.render('page', {
+				title: 'Welcome',
+				view: 'login',
+				content: {
+					context: context,
+					preview_link: false
 				}
 			});
 		} else {
@@ -1052,6 +1089,28 @@ function check_membership(person, context_id) {
 				resolve(res.rows[0]);
 			}
 		});
+	});
+}
+
+function get_invite(slug) {
+	return new Promise(async (resolve, reject) => {
+		try {
+			let query = await db.query(`
+				SELECT member.*, context.slug AS context_slug
+				FROM member, context
+				WHERE member.invite_slug = $1
+				  AND member.context_id = context.id
+			`, [slug]);
+
+			if (query.rows.length == 0) {
+				resolve(false);
+			} else {
+				resolve(query.rows[0]);
+			}
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
+		}
 	});
 }
 
