@@ -126,11 +126,11 @@
 			}
 		});
 
-		$("#send #content").keyup(function(e) {
+		/*$("#send #content").keyup(function(e) {
 			while ($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css("borderTopWidth")) + parseFloat($(this).css("borderBottomWidth"))) {
 				$(this).height($(this).height() + 1);
 			};
-		});
+		});*/
 
 		if ($('#context').length > 0) {
 			$('#intro').addClass('above');
