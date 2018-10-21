@@ -219,6 +219,14 @@ app.get('/group/:slug', async (req, rsp) => {
 		let contexts = null;
 
 		if (person) {
+
+			await db.query(`
+				UPDATE person
+				SET context_id = $1
+				WHERE id = $2
+			`, [context.id, person.id]);
+			person.context_id = context.id;
+
 			contexts = await get_contexts(person);
 			if (member && person.current_id != context.id) {
 				person.current_id = context.id;
@@ -1198,7 +1206,7 @@ function get_contexts(person, message_id) {
 					SELECT context.*
 					FROM member, context
 					WHERE member.person_id = $1
-					  AND context.id = member.context_id
+					  AND member.context_id = context.id
 				`, [person.id]);
 
 				contexts.member_of = query.rows;
