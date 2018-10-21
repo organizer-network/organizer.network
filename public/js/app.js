@@ -126,6 +126,19 @@
 			}
 		});
 
+		form_handler('#new-group', function(rsp) {
+			window.location = '/group/' + rsp.group.slug;
+		});
+
+		$('#new-group #name').change(function() {
+			var name = $('#new-group #name').val();
+			var slug = name.toLowerCase();
+			slug = slug.replace(/(\w)'s\s/g, '$1s ');
+			slug = slug.replace(/[^a-z0-9-]+/g, '-');
+			slug = slug.replace(/-$/, '');
+			$('#new-group #slug-input').val(slug);
+		});
+
 		/*$("#send #content").keyup(function(e) {
 			while ($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css("borderTopWidth")) + parseFloat($(this).css("borderBottomWidth"))) {
 				$(this).height($(this).height() + 1);

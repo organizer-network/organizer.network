@@ -178,6 +178,33 @@ app.get('/', async (req, rsp) => {
 	}
 });
 
+app.get('/group', async (req, rsp) => {
+
+	try {
+
+		let person = await curr_person(req);
+		let contexts = await get_contexts(person);
+
+		if (! person) {
+			return rsp.redirect('/');
+		}
+
+		rsp.render('page', {
+			title: 'Create a new group',
+			view: 'new-group',
+			content: {
+				person: person,
+				contexts: contexts,
+				base_url: config.base_url
+			}
+		});
+
+	} catch(err) {
+		console.log(err.stack);
+		error_page(rsp, '500');
+	}
+});
+
 app.get('/group/:slug', async (req, rsp) => {
 
 	try {
@@ -288,7 +315,7 @@ app.get('/join/:slug', async (req, rsp) => {
 		let person = await curr_person(req);
 		if (! person) {
 			rsp.render('page', {
-				title: 'welcome',
+				title: 'Welcome',
 				view: 'login',
 				content: {
 					context: context,
@@ -296,10 +323,7 @@ app.get('/join/:slug', async (req, rsp) => {
 				}
 			});
 		} else {
-			let member = await check_membership(person, context.id);
-			if (! member) {
-				join_context(person, context.id);
-			}
+			await join_context(person, context.id);
 			rsp.redirect(`${config.base_url}/group/${context.slug}`);
 		}
 
@@ -318,23 +342,89 @@ app.post('/api/ping', (req, rsp) => {
 	});
 });
 
-const login_hashes = {};
-app.post('/api/login', (req, rsp) => {
+app.post('/api/group', async (req, rsp) => {
 
-	if (! 'body' in req ||
-	    ! 'email' in req.body) {
-		return rsp.status(400).send({
+	try {
+
+		if (! req.body.name ||
+		    ! req.body.slug ||
+		    ! req.body.visibility) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Please include a name and a URL slug."
+			});
+		}
+
+		let name = req.body.name;
+		let slug = req.body.slug;
+		let visibility = req.body.visibility;
+
+		let person = await curr_person(req);
+		if (! person) {
+			return rsp.status(403).send({
+				ok: false,
+				error: "You must be signed in to create a group."
+			});
+		}
+
+		let context = await get_context(slug);
+		if (context) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Sorry, that group URL is already taken."
+			});
+		}
+
+		let parent_id = -1;
+		if (visibility == 'public') {
+			parent_id = 0;
+		}
+
+		let query = await db.query(`
+			INSERT INTO context
+			(name, slug, parent_id, created)
+			VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+			RETURNING *
+		`, [name, slug, parent_id]);
+
+		let group = query.rows[0];
+
+		await join_context(person, group.id);
+
+		rsp.send({
+			ok: true,
+			group: group
+		});
+
+	} catch(err) {
+		console.log(err.stack);
+		return rsp.status(500).send({
 			ok: false,
-			error: "Please include 'email' for your login."
+			error: "Could not create a new group."
 		});
 	}
 
-	const hash = random(16);
-	const login_url = `${config.base_url}/login/${hash}`;
+});
 
-	const email = normalize_email(req.body.email);
-	const subject = 'organizer.network login link';
-	const body = `Hello,
+const login_hashes = {};
+app.post('/api/login', async (req, rsp) => {
+
+	try {
+
+		if (! 'body' in req ||
+		    ! 'email' in req.body) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Please include 'email' for your login."
+			});
+		}
+
+		const hash = random(16);
+		const login_url = `${config.base_url}/login/${hash}`;
+
+		const email = normalize_email(req.body.email);
+		const subject = 'organizer.network login link';
+		const body = `Hello,
 
 Follow this link to login:
 ${login_url}
@@ -343,80 +433,55 @@ ${login_url}
 
 <3`;
 
-	function callback(id, slug) {
+		let query = await db.query(`
+			SELECT id, slug
+			FROM person
+			WHERE email = $1
+			LIMIT 1
+		`, [email]);
+
+		var id, slug;
+
+		if (query.rows.length == 1) {
+			id = query.rows[0].id;
+			slug = query.rows[0].slug;
+		} else {
+			slug = random(6);
+			query = db.query(`
+				INSERT INTO person
+				(email, slug, created)
+				VALUES ($1, $2, CURRENT_TIMESTAMP)
+				RETURNING *
+			`, [email, slug]);
+			id = query.rows[0].id;
+		}
 
 		login_hashes[id] = hash;
 		setTimeout(function() {
 			delete login_hashes[id];
 		}, 10 * 60 * 1000);
 
-		send_email(email, subject, body)
-			.then((info) => {
-				return rsp.status(200).send({
-					ok: true,
-					id: id,
-					slug: slug
-				});
-			})
-			.catch((err) => {
-				console.log(err.stack);
-				return rsp.status(500).send({
-					ok: false,
-					error: "Error sending login email."
-				});
-			});
-
-		if ('context' in req.body) {
-			get_context(req.body.context)
-			.then(async context => {
-				let person = await get_person(slug);
-				join_context(person, context.id);
-			});
-		}
-	}
-
-	db.query(`
-		SELECT id, slug
-		FROM person
-		WHERE email = $1
-		LIMIT 1
-	`, [email], (err, res) => {
-
-		if (err) {
-			return rsp.status(500).send({
-				ok: false,
-				error: "Error checking 'person' table."
-			});
+		if (req.body.context) {
+			let context = await get_context(req.body.context);
+			let person = await get_person(slug);
+			await join_context(person, context.id);
 		}
 
-		if (res.rows.length == 1) {
-			let id = res.rows[0].id;
-			let slug = res.rows[0].slug;
-			return callback(id, slug);
-		}
+		await send_email(email, subject, body);
 
-		var slug = random(6);
-
-		db.query(`
-			INSERT INTO person
-			(email, slug, created)
-			VALUES ($1, $2, CURRENT_TIMESTAMP)
-			RETURNING *
-		`, [email, slug], (err, res) => {
-
-			if (err) {
-				return rsp.status(500).send({
-					ok: false,
-					error: "Error creating 'person' record."
-				});
-			}
-
-			let id = res.rows[0].id;
-
-			return callback(id, slug);
+		return rsp.send({
+			ok: true,
+			id: id,
+			slug: slug
 		});
 
-	});
+	} catch(err) {
+		console.log(err.stack);
+		return rsp.status(500).send({
+			ok: false,
+			error: "Error creating 'person' record."
+		});
+	}
 
 });
 
@@ -929,20 +994,40 @@ ${config.base_url}/leave/${member.leave_slug}`);
 
 function join_context(person, context_id) {
 
-	let leave_slug = random(16);
-	let invite_slug = random(16);
+	return new Promise(async (resolve, reject) => {
 
-	db.query(`
-		INSERT INTO member
-		(person_id, context_id, leave_slug, invite_slug, created, updated)
-		VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	`, [person.id, context_id, leave_slug, invite_slug]);
+		try {
 
-	db.query(`
-		UPDATE person
-		SET context_id = $1
-		WHERE id = $2
-	`, [context_id, person.id]);
+			await db.query(`
+				UPDATE person
+				SET context_id = $1
+				WHERE id = $2
+			`, [context_id, person.id]);
+
+			let member = await check_membership(person, context_id);
+			if (member) {
+				return resolve(member);
+			}
+
+			let leave_slug = random(16);
+			let invite_slug = random(16);
+
+			let query = await db.query(`
+				INSERT INTO member
+				(person_id, context_id, leave_slug, invite_slug, created, updated)
+				VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+				RETURNING *
+			`, [person.id, context_id, leave_slug, invite_slug]);
+
+			member = query.rows[0];
+			return resolve(member);
+
+		} catch (err) {
+			console.log(err.stack);
+			reject(err);
+		}
+
+	});
 }
 
 function check_membership(person, context_id) {

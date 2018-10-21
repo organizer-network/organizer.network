@@ -56,6 +56,7 @@ ul.back li::before {
 }
 
 label {
+	font-weight: 500;
 	display: block;
 	margin: 2em 0 0.5em 0;
 }
@@ -512,6 +513,23 @@ input[type="submit"]:active,
 	text-decoration: underline;
 }
 
+.radio-group {
+	margin: 1em 0;
+}
+
+.radio-group label {
+	display: inline;
+}
+
+.help {
+	font-size: 0.8em;
+	color: #808080;
+}
+
+.radio-group .help {
+	margin-left: 1em;
+}
+
 .hidden {
 	display: none;
 }
@@ -534,7 +552,7 @@ input[type="submit"]:active,
 		padding-top: 1em;
 	}
 
-	#messages {
+	#messages, #main {
 		float: left;
 		width: calc(66% - 1em);
 		padding-bottom: 5em;
