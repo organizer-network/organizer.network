@@ -90,3 +90,10 @@ $ git clone https://github.com/organizer-network/organizer.network.git .
 $ cd setup
 $ ./ubuntu_setup.sh
 ```
+
+Once the script finishes running you should be able to load up `http://[your ip address]` in a browser. There's one last part you need to configure in `config.js`:
+
+* Either set up the `smtp` config details
+* Or set up a [SendGrid](https://sendgrid.com/) API key
+
+Then once you do that, restart the server with `pm2 restart organizer.network`.
