@@ -231,7 +231,7 @@ app.get('/group/:slug', async (req, rsp) => {
 
 			contexts = await get_contexts(person);
 
-			if (! contexts.current) {
+			if (! contexts.current || contexts.current.id != context.id) {
 				contexts.current = await add_context_details(context);
 			}
 		} else {
@@ -275,11 +275,11 @@ app.get('/group/:slug/:id', async (req, rsp) => {
 		let person = await curr_person(req);
 		let member = await check_membership(person, context.id);
 
-		if (! person || ! member) {
-			return rsp.redirect(`/group/${req.params.slug}`);
+		if (context.parent_id != 0 && ! member) {
+			return error_page(rsp, '404');
 		}
 
-		if (person.current_id != context.id) {
+		if (member && person.current_id != context.id) {
 			person.current_id = context.id;
 			db.query(`
 				UPDATE person
@@ -292,7 +292,7 @@ app.get('/group/:slug/:id', async (req, rsp) => {
 		let contexts = await get_contexts(person, id);
 
 		rsp.render('page', {
-			title: contexts.current.name,
+			title: context.name,
 			view: 'thread',
 			content: {
 				person: person,
@@ -749,7 +749,8 @@ app.get('/api/message/:id', async (req, rsp) => {
 			message: message,
 			context: {
 				slug: message.context_slug
-			}
+			},
+			member: member
 		});
 
 	} catch (err) {
@@ -780,6 +781,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 
 		let message = query.rows[0];
 		let person = await curr_person(req);
+		let member = await check_membership(person, message.context_id);
 
 		query = await db.query(`
 			SELECT message.*,
@@ -798,7 +800,8 @@ app.get('/api/replies/:id', async (req, rsp) => {
 			context: {
 				id: message.context_id,
 				slug: message.context_slug
-			}
+			},
+			member: member
 		});
 
 	} catch (err) {
@@ -845,7 +848,8 @@ app.get('/api/group/:slug', async (req, rsp) => {
 		await add_context_details(context, before_id);
 
 		rsp.render('message-page', {
-			context: context
+			context: context,
+			member: member
 		});
 
 	} catch(err) {
@@ -1209,26 +1213,38 @@ function get_contexts(person, message_id) {
 					return context.id != person.context_id;
 				});
 
+				let thread = null;
+				let context_id = null;
+
 				if (person.context_id) {
+					context_id = person.context_id;
+				}
+
+				if (message_id) {
+					query = await db.query(`
+						SELECT message.*,
+							   person.slug AS person_slug, person.name AS person_name
+						FROM message, person
+						WHERE (message.id = $1 OR in_reply_to = $1)
+						  AND message.person_id = person.id
+						ORDER BY created
+					`, [message_id]);
+					thread = query.rows;
+					context_id = thread[0].context_id;
+				}
+
+				if (context_id) {
 
 					query = await db.query(`
 						SELECT *
 						FROM context
 						WHERE id = $1
-					`, [person.context_id]);
+					`, [context_id]);
 
 					let current = query.rows[0];
 
-					if (message_id) {
-						query = await db.query(`
-							SELECT message.*,
-							       person.slug AS person_slug, person.name AS person_name
-							FROM message, person
-							WHERE (message.id = $1 OR in_reply_to = $1)
-							  AND message.person_id = person.id
-							ORDER BY created
-						`, [message_id]);
-						current.thread = query.rows;
+					if (thread) {
+						current.thread = thread;
 					}
 
 					contexts.current = await add_context_details(current);

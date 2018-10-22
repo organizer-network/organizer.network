@@ -42,6 +42,7 @@
 
 			var $replies = $(el).closest('.replies');
 			var $message = $(el).closest('.message');
+			var $link = $message.find('> .reply a');
 
 			$replies.find('.message-list').append(rsp);
 			var $timestamp = $replies.find('.message-list .message:last-child .timestamp a');
@@ -52,7 +53,10 @@
 
 			var count = $replies.find('.message-list .message').length;
 			var label = (count == 1) ? ' reply' : ' replies';
-			$message.find('> .reply a').html(count + label);
+
+			$link.html(count + label);
+			$link.addClass('selected');
+			$replies.removeClass('no-replies');
 
 		});
 	}

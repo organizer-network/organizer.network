@@ -2,14 +2,18 @@
 	<h4 class="person"><a href="/<%= message.person_slug %>"><%= message.person_name || `person ${message.person_slug}` %></a></h4>
 	<pre class="message-content"><%= message.content %></pre>
 	<div class="meta reply">
-		<a href="/group/<%= context.slug %>/<%= message.id %>#reply-<%= message.id %>" data-id="<%= message.id %>"<% if (message.replies) { %> class="selected"<% } %>>
-			<%= message.reply_count %>
-			<% if (message.reply_count == 1) { %>
-				reply
-			<% } else { %>
-				replies
-			<% } %>
-		</a>
+		<% if (member || message.reply_count > 0) { %>
+			<a href="/group/<%= context.slug %>/<%= message.id %>#reply-<%= message.id %>" data-id="<%= message.id %>"<% if (message.replies && message.reply_count > 0) { %> class="selected"<% } %>>
+		<% } %>
+		<%= message.reply_count %>
+		<% if (message.reply_count == 1) { %>
+			reply
+		<% } else { %>
+			replies
+		<% } %>
+		<% if (member || message.reply_count > 0) { %>
+			</a>
+		<% } %>
 	</div>
 	<div class="meta timestamp">
 		<a href="/group/<%= context.slug %>/<%= message.id %>">

@@ -16,7 +16,7 @@
 			<% if (member) { %>
 				<form id="send" action="/api/send" method="post">
 					<input type="hidden" name="context_id" value="<%= context.id %>">
-					<textarea id="content" name="content" cols="80" rows="3" placeholder="so shines a good deed in a weary world."></textarea>
+					<textarea id="content" name="content" cols="80" rows="3" placeholder="type your message here."></textarea>
 					<input type="submit" value="Send message →">
 					<div class="response"></div>
 				</form>
@@ -25,8 +25,12 @@
 			<% } %>
 			<div id="message-list">
 				<%- include('message-page', {
-					context: context
+					context: context,
+					member: member
 				}) %>
+				<% if (context.total_messages == 0) { %>
+					<h2>Nobody has sent messages here yet.</h2>
+				<% } %>
 			</div>
 			<% if (context.total_messages > context.messages.length) { %>
 				<% if (! member) { %>

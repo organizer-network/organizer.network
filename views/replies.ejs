@@ -1,4 +1,4 @@
-<div class="replies">
+<div class="replies<% if (message.replies.length == 0) { %> no-replies<% } %>">
 	<div class="message-list">
 		<% for (let reply of message.replies) { %>
 			<%- include('message', {
@@ -7,11 +7,15 @@
 			}) %>
 		<% } %>
 	</div>
-	<form action="/api/send" method="post" class="reply-form">
-		<input type="hidden" name="in_reply_to" value="<%= message.id %>">
-		<input type="hidden" name="context_id" value="<%= context.id %>">
-		<textarea id="content" name="content" cols="80" rows="3" placeholder="don’t forget what happened to the person who suddenly got everything they always wanted."></textarea>
-		<input type="submit" value="Send reply →">
-		<div class="response"></div>
-	</form>
+	<% if (member) { %>
+		<form action="/api/send" method="post" class="reply-form">
+			<input type="hidden" name="in_reply_to" value="<%= message.id %>">
+			<input type="hidden" name="context_id" value="<%= context.id %>">
+			<textarea id="content" name="content" cols="80" rows="3" placeholder="type your message here."></textarea>
+			<input type="submit" value="Send reply →">
+			<div class="response"></div>
+		</form>
+	<% } else { %>
+		<a href="/join/<%= context.slug %>" class="button">Join to reply</a>
+	<% } %>
 </div>
