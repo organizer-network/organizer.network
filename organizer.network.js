@@ -990,37 +990,48 @@ app.use(async (req, rsp) => {
 });
 
 function send_message(person, context_id, in_reply_to, content) {
-	return new Promise((resolve, reject) => {
-		db.query(`
-			INSERT INTO message
-			(person_id, context_id, in_reply_to, content, created)
-			VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
-			RETURNING *
-		`, [person.id, context_id, in_reply_to, content], (err, res) => {
-			if (err) {
-				console.log('Error sending message:');
-				console.log(err);
-				return reject(err);
-			}
-			if (res.rows.length == 0) {
-				reject('Could not send message.');
+	return new Promise(async (resolve, reject) => {
+
+		try {
+
+			let query = await db.query(`
+				INSERT INTO message
+				(person_id, context_id, in_reply_to, content, created)
+				VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+				RETURNING *
+			`, [person.id, context_id, in_reply_to, content]);
+
+			let message = query.rows[0];
+			message.reply_count = 0;
+			resolve(message);
+
+			let from = config.email_from;
+			let email_match = from.match(/<\w+@\w+>/);
+
+			if (email_match) {
+				from = `"${person.name}" <${email_match[1]}>`;
 			} else {
-				let message = res.rows[0];
-				message.reply_count = 0;
-				resolve(message);
-				send_notifications(person, message);
-				db.query(`
-					UPDATE member
-					SET updated = CURRENT_TIMESTAMP
-					WHERE person_id = $1
-					  AND context_id = $2
-				`, [person.id, context_id]);
+				// This is assuming config.from_email is set to an email address
+				// without a "name" part, e.g. 'foo@bar.com'
+				from = `"${person.name}" <${from}>`;
 			}
-		});
+
+			send_notifications(person, message, from);
+			await db.query(`
+				UPDATE member
+				SET updated = CURRENT_TIMESTAMP
+				WHERE person_id = $1
+				  AND context_id = $2
+			`, [person.id, context_id]);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
+		}
 	});
 }
 
-async function send_notifications(sender, message) {
+async function send_notifications(sender, message, from) {
 
 	try {
 
@@ -1061,7 +1072,7 @@ Message link:
 ${config.base_url}/group/${member.context_slug}/${message.id}
 
 Unsubscribe from ${member.context_name}:
-${config.base_url}/leave/${member.leave_slug}`);
+${config.base_url}/leave/${member.leave_slug}`, from);
 
 			if (rsp && rsp.length > 0 && rsp[0].headers) {
 				let email_id = rsp[0].headers['x-message-id'];
@@ -1452,11 +1463,15 @@ async function add_reply_counts(messages) {
 	}
 }
 
-function send_email(to, subject, body) {
+function send_email(to, subject, body, from) {
 	return new Promise((resolve, reject) => {
 
+		if (! from) {
+			from = config.email_from;
+		}
+
 		const message = {
-			from: config.email_from,
+			from: from,
 			to: to,
 			subject: subject,
 			text: body
