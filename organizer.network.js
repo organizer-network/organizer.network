@@ -612,8 +612,8 @@ app.post('/api/reply', upload.none(), async (req, rsp) => {
 
 		let reply = req.body;
 
-		let id = reply.headers.match(/Message-Id: <([^>]+)>/i);
-		let in_reply_to = reply.headers.match(/In-Reply-To: <([^>]+)>/i);
+		let id = reply.headers.match(/Message-Id: <([^@]+)@/i);
+		let in_reply_to = reply.headers.match(/In-Reply-To: <([^@]+)@/i);
 
 		let context_id = -1;
 		let message_id = -1;
