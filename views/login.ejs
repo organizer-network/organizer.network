@@ -5,8 +5,11 @@
 			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
 		</div>
 		<form action="/api/login" method="post" id="login">
-			<% if (context) { %>
-				<input type="hidden" name="context" value="<%= context.slug %>">
+			<% if (invite) { %>
+				<input type="hidden" name="context" value="<%= invite %>">
+			<% } %>
+			<% if (then) { %>
+				<input type="hidden" name="then" value="<%= then %>">
 			<% } %>
 			<div class="step"><span class="number">1</span> <span class="text">Login by email</span></div>
 			<div class="controls">
@@ -22,12 +25,6 @@
 		</form>
 		<div id="about">
 			We are a group of political organizers gathering on a decentralized computer network, working on a variety of social justice issues. Join us!
-			<% if (context) { %>
-				<h2>Join: <%= context.name %></h2>
-			<% } %>
-			<% if (context && preview_link) { %>
-				<a href="/group/<%= context.slug %>" class="button">Preview group</a>
-			<% } %>
 		</div>
 		<br class="clear">
 	</div>

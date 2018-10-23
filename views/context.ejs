@@ -1,14 +1,7 @@
-<% if (person) { %>
-	<%- include('intro', {
-		person: person,
-		contexts: contexts
-	}) %>
-<% } else { %>
-	<%- include('login', {
-		context: contexts.current,
-		preview_link: false
-	}) %>
-<% } %>
+<%- include('intro', {
+	person: person,
+	contexts: contexts
+}) %>
 <div id="context">
 	<div class="content">
 		<div id="messages">
@@ -29,7 +22,7 @@
 					member: member
 				}) %>
 				<% if (context.total_messages == 0) { %>
-					<h2>Nobody has sent messages here yet.</h2>
+					<h2 id="no-messages">Nobody has sent messages here yet.</h2>
 				<% } %>
 			</div>
 			<% if (context.total_messages > context.messages.length) { %>

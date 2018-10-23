@@ -23,14 +23,6 @@
 					<% } %>
 				</ul>
 			<% } %>
-			<% if (contexts.public.length) { %>
-				<h2 class="headroom">Groups you can join</h2>
-				<ul>
-					<% for (let context of contexts.public) { %>
-						<li><a href="/group/<%= context.slug %>"><%= context.name %></a></li>
-					<% } %>
-				</ul>
-			<% } %>
 		</div>
 		<br class="clear">
 	</div>

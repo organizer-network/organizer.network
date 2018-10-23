@@ -34,7 +34,6 @@ const io = require('socket.io')(server);
 const body_parser = require('body-parser');
 const marked = require('marked');
 const yaml = require('js-yaml');
-const date_format = require('dateformat');
 const mime = require('mime');
 const sharp = require('sharp');
 const session = require('express-session');
@@ -45,7 +44,7 @@ const sendgrid = require('@sendgrid/mail');
 const mkdirp = require('mkdirp');
 const multer = require('multer')
 
-const person_slug_regex = /^\/[a-z0-9_][a-z0-9_]+$/;
+const slug_regex = /^[a-z0-9_-][a-z0-9_-]+$/;
 
 marked.setOptions({
 	gfm: true,
@@ -105,31 +104,6 @@ if ('sendgrid_api_key' in config) {
 
 const upload = multer();
 
-db.query(`
-	SELECT id
-	FROM context
-	WHERE slug = 'commons'
-`, (err, res) => {
-
-	if (err) {
-		console.log(err);
-		return;
-	}
-
-	if (res.rows.length == 0) {
-		console.log("setting up 'commons' context");
-		db.query(`
-			INSERT INTO context (name, slug, parent_id, created)
-			VALUES ('Commons', 'commons', 0, CURRENT_TIMESTAMP)
-		`, (err) => {
-			if (err) {
-				console.log(err);
-			}
-		});
-	}
-
-});
-
 function error_page(rsp, type) {
 	rsp.render('page', {
 		title: 'Error',
@@ -151,16 +125,21 @@ app.get('/', async (req, rsp) => {
 				title: 'Welcome',
 				view: 'login',
 				content: {
-					context: null
+					invite: null,
+					then: req.query.then
 				}
 			});
 		}
 
-		let contexts = await get_contexts(person);
+		if (person.context_id) {
 
-		if (contexts.current) {
-			return rsp.redirect(`/group/${contexts.current.slug}`);
+			// If the person is logged in, and has a group context ID, redirect.
+
+			let context = await get_context(person.context_id);
+			return rsp.redirect(`/group/${context.slug}`);
 		}
+
+		let contexts = await get_contexts(person);
 
 		rsp.render('page', {
 			title: 'Hello',
@@ -168,7 +147,8 @@ app.get('/', async (req, rsp) => {
 			content: {
 				person: person,
 				contexts: contexts,
-				base_url: config.base_url
+				base_url: config.base_url,
+				then: req.query.then
 			}
 		});
 
@@ -186,8 +166,10 @@ app.get('/group', async (req, rsp) => {
 		let contexts = await get_contexts(person);
 
 		if (! person) {
-			return rsp.redirect('/');
+			return rsp.redirect('/?then=%2Fgroup');
 		}
+
+		let default_slug = random(16);
 
 		rsp.render('page', {
 			title: 'Create a new group',
@@ -195,7 +177,8 @@ app.get('/group', async (req, rsp) => {
 			content: {
 				person: person,
 				contexts: contexts,
-				base_url: config.base_url
+				base_url: config.base_url,
+				default_slug: default_slug
 			}
 		});
 
@@ -216,43 +199,24 @@ app.get('/group/:slug', async (req, rsp) => {
 
 		let person = await curr_person(req);
 		let member = await check_membership(person, context.id);
-		let contexts = null;
 
-		if (person) {
-
-			if (member && person.current_id != context.id) {
-				person.context_id = context.id;
-				db.query(`
-					UPDATE person
-					SET context_id = $1
-					WHERE id = $2
-				`, [context.id, person.id]);
-			}
-
-			contexts = await get_contexts(person);
-
-			if (! contexts.current || contexts.current.id != context.id) {
-				contexts.current = await add_context_details(context);
-			}
-		} else {
-			contexts = {
-				current: await add_context_details(context)
-			};
-		}
-
-		if (! member && context.parent_id != 0) {
+		if (! member) {
 			return error_page(rsp, '404');
 		}
 
+		set_context(person, context);
+		let contexts = await get_contexts(person);
+
 		rsp.render('page', {
-			title: contexts.current.name,
+			title: context.name,
 			view: 'context',
 			content: {
 				person: person,
 				contexts: contexts,
 				context: contexts.current,
 				member: member,
-				base_url: config.base_url
+				base_url: config.base_url,
+				then: req.query.then
 			}
 		});
 
@@ -275,18 +239,11 @@ app.get('/group/:slug/:id', async (req, rsp) => {
 		let person = await curr_person(req);
 		let member = await check_membership(person, context.id);
 
-		if (context.parent_id != 0 && ! member) {
+		if (! member) {
 			return error_page(rsp, '404');
 		}
 
-		if (member && person.current_id != context.id) {
-			person.current_id = context.id;
-			db.query(`
-				UPDATE person
-				SET context_id = $1
-				WHERE id = $2
-			`, [context.id, person.id]);
-		}
+		set_context(person, context);
 
 		let id = parseInt(req.params.id);
 		let contexts = await get_contexts(person, id);
@@ -314,37 +271,6 @@ app.get('/join/:slug', async (req, rsp) => {
 
 	try {
 
-		let context = await get_context(req.params.slug);
-		if (! context || context.parent_id != 0) {
-			return error_page(rsp, '404');
-		}
-
-		let person = await curr_person(req);
-		if (! person) {
-			rsp.render('page', {
-				title: 'Welcome',
-				view: 'login',
-				content: {
-					context: context,
-					preview_link: true
-				}
-			});
-		} else {
-			await join_context(person, context.id);
-			rsp.redirect(`${config.base_url}/group/${context.slug}`);
-		}
-
-	} catch(err) {
-		console.log(err.stack);
-		return error_page(rsp, '500');
-	}
-
-});
-
-app.get('/invite/:slug', async (req, rsp) => {
-
-	try {
-
 		let member = await get_invite(req.params.slug);
 		if (! member) {
 			return error_page(rsp, '404');
@@ -358,12 +284,13 @@ app.get('/invite/:slug', async (req, rsp) => {
 				title: 'Welcome',
 				view: 'login',
 				content: {
-					context: context,
-					preview_link: false
+					invite: req.params.slug,
+					then: req.query.then
 				}
 			});
 		} else {
-			await join_context(person, context.id);
+			let invited_by = member.person_id;
+			await join_context(person, context.id, invited_by);
 			rsp.redirect(`${config.base_url}/group/${context.slug}`);
 		}
 
@@ -382,71 +309,12 @@ app.post('/api/ping', (req, rsp) => {
 	});
 });
 
-app.post('/api/group', async (req, rsp) => {
-
-	try {
-
-		if (! req.body.name ||
-		    ! req.body.slug ||
-		    ! req.body.visibility) {
-			return rsp.status(400).send({
-				ok: false,
-				error: "Please include a name and a URL slug."
-			});
-		}
-
-		let name = req.body.name;
-		let slug = req.body.slug;
-		let visibility = req.body.visibility;
-
-		let person = await curr_person(req);
-		if (! person) {
-			return rsp.status(403).send({
-				ok: false,
-				error: "You must be signed in to create a group."
-			});
-		}
-
-		let context = await get_context(slug);
-		if (context) {
-			return rsp.status(400).send({
-				ok: false,
-				error: "Sorry, that group URL is already taken."
-			});
-		}
-
-		let parent_id = -1;
-		if (visibility == 'public') {
-			parent_id = 0;
-		}
-
-		let query = await db.query(`
-			INSERT INTO context
-			(name, slug, parent_id, created)
-			VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
-			RETURNING *
-		`, [name, slug, parent_id]);
-
-		let group = query.rows[0];
-
-		await join_context(person, group.id);
-
-		rsp.send({
-			ok: true,
-			group: group
-		});
-
-	} catch(err) {
-		console.log(err.stack);
-		return rsp.status(500).send({
-			ok: false,
-			error: "Could not create a new group."
-		});
-	}
-
-});
-
+// Because the login hashes are stored in memory (and not in the database), it
+// is important to check for pending logins when restarting the server. There is
+// a console.log() of the number of pending logins whenever the number changes.
+// (20181022/dphiffer)
 const login_hashes = {};
+
 app.post('/api/login', async (req, rsp) => {
 
 	try {
@@ -459,8 +327,17 @@ app.post('/api/login', async (req, rsp) => {
 			});
 		}
 
-		const hash = random(16);
-		const login_url = `${config.base_url}/login/${hash}`;
+		let hash = random(16);
+		let login_url = `${config.base_url}/login/${hash}`;
+
+		while (hash in login_hashes) {
+
+			// This is extremely improbable and will likely never happen.
+
+			console.log('Login hash collision!');
+			hash = random(16);
+			login_url = `${config.base_url}/login/${hash}`;
+		}
 
 		const email = normalize_email(req.body.email);
 		const subject = 'organizer.network login link';
@@ -480,14 +357,14 @@ ${login_url}
 			LIMIT 1
 		`, [email]);
 
-		var id, slug;
+		let id, slug;
 
 		if (query.rows.length == 1) {
 			id = query.rows[0].id;
 			slug = query.rows[0].slug;
 		} else {
 			slug = random(6);
-			query = db.query(`
+			query = await db.query(`
 				INSERT INTO person
 				(email, slug, created)
 				VALUES ($1, $2, CURRENT_TIMESTAMP)
@@ -496,23 +373,33 @@ ${login_url}
 			id = query.rows[0].id;
 		}
 
-		login_hashes[id] = hash;
-		setTimeout(function() {
-			delete login_hashes[id];
-		}, 10 * 60 * 1000);
+		login_hashes[hash] = {
+			id: id
+		};
 
-		if (req.body.context) {
-			let context = await get_context(req.body.context);
-			let person = await get_person(slug);
-			await join_context(person, context.id);
+		if (req.body.invite) {
+			login_hashes[hash]['invite'] = req.body.invite;
 		}
+
+		let count = Object.keys(login_hashes).length;
+		let now = (new Date()).toISOString();
+		console.log(`${now}: ${count} logins pending`);
+
+		setTimeout(function() {
+
+			// Expire the login hash.
+			delete login_hashes[hash];
+
+			count = Object.keys(login_hashes).length;
+			now = (new Date()).toISOString();
+			console.log(`${now}: ${count} logins pending`);
+
+		}, 10 * 60 * 1000);
 
 		await send_email(email, subject, body);
 
 		return rsp.send({
-			ok: true,
-			id: id,
-			slug: slug
+			ok: true
 		});
 
 	} catch(err) {
@@ -525,43 +412,137 @@ ${login_url}
 
 });
 
-app.get('/login/:hash', (req, rsp) => {
+app.get('/login/:hash', async (req, rsp) => {
 
-	let hash = req.params.hash;
+	try {
 
-	for (let id in login_hashes) {
-		if (login_hashes[id] == hash) {
-			db.query(`
+		let hash = req.params.hash;
+
+		if (login_hashes[hash]) {
+
+			let login = login_hashes[hash];
+			delete login_hashes[hash];
+
+			let query = await db.query(`
 				SELECT *
 				FROM person
 				WHERE id = $1
-			`, [id], (err, res) => {
+			`, [login.id]);
 
-				if (err || res.rows.length != 1) {
-					console.log(err);
-					return error_page(rsp, 'invalid-login');
+			if (query.rows.length != 1) {
+				return error_page(rsp, 'invalid-login');
+			}
+
+			let person = query.rows[0];
+			req.session.person = person;
+
+			let redirect = '/';
+
+			if (login.invite) {
+
+				query = await db.query(`
+					SELECT *
+					FROM member
+					WHERE invite_slug = $1
+				`, [login.invite]);
+
+				let member = query.rows[0];
+				let invited_by = member.person_id;
+				await join_context(person, member.context_id, invited_by);
+				let context = await get_context(member.context_id);
+
+				redirect = `/group/${context.slug}`;
+			}
+
+			if (! person.name) {
+				let then = '';
+				if (redirect != '/') {
+					then = encodeURIComponent(redirect);
 				}
-
-				let person = res.rows[0];
-				req.session.person = person;
-
-				let redirect = '/';
-				if (! person.name) {
-					redirect = `/${person.slug}?edit=1`;
+				redirect = `/${person.slug}?edit=1`;
+				if (then) {
+					redirect += `&then=${then}`;
 				}
-				rsp.redirect(`${config.base_url}${redirect}`);
-			});
-			delete login_hashes[id];
-			return;
+			}
+
+			return rsp.redirect(`${config.base_url}${redirect}`);
 		}
-	}
 
-	error_page(rsp, 'invalid-login');
+		error_page(rsp, 'invalid-login');
+
+	} catch(err) {
+		console.log(err.stack);
+		error_page(rsp, '500');
+	}
 });
 
 app.get('/logout', (req, rsp) => {
 	delete req.session.person;
 	rsp.redirect(`${config.base_url}/`);
+});
+
+app.post('/api/group', async (req, rsp) => {
+
+	try {
+
+		if (! req.body.name ||
+		    ! req.body.slug) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Please include a name and a URL slug."
+			});
+		}
+
+		let name = req.body.name;
+		let slug = req.body.slug;
+
+		if (! slug.match(slug_regex)) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "The URL format is: at least 2 letters, numbers, hyphens, or underscores."
+			});
+		}
+
+		let person = await curr_person(req);
+		if (! person) {
+			return rsp.status(403).send({
+				ok: false,
+				error: "You must be signed in to create a group."
+			});
+		}
+
+		let context = await get_context(slug);
+		if (context) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Sorry, that group URL is already taken."
+			});
+		}
+
+		let query = await db.query(`
+			INSERT INTO context
+			(name, slug, created)
+			VALUES ($1, $2, CURRENT_TIMESTAMP)
+			RETURNING *
+		`, [name, slug]);
+
+		let group = query.rows[0];
+
+		await join_context(person, group.id);
+
+		rsp.send({
+			ok: true,
+			group: group
+		});
+
+	} catch(err) {
+		console.log(err.stack);
+		return rsp.status(500).send({
+			ok: false,
+			error: "Could not create a new group."
+		});
+	}
+
 });
 
 app.post('/api/send', async (req, rsp) => {
@@ -631,49 +612,42 @@ app.post('/api/reply', upload.none(), (req, rsp) => {
 
 app.post('/api/profile', async (req, rsp) => {
 
-	if (! 'body' in req ||
-	    ! 'id' in req.body ||
-	    ! 'name' in req.body ||
-	    ! 'about' in req.body ||
-	    ! 'slug' in req.body ||
-	    req.body.content == '') {
-		return rsp.status(400).send({
-			ok: false,
-			error: "Please include 'id', 'name', 'about', and 'slug' params."
-		});
-	}
-
 	try {
-		var person = await curr_person(req);
+
+		if (! 'body' in req ||
+		    ! 'id' in req.body ||
+		    ! 'name' in req.body ||
+		    ! 'about' in req.body ||
+		    ! 'slug' in req.body ||
+		    req.body.content == '') {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Please include 'id', 'name', 'about', and 'slug' params."
+			});
+		}
+
+		let person = await curr_person(req);
 		if (person.id !== parseInt(req.body.id)) {
 			return rsp.status(403).send({
 				ok: false,
 				error: "You are only allowed to edit your own profile."
 			});
 		}
-	} catch(err) {
-		return rsp.status(400).send({
-			ok: false,
-			error: "You are unable to edit that profile."
-		});
-	}
 
-	if (req.body.name == '') {
-		return rsp.status(400).send({
-			ok: false,
-			error: "Please include a non-empty 'name'."
-		});
-	}
+		if (req.body.name == '') {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Please include a non-empty name."
+			});
+		}
 
-	if (req.body.slug == '' ||
-	    ! ('/' + req.body.slug).match(person_slug_regex)) {
-		return rsp.status(400).send({
-			ok: false,
-			error: "The URL format is: at least 2 letters, numbers, or underscores."
-		});
-	}
+		if (! req.body.slug.match(slug_regex)) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "The URL format is: at least 2 letters, numbers, hyphens, or underscores."
+			});
+		}
 
-	try {
 		let person_with_slug = await get_person(req.body.slug);
 		if (person_with_slug.id !== person.id) {
 			return rsp.status(400).send({
@@ -681,29 +655,27 @@ app.post('/api/profile', async (req, rsp) => {
 				error: "That profile URL is already taken."
 			});
 		}
-	} catch(err) {}
 
-	db.query(`
-		UPDATE person
-		SET name = $1, about = $2, slug = $3
-		WHERE id = $4
-	`, [req.body.name, req.body.about, req.body.slug, req.body.id], async (err, res) => {
+		await db.query(`
+			UPDATE person
+			SET name = $1, about = $2, slug = $3
+			WHERE id = $4
+		`, [req.body.name, req.body.about, req.body.slug, req.body.id]);
 
-		if (err) {
-			return rsp.status(500).send({
-				ok: false,
-				error: "Unable to update profile."
-			});
-		}
-
-		let person = await curr_person(req);
+		person = await curr_person(req);
 
 		return rsp.send({
 			ok: true,
 			person: person
 		});
 
-	})
+	} catch(err) {
+		console.log(err.stack);
+		return rsp.status(500).send({
+			ok: false,
+			error: "Could not update profile."
+		});
+	}
 });
 
 app.get('/api/message/:id', async (req, rsp) => {
@@ -862,66 +834,58 @@ app.get('/api/group/:slug', async (req, rsp) => {
 
 });
 
-app.get('/leave/:id', (req, rsp) => {
+app.get('/leave/:id', async (req, rsp) => {
 
-	db.query(`
-		SELECT member.leave_slug, member.person_id, member.context_id,
-		       context.name AS context_name
-		FROM member, context
-		WHERE member.leave_slug = $1
-		  AND member.context_id = context.id
-	`, [req.params.id], (err, res) => {
+	try {
 
-		if (err || res.rows.length == 0) {
-			if (err) {
-				console.log(err);
-			}
-			return error_page(rsp, 'leave-link-not-found');
-		}
+		let query = await db.query(`
+			SELECT member.leave_slug, member.person_id, member.context_id,
+			       context.name AS context_name
+			FROM member, context
+			WHERE member.leave_slug = $1
+			  AND member.context_id = context.id
+		`, [req.params.id]);
 
-		let member = res.rows[0];
+		let member = query.rows[0];
 
-		db.query(`
+		await db.query(`
 			DELETE FROM member
 			WHERE leave_slug = $1
-		`, [member.leave_slug], (err, res) => {
+		`, [member.leave_slug]);
 
-			if (err) {
-				console.log(err);
-				return error_page(rsp, 'leave-link-not-found');
+		rsp.render('page', {
+			title: 'Unsubscribed',
+			view: 'leave',
+			content: {
+				context: member.context_name
 			}
-
-			rsp.render('page', {
-				title: 'Unsubscribed',
-				view: 'leave',
-				content: {
-					context: member.context_name
-				}
-			});
-
-			db.query(`
-				UPDATE person
-				SET context_id = NULL
-				WHERE id = $1
-				  AND context_id = $2
-			`, [member.person_id, member.context_id]);
-
 		});
 
-	});
+		db.query(`
+			UPDATE person
+			SET context_id = NULL
+			WHERE id = $1
+			  AND context_id = $2
+		`, [member.person_id, member.context_id]);
+
+	} catch(err) {
+		console.log(err.stack);
+		return error_page(rsp, '500');
+	}
 
 });
 
 app.use(async (req, rsp) => {
 
-	let curr_id = null;
-	let curr = await curr_person(req);
-	if (curr) {
-		curr_id = curr.id;
-	}
+	try {
 
-	if (req.path.match(person_slug_regex)) {
-		try {
+		let curr_id = null;
+		let curr = await curr_person(req);
+		if (curr) {
+			curr_id = curr.id;
+		}
+
+		if (req.path.substr(1).match(slug_regex)) {
 			let person = await get_person(req.path.substr(1));
 			if (person) {
 				rsp.render('page', {
@@ -934,16 +898,17 @@ app.use(async (req, rsp) => {
 						curr_id: curr_id
 					}
 				});
+				return;
 			}
-		} catch(err) {
-			rsp.status(404);
-			error_page(rsp, '404');
 		}
-		return;
-	}
 
-	rsp.status(404);
-	error_page(rsp, '404');
+		rsp.status(404);
+		error_page(rsp, '404');
+
+	} catch(err) {
+		console.log(err.stack);
+		return error_page(rsp, '500');
+	}
 });
 
 function send_message(person, context_id, in_reply_to, content) {
@@ -1036,7 +1001,7 @@ ${config.base_url}/leave/${member.leave_slug}`);
 	}
 }
 
-function join_context(person, context_id) {
+function join_context(person, context_id, invited_by) {
 
 	return new Promise(async (resolve, reject) => {
 
@@ -1055,13 +1020,23 @@ function join_context(person, context_id) {
 
 			let leave_slug = random(16);
 			let invite_slug = random(16);
+			let query;
 
-			let query = await db.query(`
-				INSERT INTO member
-				(person_id, context_id, leave_slug, invite_slug, created, updated)
-				VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-				RETURNING *
-			`, [person.id, context_id, leave_slug, invite_slug]);
+			if (invited_by) {
+				query = await db.query(`
+					INSERT INTO member
+					(person_id, context_id, leave_slug, invite_slug, invited_by, created, updated)
+					VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+					RETURNING *
+				`, [person.id, context_id, leave_slug, invite_slug, invited_by]);
+			} else {
+				query = await db.query(`
+					INSERT INTO member
+					(person_id, context_id, leave_slug, invite_slug, created, updated)
+					VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+					RETURNING *
+				`, [person.id, context_id, leave_slug, invite_slug]);
+			}
 
 			member = query.rows[0];
 			return resolve(member);
@@ -1160,25 +1135,43 @@ function curr_person(req) {
 	});
 }
 
-function get_context(slug) {
-	return new Promise((resolve, reject) => {
-		db.query(`
-			SELECT *
-			FROM context
-			WHERE slug = $1
-		`, [slug], (err, res) => {
+function get_context(id_or_slug) {
 
-			if (err) {
-				console.log(err);
-				return reject();
+	return new Promise(async (resolve, reject) => {
+
+		try {
+			let query;
+
+			if (typeof id_or_slug == 'string') {
+				let slug = id_or_slug;
+				query = await db.query(`
+					SELECT *
+					FROM context
+					WHERE slug = $1
+				`, [slug]);
+			} else if (typeof id_or_slug == 'number') {
+				let id = id_or_slug;
+				query = await db.query(`
+					SELECT *
+					FROM context
+					WHERE id = $1
+				`, [id]);
+			} else {
+				throw new Error('Argument should be a string or number type.');
 			}
 
-			if (res.rows.length == 0) {
+			if (query.rows.length == 0) {
+				// No context found, but we still resolve().
 				return resolve(null);
 			}
 
-			resolve(res.rows[0]);
-		});
+			let context = query.rows[0];
+			resolve(context);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
+		}
 	});
 }
 
@@ -1186,18 +1179,10 @@ function get_contexts(person, message_id) {
 
 	return new Promise(async (resolve, reject) => {
 
-		var contexts = {};
-
 		try {
 
-			let query = await db.query(`
-				SELECT *
-				FROM context
-				WHERE parent_id = 0
-				ORDER BY name
-			`);
-
-			contexts.public = query.rows;
+			let query;
+			const contexts = {};
 
 			if (person) {
 
@@ -1209,9 +1194,6 @@ function get_contexts(person, message_id) {
 				`, [person.id]);
 
 				contexts.member_of = query.rows;
-				contexts.public = contexts.public.filter((context) => {
-					return context.id != person.context_id;
-				});
 
 				let thread = null;
 				let context_id = null;
@@ -1259,9 +1241,24 @@ function get_contexts(person, message_id) {
 	});
 }
 
+function set_context(person, context) {
+	if (person.context_id != context.id) {
+		person.context_id = context.id;
+		db.query(`
+			UPDATE person
+			SET context_id = $1
+			WHERE id = $2
+		`, [context.id, person.id]);
+	}
+}
+
 async function add_context_details(context, before_id) {
 
-	var query;
+	let query;
+
+	if (! context) {
+		return;
+	}
 
 	if (context.thread) {
 

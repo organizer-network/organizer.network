@@ -1,14 +1,7 @@
-<% if (person) { %>
-	<%- include('intro', {
-		person: person,
-		contexts: contexts
-	}) %>
-<% } else { %>
-	<%- include('login', {
-		context: contexts.current,
-		preview_link: false
-	}) %>
-<% } %>
+<%- include('intro', {
+	person: person,
+	contexts: contexts
+}) %>
 <div id="context">
 	<div class="content">
 		<div id="main">
@@ -16,21 +9,21 @@
 				<h1>Create a new group</h1>
 				<label for="name">Name</label>
 				<input type="text" id="name" name="name">
-				<h2 class="headroom">Group visibility</h2>
-				<div class="radio-group">
-					<input type="radio" id="visibility-private" name="visibility" value="private" checked>
-					<label for="visibility-private">Private</label>
-					<span class="help">People must be invited to see this group.</span>
-				</div>
-				<div class="radio-group">
-					<input type="radio" id="visibility-public" name="visibility" value="public">
-					<label for="visibility-public">Public</label>
-					<span class="help">Anyone can see this group.</span>
-				</div>
-				<h2>Group URL</h2>
-				<div><code><%= base_url %>/group/</code><input type="text" id="slug-input" name="slug"></div>
+				<label for="slug-input">Group URL</label>
+				<div><code><%= base_url %>/group/</code><input type="text" id="slug-input" name="slug" value="<%= default_slug %>"></div>
 				<input type="submit" value="Create Group">
 				<div class="response"></div>
+			</form>
+		</div>
+		<div id="sidebar">
+			<div id="privacy">
+				<h2>No privacy settings</h2>
+				<ul>
+					<li>All groups are private.</li>
+					<li>All members must be invited.</li>
+					<li>Groups are not listed anywhere.</li>
+					<li>Content is only visible to members.</li>
+				</ul>
 			</div>
 		</div>
 		<br class="clear">

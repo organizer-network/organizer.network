@@ -56,7 +56,7 @@ ul.back li::before {
 }
 
 label {
-	font-weight: 500;
+	font-weight: bold;
 	display: block;
 	margin: 2em 0 0.5em 0;
 }
@@ -351,6 +351,10 @@ input[type="submit"]:active,
 #more-messages.disabled:hover {
 	background: #808080;
 	cursor: default;
+}
+
+#privacy {
+	margin-top: 5em;
 }
 
 .content {

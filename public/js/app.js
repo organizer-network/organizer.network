@@ -119,12 +119,13 @@
 				$('#members li:eq(0)').before($('#members li.curr-person'));
 				setup_replies('#message-list .message:first-child .reply a');
 			});
+			$('#no-messages').remove();
 		});
 
 		var first_update = ($('input[name="name"]').val() == '');
 		form_handler('#profile form', function(rsp) {
 			if (first_update) {
-				window.location = '/group/commons';
+				window.location = '/group/';
 			} else {
 				window.location = '/' + rsp.person.slug;
 			}
@@ -132,15 +133,6 @@
 
 		form_handler('#new-group', function(rsp) {
 			window.location = '/group/' + rsp.group.slug;
-		});
-
-		$('#new-group #name').change(function() {
-			var name = $('#new-group #name').val();
-			var slug = name.toLowerCase();
-			slug = slug.replace(/(\w)'s\s/g, '$1s ');
-			slug = slug.replace(/[^a-z0-9-]+/g, '-');
-			slug = slug.replace(/-$/, '');
-			$('#new-group #slug-input').val(slug);
 		});
 
 		/*$("#send #content").keyup(function(e) {
