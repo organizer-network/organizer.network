@@ -619,7 +619,7 @@ app.post('/api/reply', upload.none(), async (req, rsp) => {
 		let message_id = -1;
 		let person_id = -1;
 
-		if (! id || ! reply_to) {
+		if (! id || ! in_reply_to) {
 			console.log('Could not parse reply.');
 			console.log(reply);
 			return;
