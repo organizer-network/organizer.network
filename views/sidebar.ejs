@@ -13,11 +13,7 @@
 	<% if (member) { %>
 		<h2>Invite link</h2>
 		<p>Share this link to invite others to join the group.</p>
-		<% if (context.parent_id == 0) { %>
-			<input type="text" value="<%= `${base_url}/join/${context.slug}` %>" id="invite-input">
-		<% } else { %>
-			<input type="text" value="<%= `${base_url}/invite/${member.invite_slug}` %>" id="invite-input">
-		<% } %>
+		<input type="text" value="<%= `${base_url}/join/${member.invite_slug}` %>" id="invite-input">
 		<div id="invite-response"></div>
 		<h2>Ready to leave?</h2>
 		<p><a href="<%= `/leave/${member.leave_slug}` %>">Unsubscribe from this group</a></p>

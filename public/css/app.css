@@ -399,6 +399,13 @@ input[type="submit"]:active,
 	color: #fff;
 }
 
+.next-step {
+	background: #6835E7;
+	padding: 10px 15px;
+	border-radius: 4px;
+	margin-top: -15px;
+}
+
 .response {
 	display: block;
 	margin-top: 1.5em;

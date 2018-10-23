@@ -271,27 +271,26 @@ app.get('/join/:slug', async (req, rsp) => {
 
 	try {
 
-		let member = await get_invite(req.params.slug);
-		if (! member) {
+		let invite = await get_invite(req.params.slug);
+		if (! invite) {
 			return error_page(rsp, '404');
 		}
 
 		let person = await curr_person(req);
-		let context = await get_context(member.context_slug);
 
 		if (! person) {
 			rsp.render('page', {
 				title: 'Welcome',
 				view: 'login',
 				content: {
-					invite: req.params.slug,
+					invite: invite,
 					then: req.query.then
 				}
 			});
 		} else {
 			let invited_by = member.person_id;
-			await join_context(person, context.id, invited_by);
-			rsp.redirect(`${config.base_url}/group/${context.slug}`);
+			await join_context(person, invite.context.id, invited_by);
+			rsp.redirect(`${config.base_url}/group/${invite.context.slug}`);
 		}
 
 	} catch(err) {
@@ -422,6 +421,10 @@ app.get('/login/:hash', async (req, rsp) => {
 
 			let login = login_hashes[hash];
 			delete login_hashes[hash];
+
+			let count = Object.keys(login_hashes).length;
+			let now = (new Date()).toISOString();
+			console.log(`${now}: ${count} logins pending`);
 
 			let query = await db.query(`
 				SELECT *
@@ -889,13 +892,14 @@ app.use(async (req, rsp) => {
 			let person = await get_person(req.path.substr(1));
 			if (person) {
 				rsp.render('page', {
-					title: person.name || 'profile',
+					title: person.name || 'Profile',
 					view: 'profile',
 					content: {
 						person: person,
 						edit: (req.query.edit == '1'),
 						base_url: config.base_url,
-						curr_id: curr_id
+						curr_id: curr_id,
+						then: req.query.then
 					}
 				});
 				return;
@@ -1078,16 +1082,21 @@ function get_invite(slug) {
 	return new Promise(async (resolve, reject) => {
 		try {
 			let query = await db.query(`
-				SELECT member.*, context.slug AS context_slug
-				FROM member, context
-				WHERE member.invite_slug = $1
-				  AND member.context_id = context.id
+				SELECT *
+				FROM member
+				WHERE invite_slug = $1
 			`, [slug]);
+
+			let invite;
 
 			if (query.rows.length == 0) {
 				resolve(false);
 			} else {
-				resolve(query.rows[0]);
+				invite = query.rows[0];
+				console.log(invite);
+				invite.person = await get_person(invite.person_id);
+				invite.context = await get_context(invite.context_id);
+				resolve(invite);
 			}
 		} catch(err) {
 			console.log(err.stack);
@@ -1096,21 +1105,40 @@ function get_invite(slug) {
 	});
 }
 
-function get_person(slug) {
-	return new Promise((resolve, reject) => {
-		db.query(`
-			SELECT *
-			FROM person
-			WHERE slug = $1
-		`, [slug], (err, res) => {
-			if (err) {
-				return reject(err);
+function get_person(id_or_slug) {
+	return new Promise(async (resolve, reject) => {
+
+		try {
+
+			let query;
+
+			if (typeof id_or_slug == 'string') {
+				let slug = id_or_slug;
+				query = await db.query(`
+					SELECT *
+					FROM person
+					WHERE slug = $1
+				`, [slug]);
+			} else if (typeof id_or_slug == 'number') {
+				let id = id_or_slug;
+				query = await db.query(`
+					SELECT *
+					FROM person
+					WHERE id = $1
+				`, [id]);
+			} else {
+				throw new Error('Argument should be a string or number type.');
 			}
-			if (res.rows.length == 0) {
+
+			if (query.rows.length == 0) {
 				return reject(null);
 			}
-			resolve(res.rows[0]);
-		});
+			resolve(query.rows[0]);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
+		}
 
 	});
 }
@@ -1157,7 +1185,7 @@ function get_context(id_or_slug) {
 					WHERE id = $1
 				`, [id]);
 			} else {
-				throw new Error('Argument should be a string or number type.');
+				throw new Error(`Argument ${id_or_slug} should be a string or number type.`);
 			}
 
 			if (query.rows.length == 0) {

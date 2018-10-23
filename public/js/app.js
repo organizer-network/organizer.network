@@ -106,7 +106,7 @@
 	$(document).ready(function() {
 
 		form_handler('#login', function(rsp) {
-			$('#login .response').html('✅ Email sent, please check your inbox.');
+			$('#login .response').html('<div class="next-step">Email sent, please check your inbox.</div>');
 			$('#login .controls').addClass('hidden');
 		});
 
@@ -124,7 +124,10 @@
 
 		var first_update = ($('input[name="name"]').val() == '');
 		form_handler('#profile form', function(rsp) {
-			if (first_update) {
+			var redirect = $('input[name="then"]').val();
+			if (redirect) {
+				window.location = redirect;
+			} else if (first_update) {
 				window.location = '/group/';
 			} else {
 				window.location = '/' + rsp.person.slug;

@@ -6,6 +6,9 @@
 			</div>
 			<form action="/api/profile" method="post">
 				<input type="hidden" name="id" value="<%= person.id %>">
+				<% if (then) { %>
+					<input type="hidden" name="then" value="<%= then %>">
+				<% } %>
 				<label>Email address: <strong><%= person.email %></strong></label>
 				<label for="name-input">Display name</label>
 				<input type="text" id="name-input" name="name" value="<%= person.name %>">

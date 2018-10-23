@@ -1,12 +1,17 @@
 <div id="intro">
 	<div class="content">
 		<div class="heading">
-			<h1>Organizer Network</h1>
-			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
+			<% if (invite) { %>
+				<h1>Join <%= invite.context.name %></h1>
+				<h2 class="tagline"><%= invite.person.name %> invited you to join a group on organizer.network</h2>
+			<% } else { %>
+				<h1>Organizer Network</h1>
+				<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
+			<% } %>
 		</div>
 		<form action="/api/login" method="post" id="login">
 			<% if (invite) { %>
-				<input type="hidden" name="context" value="<%= invite %>">
+				<input type="hidden" name="invite" value="<%= invite.invite_slug %>">
 			<% } %>
 			<% if (then) { %>
 				<input type="hidden" name="then" value="<%= then %>">
