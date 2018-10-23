@@ -648,7 +648,7 @@ app.post('/api/reply', upload.none(), async (req, rsp) => {
 
 		content = content.join('\n').trim();
 
-		let query = db.query(`
+		let query = await db.query(`
 			SELECT *
 			FROM email_tx
 			WHERE id = $1
