@@ -383,6 +383,7 @@ ${login_url}
 		let count = Object.keys(login_hashes).length;
 		let now = (new Date()).toISOString();
 		console.log(`${now}: ${count} logins pending`);
+		console.log(login_hashes);
 
 		setTimeout(function() {
 
@@ -392,6 +393,7 @@ ${login_url}
 			count = Object.keys(login_hashes).length;
 			now = (new Date()).toISOString();
 			console.log(`${now}: ${count} logins pending`);
+			console.log(login_hashes);
 
 		}, 10 * 60 * 1000);
 
@@ -425,6 +427,7 @@ app.get('/login/:hash', async (req, rsp) => {
 			let count = Object.keys(login_hashes).length;
 			let now = (new Date()).toISOString();
 			console.log(`${now}: ${count} logins pending`);
+			console.log(login_hashes);
 
 			let query = await db.query(`
 				SELECT *
