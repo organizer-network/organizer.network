@@ -1006,7 +1006,7 @@ function send_message(person, context_id, in_reply_to, content) {
 			resolve(message);
 
 			let from = config.email_from;
-			let email_match = from.match(/<\w+@\w+>/);
+			let email_match = from.match(/<([^>]+)>/);
 
 			if (email_match) {
 				from = `"${person.name}" <${email_match[1]}>`;
@@ -1049,7 +1049,7 @@ async function send_notifications(sender, message, from) {
 		let members = query.rows;
 
 		for (let member of members) {
-			let subject = `${sender.name} posted in ${member.context_name}`;
+			let subject = `New message in ${member.context_name}`;
 
 			if (message.in_reply_to) {
 				query = await db.query(`
