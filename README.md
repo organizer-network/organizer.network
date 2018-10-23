@@ -56,8 +56,8 @@ Load it up in a browser! By default it can be reached from `https://localhost:50
 
 ## Versioning
 
-* Current release: __[v0.0.2 "bzzt"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.2)__
-* Under development: __v0.0.3 "craw"__
+* Current release: __[v0.0.3 "craw"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.3)__
+* Under development: __v0.0.4 "dibdib"__
 
 Versions names are based on [Tom Gauld's *A Noisy Alphabet*](http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom).
 
