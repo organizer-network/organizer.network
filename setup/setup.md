@@ -97,3 +97,5 @@ Once the script finishes running you should be able to load up `http://[your ip 
 * Or set up a [SendGrid](https://sendgrid.com/) API key
 
 Then once you do that, restart the server with `pm2 restart organizer.network`.
+
+Note: for some reason my `~/.config` folder had `root` file permissions, so I had to do the following in order to `git pull` successfully: `sudo chown -R dphiffer:dphiffer ~/.config`
