@@ -1,5 +1,5 @@
 // organizer.network
-// v0.0.3 "craw"
+// v0.0.4 "dibdib"
 
 // versioning based on Tom Gauld's A Noisy Alphabet
 // http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom
