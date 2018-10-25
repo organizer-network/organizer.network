@@ -3,7 +3,7 @@ NOW := $(shell TZ=UTC date +%Y%m%d-%H%M%S)
 
 setup:
 	createdb $(VERSION)
-	psql $(VERSION) < schema/setup.$(VERSION).sql
+	psql $(VERSION) < schema/setup.sql
 	psql $(VERSION) < ../node_modules/connect-pg-simple/table.sql
 	mkdir -p $(VERSION)
 	pg_dump $(VERSION) > $(VERSION)/$(NOW).sql
