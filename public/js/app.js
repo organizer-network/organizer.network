@@ -138,6 +138,12 @@
 			window.location = '/group/' + rsp.group.slug;
 		});
 
+		form_handler('#unsubscribed', function(rsp) {
+			if (rsp.ok) {
+				window.location = window.location;
+			}
+		});
+
 		/*$("#send #content").keyup(function(e) {
 			while ($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css("borderTopWidth")) + parseFloat($(this).css("borderBottomWidth"))) {
 				$(this).height($(this).height() + 1);

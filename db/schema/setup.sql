@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS member (
 	invited_by INTEGER,
 	leave_slug VARCHAR(255),
 	invite_slug VARCHAR(255),
-	active BOOLEAN DEFAULT 1,
+	active BOOLEAN DEFAULT true,
 	created TIMESTAMP,
 	updated TIMESTAMP
 );

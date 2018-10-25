@@ -15,6 +15,8 @@ backup:
 	pg_dump $(VERSION) > $(VERSION)/$(NOW).sql
 
 migrate_versions:
+	@echo "migrating $(FROM) to $(TO)"
+	@echo "--------------------------------"
 	mkdir -p $(FROM)
 	pg_dump $(FROM) > $(FROM)/$(NOW).sql
 	psql `whoami` -c "ALTER DATABASE $(FROM) RENAME TO $(TO);"

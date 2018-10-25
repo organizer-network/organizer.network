@@ -1,0 +1,18 @@
+<div id="intro">
+	<div class="content">
+		<div class="heading">
+			<h1><%= context.name %></h1>
+			<h2 class="tagline">You are no longer a member of the group, but you can rejoin.</h2>
+		</div>
+		<form action="/api/join" id="unsubscribed">
+			<input type="hidden" name="context_id" value="<%= context.id %>">
+			<div class="headroom"><strong>You are unsubscribed.</strong></div>
+			<input type="submit" value="Rejoin group">
+			<div class="response"></div>
+		</form>
+		<div id="about">
+			We are a group of political organizers gathering on a decentralized computer network, working on a variety of social justice issues. Join us!
+		</div>
+		<br class="clear">
+	</div>
+</div>
