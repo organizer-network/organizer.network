@@ -11,7 +11,7 @@ module.exports = {
 
 	base_url: 'https://localhost:5000',
 	port: 5000,
-	db_dsn: "postgres://localhost:5432/dibdib",
+	db_dsn: "postgres://localhost:5432/eeeeee",
 
 	session_secret: '', // openssl rand -hex 24
 
