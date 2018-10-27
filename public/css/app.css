@@ -91,6 +91,10 @@ textarea {
 	max-width: 100%;
 }
 
+textarea {
+	line-height: 1.5em;
+}
+
 input[type="email"]:focus,
 input[type="text"]:focus,
 textarea:focus {
@@ -468,6 +472,7 @@ input[type="submit"]:active,
 
 .message-content {
 	margin: 1em 0 3em 0;
+	line-height: 1.5em;
 }
 
 .meta {
