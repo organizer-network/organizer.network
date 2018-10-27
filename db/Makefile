@@ -5,7 +5,11 @@ setup:
 	createdb $(VERSION)
 	psql $(VERSION) < schema/setup.sql
 	psql $(VERSION) < ../node_modules/connect-pg-simple/table.sql
-	mkdir -p $(VERSION)
+	mkdir -p aarg
+	mkdir -p bzzt
+	mkdir -p craw
+	mkdir -p dibdib
+	mkdir -p eeeeee
 	pg_dump $(VERSION) > $(VERSION)/$(NOW).sql
 
 migrate: bzzt craw dibdib eeeeee
@@ -34,5 +38,5 @@ craw:
 dibdib:
 	FROM=craw TO=dibdib make migrate_versions
 
-dibdib:
+eeeeee:
 	FROM=dibdib TO=eeeeee make migrate_versions
