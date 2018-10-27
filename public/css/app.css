@@ -124,6 +124,10 @@ input[type="submit"]:active,
 	background: #1DDA4F;
 }
 
+#unsubscribed .button {
+	display: inline-block;
+}
+
 #intro {
 	position: relative;
 	width: 100vw;
@@ -584,7 +588,7 @@ input[type="submit"]:active,
 		width: calc(33% - 1em);
 	}
 
-	#login, #about {
+	#login, #about, #unsubscribed {
 		float: left;
 		width: calc(50% - 1em);
 	}

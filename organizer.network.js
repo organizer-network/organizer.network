@@ -198,10 +198,21 @@ app.get('/group/:slug', async (req, rsp) => {
 		}
 
 		let person = await curr_person(req);
-		let member = await check_membership(person, context.id);
+		let member = await check_membership(person, context.id, 'include inactive');
 
 		if (! member) {
 			return error_page(rsp, '404');
+		}
+
+		if (! member.active) {
+			return rsp.render('page', {
+				title: context.name,
+				view: 'unsubscribed',
+				content: {
+					person: person,
+					context: context
+				}
+			});
 		}
 
 		set_context(person, context);
@@ -726,7 +737,7 @@ app.post('/api/profile', async (req, rsp) => {
 		}
 
 		let person_with_slug = await get_person(req.body.slug);
-		if (person_with_slug.id !== person.id) {
+		if (person_with_slug && person_with_slug.id !== person.id) {
 			return rsp.status(400).send({
 				ok: false,
 				error: "That profile URL is already taken."
@@ -923,31 +934,87 @@ app.get('/leave/:id', async (req, rsp) => {
 			  AND member.context_id = context.id
 		`, [req.params.id]);
 
+		if (query.rows.length < 1) {
+			return error_page(rsp, 'invalid-unsubscribe');
+		}
+
 		let member = query.rows[0];
 
 		await db.query(`
-			DELETE FROM member
+			UPDATE member
+			SET active = false
 			WHERE leave_slug = $1
 		`, [member.leave_slug]);
 
-		rsp.render('page', {
-			title: 'Unsubscribed',
-			view: 'leave',
-			content: {
-				context: member.context_name
-			}
-		});
-
-		db.query(`
+		await db.query(`
 			UPDATE person
 			SET context_id = NULL
 			WHERE id = $1
 			  AND context_id = $2
 		`, [member.person_id, member.context_id]);
 
+		let context = await get_context(member.context_id);
+
+		rsp.redirect(`/group/${context.slug}`);
+
 	} catch(err) {
 		console.log(err.stack);
 		return error_page(rsp, '500');
+	}
+
+});
+
+app.post('/api/join', async (req, rsp) => {
+
+	try {
+
+		if (! req.body.context_id) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Please include a 'context_id' param."
+			});
+		}
+
+		let person = await curr_person(req);
+		if (! person) {
+			return rsp.status(403).send({
+				ok: false,
+				error: 'You must be signed in to join groups.'
+			});
+		}
+
+		let context_id = parseInt(req.body.context_id);
+		let member = await check_membership(person, context_id, 'include_inactive');
+		if (! member) {
+			return rsp.status(403).send({
+				ok: false,
+				error: 'Sorry you cannot join that group.'
+			});
+		}
+
+		await db.query(`
+			UPDATE member
+			SET active = true
+			WHERE person_id = $1
+			  AND context_id = $2
+		`, [person.id, context_id]);
+
+		await db.query(`
+			UPDATE person
+			SET context_id = $1
+			WHERE id = $2
+		`, [context_id, person.id]);
+
+		rsp.send({
+			ok: true
+		});
+
+	} catch(err) {
+		console.log(err.stack);
+		rsp.status(500).send({
+			ok: false,
+			error: 'Could not join group.'
+		});
 	}
 
 });
@@ -1138,28 +1205,39 @@ function join_context(person, context_id, invited_by) {
 	});
 }
 
-function check_membership(person, context_id) {
-	return new Promise((resolve, reject) => {
-		if (! person) {
-			return resolve(false);
+function check_membership(person, context_id, include_inactive) {
+	return new Promise(async (resolve, reject) => {
+
+		try {
+
+			if (! person) {
+				return resolve(false);
+			}
+
+			let query = await db.query(`
+				SELECT *
+				FROM member
+				WHERE person_id = $1
+				  AND context_id = $2
+			`, [person.id, context_id]);
+
+
+			if (query.rows.length == 0) {
+				return resolve(false);
+			}
+
+			let member = query.rows[0];
+
+			if (! member.active && ! include_inactive) {
+				return resolve(false);
+			}
+
+			resolve(member);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
 		}
-		db.query(`
-			SELECT *
-			FROM member
-			WHERE person_id = $1
-			  AND context_id = $2
-		`, [person.id, context_id], (err, res) => {
-			if (err) {
-				console.log('Error checking membership:');
-				console.log(err);
-				return reject(err);
-			}
-			if (res.rows.length == 0) {
-				resolve(false);
-			} else {
-				resolve(res.rows[0]);
-			}
-		});
 	});
 }
 
@@ -1214,10 +1292,11 @@ function get_person(id_or_slug) {
 				throw new Error('Argument should be a string or number type.');
 			}
 
-			if (query.rows.length == 0) {
-				return reject(null);
+			if (query.rows.length > 0) {
+				return resolve(query.rows[0]);
 			}
-			resolve(query.rows[0]);
+
+			return resolve(null);
 
 		} catch(err) {
 			console.log(err.stack);
@@ -1228,21 +1307,28 @@ function get_person(id_or_slug) {
 }
 
 function curr_person(req) {
-	return new Promise((resolve, reject) => {
-		if ('session' in req &&
-		    'person' in req.session) {
-			db.query(`
-				SELECT *
-				FROM person
-				WHERE id = $1
-			`, [req.session.person.id], (err, res) => {
-				if (err) {
-					return reject(err);
+	return new Promise(async (resolve, reject) => {
+
+		try {
+
+			if ('session' in req &&
+			    'person' in req.session) {
+
+				let query = await db.query(`
+					SELECT *
+					FROM person
+					WHERE id = $1
+				`, [req.session.person.id]);
+
+				if (query.rows.length > 0) {
+					return resolve(query.rows[0]);
 				}
-				resolve(res.rows[0]);
-			});
-		} else {
+			}
 			resolve(null);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
 		}
 	});
 }
