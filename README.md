@@ -30,15 +30,39 @@ $ npm install
 
 Configure:
 
+First make a copy of the example config file:
+
 ```
 $ cp config.js.example config.js
 ```
 
 * Edit `session_secret` in `config.js`
+
+Open config.js and place a new key inside `session_secret`. To generate a new random key run the following command in your terminal.
+
+```
+$ openssl rand -hex 24
+```
+
+Your session_secret should look something like this:
+
+```
+session_secret: 'ad6fe27e6f551ec40f44b5f7ab46c45847e5d9s0813feb605',
+```
+
 * Edit `smtp` settings in `config.js` (optionally: set a [SendGrid](https://sendgrid.com/) API key)
+
+Uncomment the `smtp` setting and update the keys with your personal email credentials OR uncomment the `sendgrid_api_key` and replace with an api key from your sendgrid account.
 
 Database setup:
 
+You will need to have [postgresql installed](https://wiki.postgresql.org/wiki/Homebrew). If you have Homebrew on a Mac you can run:
+
+```
+brew install postgres
+```
+
+Now you can create a local database.
 (Ubuntu users may need to `createuser` and allow local connections before they do this, [described below](#postgresql-on-ubuntu).)
 
 ```
