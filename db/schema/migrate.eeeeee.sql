@@ -1,3 +1,6 @@
+ALTER TABLE message ADD COLUMN updated TIMESTAMP;
+UPDATE message SET updated = created;
+
 CREATE TABLE IF NOT EXISTS message_facet (
 	message_id INTEGER,
 	type VARCHAR(255),

@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS message (
 	in_reply_to INTEGER,
 	person_id INTEGER,
 	content TEXT,
-	created TIMESTAMP
+	created TIMESTAMP,
+	updated TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS message_idx ON message (id, context_id, in_reply_to, created);
 
