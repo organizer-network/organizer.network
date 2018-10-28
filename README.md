@@ -134,6 +134,12 @@ Edit `edit /etc/postgresql/10/main/pg_hba.conf` with the following line change.
 host    all             all             127.0.0.1/32            trust
 ```
 
+## Contributing
+
+This project welcomes contributors! Our process is still very much in development, but probably the first thing to do is drop in on our [meta group](https://organizer.network/join/yycczw12923m2stb) and say hello. Some issues in GitHub are [labeled as good for first-time contributors](https://github.com/organizer-network/organizer.network/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22), in case you want to jump right in.
+
+You may notice @dphiffer uses [emoji codes](http://emoji-cheat-sheet.com/) in his commit messages, this is entirely optional.
+
 ## Server setup
 
 There is a [server setup guide](setup/setup.md) available that describes the process of signing up for a DigitalOcean droplet and deploying the software on a server.
