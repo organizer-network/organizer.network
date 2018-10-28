@@ -1,4 +1,4 @@
-VERSION := eeeeee
+VERSION := foom
 NOW := $(shell TZ=UTC date +%Y%m%d-%H%M%S)
 
 setup:
@@ -13,9 +13,10 @@ endif
 	mkdir -p craw
 	mkdir -p dibdib
 	mkdir -p eeeeee
+	mkdir -p foom
 	pg_dump $(VERSION) > $(VERSION)/$(NOW).sql
 
-migrate: bzzt craw dibdib eeeeee
+migrate: bzzt craw dibdib eeeeee foom
 
 backup:
 	mkdir -p $(VERSION)
@@ -43,3 +44,6 @@ dibdib:
 
 eeeeee:
 	FROM=dibdib TO=eeeeee make migrate_versions
+
+foom:
+	FROM=eeeeee TO=foom make migrate_versions
