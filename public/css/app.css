@@ -118,14 +118,31 @@ input[type="submit"],
 	text-decoration: none;
 }
 
+.button.cancel {
+	background: #808080 !important;
+	margin-left: 7px;
+}
+
 input[type="submit"]:hover,
-.button:hover {
-	background: #6835E7;
+.button:hover,
+.button.cancel:hover {
+	background: #6835E7 !important;
 }
 
 input[type="submit"]:active,
-.button:active {
-	background: #1DDA4F;
+.button:active,
+.button.cancel:active {
+	background: #1DDA4F !important;
+}
+
+.message.editing textarea {
+	margin-top: 1em;
+}
+
+.message.editing .button,
+.message.editing input[type="submit"] {
+	margin-top: 0;
+	margin-bottom: 0.5em;
 }
 
 #unsubscribed .button {
@@ -480,6 +497,7 @@ input[type="submit"]:active,
 
 .message-options .delete {
 	font-weight: bold;
+	margin-left: 7px;
 }
 
 .message-content {
@@ -578,6 +596,16 @@ input[type="submit"]:active,
 
 .clear {
 	display: none;
+}
+
+.message.editing .message-options,
+.message.editing .message-content,
+.message.editing .meta {
+	display: none !important;
+}
+
+.message.editing form .response {
+	margin-top: 0.5em;
 }
 
 @media screen and (min-width: 760px) {

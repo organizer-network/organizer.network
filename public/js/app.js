@@ -239,6 +239,7 @@
 						return;
 					}
 					var id = $(e.target).closest('.message').attr('id');
+					id = parseInt(id);
 					$.post('/api/delete', {
 						id: id
 					}, function(rsp) {
@@ -247,6 +248,33 @@
 							window.location = $('#group-link').attr('href');
 						} else if (rsp.ok) {
 							$('#' + id).remove();
+						}
+					});
+				} else if ($(e.target).hasClass('edit')) {
+					var id = $(e.target).closest('.message').attr('id');
+					id = parseInt(id);
+					var $message = $(e.target).closest('.message');
+					$message.addClass('editing');
+					$message.find('.message-content').before(
+						'<form action="/api/update" method="post">' +
+							'<input type="hidden" name="id" value="' + id + '">' +
+							'<textarea name="content" rows="3" cols="40"></textarea>' +
+							'<input type="submit" value="Update →"> ' +
+							'<input type="button" value="Cancel" class="cancel button">' +
+							'<div class="response"></div>' +
+						'</form>'
+					);
+					$message.find('textarea').val($message.find('.message-content').html());
+					$message.find('.cancel').click(function(e) {
+						e.preventDefault();
+						$message.find('form').remove();
+						$message.removeClass('editing');
+					});
+					form_handler($message.find('form'), function(rsp) {
+						if (rsp.ok) {
+							$message.find('.message-content').html(rsp.message.content);
+							$message.find('form').remove();
+							$message.removeClass('editing');
 						}
 					});
 				}
