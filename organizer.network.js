@@ -672,6 +672,13 @@ app.post('/api/reply', upload.none(), async (req, rsp) => {
 			person_id = parseInt(email_tx.person_id);
 			in_reply_to = parseInt(email_tx.message_id);
 
+			// See also: https://github.com/organizer-network/organizer.network/issues/2
+			// (20181027/dphiffer)
+			let in_reply_to_msg = await get_message(in_reply_to);
+			if (in_reply_to_msg.in_reply_to) {
+				in_reply_to = parseInt(in_reply_to_msg.in_reply_to);
+			}
+
 			let person = await get_person(person_id);
 			let message = await send_message(person, context_id, in_reply_to, content);
 			message_id = message.id;
@@ -769,24 +776,16 @@ app.post('/api/profile', async (req, rsp) => {
 app.get('/api/message/:id', async (req, rsp) => {
 
 	try {
-		let query = await db.query(`
-			SELECT message.*,
-			       person.name AS person_name, person.slug AS person_slug,
-			       context.slug AS context_slug
-			FROM message, person, context
-			WHERE message.id = $1
-			  AND message.person_id = person.id
-			  AND message.context_id = context.id
-		`, [req.params.id]);
+		let id = parseInt(req.params.id);
+		let message = await get_message(id);
 
-		if (query.rows.length == 0) {
+		if (! message) {
 			return rsp.status(404).send({
 				ok: false,
 				error: 'Message not found.'
 			});
 		}
 
-		let message = query.rows[0];
 		let person = await curr_person(req);
 		let member = await check_membership(person, message.context_id);
 
@@ -1448,6 +1447,37 @@ function set_context(person, context) {
 			WHERE id = $2
 		`, [context.id, person.id]);
 	}
+}
+
+function get_message(id) {
+	return new Promise(async (resolve, reject) => {
+
+		try {
+
+			id = parseInt(id);
+			let query = await db.query(`
+				SELECT message.*,
+					   person.name AS person_name, person.slug AS person_slug,
+					   context.slug AS context_slug
+				FROM message, person, context
+				WHERE message.id = $1
+				  AND message.person_id = person.id
+				  AND message.context_id = context.id
+			`, [id]);
+
+			if (query.rows.length == 0) {
+				// No message found, but we still resolve().
+				return resolve(null);
+			}
+
+			let message = query.rows[0];
+			resolve(message);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
+		}
+	});
 }
 
 async function add_context_details(context, before_id) {
