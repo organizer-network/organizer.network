@@ -815,14 +815,6 @@ app.get('/api/message/:id', async (req, rsp) => {
 			});
 		}
 
-		query = await db.query(`
-			SELECT COUNT(id) AS reply_count
-			FROM message
-			WHERE in_reply_to = $1
-		`, [req.params.id]);
-
-		message.reply_count = query.rows[0].reply_count;
-
 		rsp.render('message', {
 			message: message,
 			context: {
@@ -858,6 +850,8 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		}
 
 		let message = query.rows[0];
+		await add_message_details([message]);
+
 		let person = await curr_person(req);
 		let member = await check_membership(person, message.context_id);
 
@@ -871,7 +865,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		`, [req.params.id]);
 
 		message.replies = query.rows;
-		await add_reply_counts(message.replies);
+		await add_message_details(message.replies);
 
 		rsp.render('replies', {
 			message: message,
@@ -950,6 +944,7 @@ app.post('/api/update', async (req, rsp) => {
 
 		let person = await curr_person(req);
 		let message = await get_message(id);
+
 		if (message.person_id != person.id) {
 			return rsp.status(403).send({
 				ok: false,
@@ -971,6 +966,7 @@ app.post('/api/update', async (req, rsp) => {
 		`, [content, id]);
 
 		message = await get_message(id);
+
 		rsp.send({
 			ok: true,
 			message: message
@@ -1189,7 +1185,8 @@ function send_message(person, context_id, in_reply_to, content) {
 			`, [person.id, context_id, in_reply_to, content]);
 
 			let message = query.rows[0];
-			message.reply_count = 0;
+			await add_message_details([message]);
+
 			resolve(message);
 
 			let from = config.email_from;
@@ -1592,6 +1589,8 @@ function get_message(id) {
 			}
 
 			let message = query.rows[0];
+			await add_message_details([message]);
+
 			resolve(message);
 
 		} catch(err) {
@@ -1611,10 +1610,9 @@ async function add_context_details(context, before_id) {
 
 	if (context.thread) {
 
+		await add_message_details(context.thread);
 		context.messages = context.thread.splice(0, 1);
 		context.messages[0].replies = context.thread;
-		context.messages[0].reply_count = context.messages[0].replies.length;
-		await add_reply_counts(context.messages[0].replies);
 
 	} else {
 
@@ -1648,7 +1646,7 @@ async function add_context_details(context, before_id) {
 
 		context.total_messages = query.rows[0].total_messages;
 
-		await add_reply_counts(context.messages);
+		await add_message_details(context.messages);
 	}
 
 	query = await db.query(`
@@ -1664,10 +1662,10 @@ async function add_context_details(context, before_id) {
 	return context;
 }
 
-async function add_reply_counts(messages) {
+async function add_message_details(messages) {
 
-	if (messages.length == 0) {
-		return;
+	if (! 'length' in messages || messages.length == 0) {
+		return messages;
 	}
 
 	let ids = messages.map(msg => msg.id);
@@ -1678,7 +1676,7 @@ async function add_reply_counts(messages) {
 
 	placeholders = placeholders.join(', ');
 
-	query = await db.query(`
+	let query = await db.query(`
 		SELECT in_reply_to AS id,
 			   COUNT(id) AS reply_count
 		FROM message
@@ -1691,13 +1689,46 @@ async function add_reply_counts(messages) {
 		replies[reply.id] = reply.reply_count;
 	}
 
+	query = await db.query(`
+		SELECT message_id, created
+		FROM message_facet
+		WHERE message_id IN (${placeholders})
+		  AND type = 'revision'
+		ORDER BY created DESC
+	`, ids);
+
+	let revisions = {};
+	for (let revision of query.rows) {
+
+		revision.created = new Date(revision.created).toISOString();
+
+		if (! revisions[revision.message_id]) {
+			revisions[revision.message_id] = [revision.created];
+		} else {
+			revisions[revision.message_id].push(revision.created);
+		}
+	}
+
 	for (let message of messages) {
+
+		message.created = new Date(message.created).toISOString();
+		message.updated = new Date(message.updated).toISOString();
+
 		if (message.id in replies) {
 			message.reply_count = replies[message.id];
 		} else {
 			message.reply_count = 0;
 		}
+
+		if (revisions[message.id]) {
+			message.revisions = revisions[message.id];
+		} else {
+			message.revisions = [];
+		}
+		message.revisions.unshift(message.updated);
 	}
+
+	return messages;
 }
 
 function send_email(to, subject, body, from) {

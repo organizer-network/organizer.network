@@ -21,8 +21,13 @@
 	</div>
 	<div class="meta timestamp">
 		<a href="/group/<%= context.slug %>/<%= message.id %>">
-			<%= new Date(message.created).toISOString() %>
+			<%= message.created %>
 		</a>
+	</div>
+	<div class="meta revisions">
+		<% if (message.revisions.length > 1) { %>
+			<a href="#revisions" class="revisions-link" data-revisions="<%= message.revisions.join(', ') %>">Edited</a>
+		<% } %>
 	</div>
 	<br class="clear">
 	<div id="reply-<%= message.id %>">
