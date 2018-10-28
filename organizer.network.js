@@ -121,12 +121,16 @@ app.get('/', async (req, rsp) => {
 		let person = await curr_person(req);
 
 		if (! person) {
+			let then = req.query.then;
+			if (then && ! then.match(/^\//)) {
+				then = null;
+			}
 			return rsp.render('page', {
 				title: 'Welcome',
 				view: 'login',
 				content: {
 					invite: null,
-					then: req.query.then
+					then: then
 				}
 			});
 		}
@@ -141,6 +145,11 @@ app.get('/', async (req, rsp) => {
 
 		let contexts = await get_contexts(person);
 
+		let then = req.query.then;
+		if (then && ! then.match(/^\//)) {
+			then = null;
+		}
+
 		rsp.render('page', {
 			title: 'Hello',
 			view: 'home',
@@ -148,7 +157,7 @@ app.get('/', async (req, rsp) => {
 				person: person,
 				contexts: contexts,
 				base_url: config.base_url,
-				then: req.query.then
+				then: then
 			}
 		});
 
@@ -218,6 +227,11 @@ app.get('/group/:slug', async (req, rsp) => {
 		set_context(person, context);
 		let contexts = await get_contexts(person);
 
+		let then = req.query.then;
+		if (then && ! then.match(/^\//)) {
+			then = null;
+		}
+
 		rsp.render('page', {
 			title: context.name,
 			view: 'context',
@@ -227,7 +241,7 @@ app.get('/group/:slug', async (req, rsp) => {
 				context: contexts.current,
 				member: member,
 				base_url: config.base_url,
-				then: req.query.then
+				then: then
 			}
 		});
 
@@ -289,13 +303,18 @@ app.get('/join/:slug', async (req, rsp) => {
 
 		let person = await curr_person(req);
 
+		let then = req.query.then;
+		if (then && ! then.match(/^\//)) {
+			then = null;
+		}
+
 		if (! person) {
 			rsp.render('page', {
 				title: 'Welcome',
 				view: 'login',
 				content: {
 					invite: invite,
-					then: req.query.then
+					then: then
 				}
 			});
 		} else {
@@ -1129,6 +1148,10 @@ app.use(async (req, rsp) => {
 		if (req.path.substr(1).match(slug_regex)) {
 			let person = await get_person(req.path.substr(1));
 			if (person) {
+				let then = req.query.then;
+				if (then && ! (/^\//)) {
+					then = null;
+				}
 				rsp.render('page', {
 					title: person.name || 'Profile',
 					view: 'profile',
@@ -1137,7 +1160,7 @@ app.use(async (req, rsp) => {
 						edit: (req.query.edit == '1'),
 						base_url: config.base_url,
 						curr_id: curr_id,
-						then: req.query.then
+						then: then
 					}
 				});
 				return;

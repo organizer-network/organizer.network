@@ -17,7 +17,7 @@
 				<label for="slug-input">Profile URL</label>
 				<div><code><%= base_url %>/</code><input type="text" id="slug-input" name="slug" value="<%= person.slug %>"></div>
 				<input type="submit" value="Update">
-				<a href="/<%= person.slug %>">Cancel</a>
+				<a href="<% if (then) { %><%= then %><% } else { %>/<%= person.slug %><% } %>" class="cancel button">Cancel</a>
 				<div class="response"></div>
 			</form>
 		<% } else { %>

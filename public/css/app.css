@@ -119,6 +119,7 @@ input[type="submit"],
 }
 
 .button.cancel {
+	display: inline-block;
 	background: #808080 !important;
 	margin-left: 7px;
 }
