@@ -27,10 +27,10 @@ Dependencies:
 Note that these instructions are assuming a macOS development environment. You may need to adjust for other platforms. If you're looking to install this on a server, you may want to check out the [server setup guide](setup/setup.md).
 
 * Install [node.js](https://nodejs.org/en/)
-* Install [PostgreSQL with Homebrew](https://wiki.postgresql.org/wiki/Homebrew):
+* Install PostgreSQL with Homebrew:
 
 ```
-$ brew install postgresql
+$ brew install postgres
 ```
 
 Clone the repo:
@@ -46,7 +46,9 @@ Setup node.js packages:
 $ npm install
 ```
 
-Configure:
+## Configure
+
+First make a copy of the example config file:
 
 ```
 $ cp config.js.example config.js
@@ -54,26 +56,46 @@ $ cp config.js.example config.js
 
 * Edit `session_secret` in `config.js`
 
-This is just a random string that makes the browser sessions work securely. Here's how you can use `openssl` and the `pbcopy` macOS clipboard utility to copy a random string and then paste it into your `config.js` file:
+Open config.js and place a new key inside `session_secret`. To generate a new random key run the following command in your terminal. This is just a random string that makes the browser sessions work securely.
 
 ```
-$ openssl rand -hex 24 | pbcopy
+$ openssl rand -hex 24
+```
+
+Your session_secret should look something like this:
+
+```
+session_secret: 'ad6fe27e6f551ec40f44b5f7ab46c45847e5d9s0813feb605',
 ```
 
 * Edit `smtp` settings in `config.js` (optionally: set a [SendGrid](https://sendgrid.com/) API key)
 
-You can either [sign up for a new SendGrid account](https://signup.sendgrid.com/) or use the SMTP settings for your existing email account. For example, here is [a short tutorial from DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-use-google-s-smtp-server) on using Gmail as your SMTP server.
+Uncomment the `smtp` setting and update the keys with your personal email credentials OR uncomment the `sendgrid_api_key` and replace with an API key from SendGrid account.
 
-Database setup:
+* [How To Use Google's SMTP Server](https://www.digitalocean.com/community/tutorials/how-to-use-google-s-smtp-server)
+* [Sign up for a new SendGrid account](https://signup.sendgrid.com/)
+
+## Database setup
 
 ```
 $ cd db/
 $ make setup
 ```
 
-Run the server:
+## Optional: HTTPS
+
+The `ssl` section of `config.js` configures your SSL certificate/key. If you comment out this part of the configuration the server will run using "plain vanilla HTTP."
+
+Here is how to generate a self-signed SSL certificate, which is perfectly fine for development purposes:
 
 ```
+$ cd ssl && openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out cert.pem -subj "/C=US/ST=New York/L=Troy/O=organizer.network/CN=localhost"
+```
+
+# Run the server
+
+```
+$ cd ..
 $ npm run
 ```
 
@@ -110,16 +132,6 @@ Edit `edit /etc/postgresql/10/main/pg_hba.conf` with the following line change.
 ```
 # IPv4 local connections:
 host    all             all             127.0.0.1/32            trust
-```
-
-## SSL certificates
-
-The `ssl` section of `config.js` configures your SSL certificate/key. If you comment out this part of the configuration the server will use plain vanilla HTTP.
-
-If you want to use a self-signed SSL certificate for development purposes:
-
-```
-$ cd ssl && openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out cert.pem -subj "/C=US/ST=New York/L=Troy/O=organizer.network/CN=localhost"
 ```
 
 ## Server setup
