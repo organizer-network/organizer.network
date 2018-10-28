@@ -5,7 +5,7 @@
 		<title><%= title %></title>
 		<link rel="stylesheet" href="/css/app.css">
 	</head>
-	<body<% if (content.person) { %> class="logged-in"<% } %>>
+	<body<% if (content.person) { %> class="logged-in person-<%= content.person.slug %>"<% } %>>
 		<%- include(view, content) %>
 		<footer>
 			<div class="content">

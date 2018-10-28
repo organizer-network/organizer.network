@@ -63,9 +63,11 @@
 
 	function format_timestamp(el) {
 		var iso_date = $(el).html().trim();
-		var nice_timestamp = moment(iso_date).format('MMM D, YYYY, h:mma');
+		var full_timestamp = moment(iso_date).format('MMM D, YYYY, h:mma');
+		var relative_time = moment(iso_date).fromNow();
 		$(el).attr('data-orig', iso_date);
-		$(el).html(nice_timestamp);
+		$(el).attr('title', full_timestamp);
+		$(el).html(relative_time);
 	}
 
 	function setup_replies(query) {
@@ -223,6 +225,14 @@
 			setTimeout(function() {
 				window.location = '/';
 			}, 5000);
+		}
+
+		if ($(document.body).hasClass('logged-in')) {
+			var classes = $(document.body).attr('class');
+			var person = classes.match(/person-\w+/);
+			if (person) {
+				$('<style>.message.' + person[0] + ':hover .message-options { display: block; }</style>').appendTo('head');
+			}
 		}
 
 	});
