@@ -546,8 +546,13 @@ input[type="submit"]:active,
 	padding: 5px 10px 3px 10px;
 }
 
-.meta.timestamp {
+.meta.timestamp,
+.meta.revisions {
 	float: right;
+}
+
+.meta.revisions {
+	margin-right: 1.5em;
 }
 
 .heading {

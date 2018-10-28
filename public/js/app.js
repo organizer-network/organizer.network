@@ -275,11 +275,21 @@
 							$message.find('.message-content').html(rsp.message.content);
 							$message.find('form').remove();
 							$message.removeClass('editing');
+
+							var revisions = rsp.message.revisions.join(', ');
+							$message.find('.revisions').html('<a href="#revisions" class="revisions-link" data-revisions="' + revisions + '">Edited</a>');
 						}
 					});
 				}
 			});
 		}
+
+		$('.revisions-link').click(function(e) {
+			e.preventDefault();
+			var $link = $(e.target);
+			var revisions = $link.data('revisions');
+			console.log(revisions);
+		});
 
 	});
 
