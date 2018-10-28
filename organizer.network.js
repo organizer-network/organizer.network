@@ -787,6 +787,8 @@ app.get('/api/message/:id', async (req, rsp) => {
 		}
 
 		let message = query.rows[0];
+		message.content = marked(message.content);
+
 		let person = await curr_person(req);
 		let member = await check_membership(person, message.context_id);
 
@@ -853,6 +855,10 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		`, [req.params.id]);
 
 		message.replies = query.rows;
+		for (let msg of message.replies) {
+			msg.content = marked(msg.content);
+		}
+
 		await add_reply_counts(message.replies);
 
 		rsp.render('replies', {
@@ -1460,6 +1466,10 @@ async function add_context_details(context, before_id) {
 
 	if (context.thread) {
 
+		for (let msg of context.thread) {
+			msg.content = marked(msg.content);
+		}
+
 		context.messages = context.thread.splice(0, 1);
 		context.messages[0].replies = context.thread;
 		context.messages[0].reply_count = context.messages[0].replies.length;
@@ -1487,6 +1497,9 @@ async function add_context_details(context, before_id) {
 		`, values);
 
 		context.messages = query.rows;
+		for (let msg of context.messages) {
+			msg.content = marked(msg.content);
+		}
 
 		query = await db.query(`
 			SELECT COUNT(id) AS total_messages
@@ -1560,7 +1573,8 @@ function send_email(to, subject, body, from) {
 			from: from,
 			to: to,
 			subject: subject,
-			text: body
+			text: body,
+			html: marked(body)
 		};
 
 		if ('sendgrid_api_key' in config) {

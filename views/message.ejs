@@ -1,6 +1,6 @@
 <div class="message" id="<%= message.id %>">
 	<h4 class="person"><a href="/<%= message.person_slug %>"><%= message.person_name || `person ${message.person_slug}` %></a></h4>
-	<pre class="message-content"><%= message.content %></pre>
+	<div class="message-content"><%- message.content %></div>
 	<div class="meta reply">
 		<% if (member || message.reply_count > 0) { %>
 			<a href="/group/<%= context.slug %>/<%= message.id %>#reply-<%= message.id %>" data-id="<%= message.id %>"<% if (message.replies && message.reply_count > 0) { %> class="selected"<% } %>>
