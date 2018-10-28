@@ -2,6 +2,9 @@ VERSION := eeeeee
 NOW := $(shell TZ=UTC date +%Y%m%d-%H%M%S)
 
 setup:
+ifeq (, $(shell which createdb))
+	$(error "Oops, it looks like you still need to install PostgreSQL.")
+endif
 	createdb $(VERSION)
 	psql $(VERSION) < schema/setup.sql
 	psql $(VERSION) < ../node_modules/connect-pg-simple/table.sql
