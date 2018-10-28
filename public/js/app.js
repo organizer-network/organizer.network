@@ -233,6 +233,24 @@
 			if (person) {
 				$('<style>.message.' + person[0] + ':hover .message-options { display: block; }</style>').appendTo('head');
 			}
+			$('#message-list').click(function(e) {
+				if ($(e.target).hasClass('delete')) {
+					if (! confirm('Are you sure you want to delete your message?')) {
+						return;
+					}
+					var id = $(e.target).closest('.message').attr('id');
+					$.post('/api/delete', {
+						id: id
+					}, function(rsp) {
+						if ($('#context').hasClass('thread') &&
+						    $('#context').data('id') == id) {
+							window.location = $('#group-link').attr('href');
+						} else if (rsp.ok) {
+							$('#' + id).remove();
+						}
+					});
+				}
+			});
 		}
 
 	});

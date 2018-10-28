@@ -2,12 +2,12 @@
 	person: person,
 	contexts: contexts
 }) %>
-<div id="context" class="thread">
+<div id="context" class="thread" data-id="<%= context.messages[0].id %>">
 	<div class="content">
 		<div id="messages">
 			<h2><%= context.name %></h2>
 			<ul class="back">
-				<li><a href="/group/<%= context.slug %>">Group page</a></li>
+				<li><a href="/group/<%= context.slug %>" id="group-link">Group page</a></li>
 				<% if (context.messages[0].in_reply_to) { %>
 					<li><a href="/group/<%= context.slug %>/<%= context.messages[0].in_reply_to %>">In reply to message</a></li>
 				<% } %>

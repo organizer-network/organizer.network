@@ -869,6 +869,53 @@ app.get('/api/replies/:id', async (req, rsp) => {
 	}
 });
 
+app.post('/api/delete', async (req, rsp) => {
+
+	try {
+
+		let id = req.body.id;
+		if (! id) {
+			return rsp.status(400).send({
+				ok: false,
+				error: "Please include a message 'id' param."
+			});
+		}
+
+		let person = await curr_person(req);
+		let message = await get_message(id);
+		if (message.person_id != person.id) {
+			return rsp.status(403).send({
+				ok: false,
+				error: "You cannot delete other people's messages."
+			});
+		}
+
+		await db.query(`
+			DELETE FROM message
+			WHERE id = $1
+		`, [id]);
+
+		await db.query(`
+			DELETE FROM message_facet
+			WHERE message_id = $1
+		`, [id]);
+
+		console.log(`Deleted message ${message.id} by ${person.slug} (${person.id}): ${message.content}`);
+
+		rsp.send({
+			ok: true
+		});
+
+	} catch(err) {
+		console.log(err.stack);
+		rsp.status(500).send({
+			ok: false,
+			error: 'Could not delete message.'
+		});
+	}
+
+});
+
 app.get('/api/group/:slug', async (req, rsp) => {
 
 	try {
