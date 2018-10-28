@@ -80,11 +80,12 @@ Uncomment the `smtp` setting and update the keys with your personal email creden
 ```
 $ cd db/
 $ make setup
+$ cd ..
 ```
 
 ## Optional: HTTPS
 
-The `ssl` section of `config.js` configures your SSL certificate/key. If you comment out this part of the configuration the server will run using "plain vanilla HTTP."
+The `ssl` section of `config.js` configures your SSL certificate/key. If you comment out the `ssl` part of the configuration the server will run using "plain vanilla HTTP."
 
 Here is how to generate a self-signed SSL certificate, which is perfectly fine for development purposes:
 
@@ -94,12 +95,13 @@ $ cd ssl && openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 
 
 # Run the server
 
+Just go into the project folder and load up the server with `npm run`.
+
 ```
-$ cd ..
 $ npm run
 ```
 
-Load it up in a browser! By default it can be reached from `https://localhost:5000/`. If you used a self-signed SSL certificate ([described below](#ssl-certificates)) you will need to click through a security warning.
+Load it up in a browser! By default it can be reached from `https://localhost:5000/`. If you used a self-signed SSL certificate you will need to click through a security warning.
 
 ## Database tasks
 
@@ -127,7 +129,7 @@ $ sudo -u postgres createuser -d `whoami`
 
 Setup Postgres to accept localhost connections on Ubuntu:
 
-Edit `edit /etc/postgresql/10/main/pg_hba.conf` with the following line change.
+Edit `/etc/postgresql/10/main/pg_hba.conf` with the following line change.
 
 ```
 # IPv4 local connections:
