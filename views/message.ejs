@@ -1,8 +1,8 @@
 <div class="message person-<%= message.person_slug %>" id="<%= message.id %>">
 	<h4 class="person"><a href="/<%= message.person_slug %>"><%= message.person_name || `person ${message.person_slug}` %></a></h4>
 	<div class="message-options meta">
-		<a href="#edit">edit</a>
-		<a href="#delete">&times;</a>
+		<a href="#edit" class="edit" title="Edit this message">edit</a>
+		<a href="#delete" class="delete" title="Delete this message">&times;</a>
 	</div>
 	<pre class="message-content"><%= message.content %></pre>
 	<div class="meta reply">
