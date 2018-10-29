@@ -303,7 +303,7 @@
 			var classes = $(document.body).attr('class');
 			var person = classes.match(/person-\w+/);
 			if (person) {
-				$('<style>.message.' + person[0] + ':hover .message-options { display: block; }</style>').appendTo('head');
+				$('<style>.message.' + person[0] + ':hover > .message-options { display: block; }</style>').appendTo('head');
 			}
 			$('#message-list').click(function(e) {
 				if ($(e.target).hasClass('delete')) {
