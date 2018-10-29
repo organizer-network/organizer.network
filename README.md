@@ -8,7 +8,7 @@ It's worth pointing out that this project is still in its early days, so proceed
 
 ## Versioning
 
-* Current release: __[v0.0.5 "eeeeee"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.5)__ (on the `master` branch)
+* Current release: __[v0.0.5 "eeeeee"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.5)__
 * Under development: __v0.0.6 "foom"__
 
 Versions names are based on [Tom Gauld's *A Noisy Alphabet*](http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom).
@@ -31,9 +31,9 @@ You may notice dphiffer uses [emoji codes](http://emoji-cheat-sheet.com/) in his
 
 ## Developer setup
 
-_This has only been tested on macOS and Ubuntu, but there's no reason to think it wouldn't work on other platforms. I definitely welcome hearing about your experience on, for example, Windows._
+This has only been tested on macOS and Ubuntu, but there's no reason to think it wouldn't work on other platforms. I definitely welcome hearing about your experience on, for example, Windows.
 
-Note that these instructions are assuming a macOS development environment. You may need to adjust for other platforms. If you're looking to install this on a server, you may want to check out the [server setup guide](setup/setup.md).
+These setup instructions assume a macOS development environment. You may need to adjust for other platforms. If you're looking to install this on a server, you may want to check out the [server setup guide](setup/setup.md).
 
 * Install [node.js](https://nodejs.org/en/)
 * Install PostgreSQL with Homebrew:
