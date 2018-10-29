@@ -796,7 +796,8 @@ app.get('/api/message/:id', async (req, rsp) => {
 
 	try {
 		let id = parseInt(req.params.id);
-		let message = await get_message(id);
+		let revision = req.query.revision || null;
+		let message = await get_message(id, revision);
 
 		if (! message) {
 			return rsp.status(404).send({
@@ -815,13 +816,20 @@ app.get('/api/message/:id', async (req, rsp) => {
 			});
 		}
 
-		rsp.render('message', {
-			message: message,
-			context: {
-				slug: message.context_slug
-			},
-			member: member
-		});
+		if (req.query.format == 'html') {
+			rsp.render('message', {
+				message: message,
+				context: {
+					slug: message.context_slug
+				},
+				member: member
+			});
+		} else {
+			rsp.send({
+				ok: true,
+				message: message
+			});
+		}
 
 	} catch (err) {
 		console.log(err.stack);
@@ -1567,7 +1575,7 @@ function set_context(person, context) {
 	}
 }
 
-function get_message(id) {
+function get_message(id, revision) {
 	return new Promise(async (resolve, reject) => {
 
 		try {
@@ -1590,6 +1598,11 @@ function get_message(id) {
 
 			let message = query.rows[0];
 			await add_message_details([message]);
+
+			if (revision) {
+				message.revision = revision;
+				message.content = message.revisions[revision].content;
+			}
 
 			resolve(message);
 
@@ -1690,7 +1703,7 @@ async function add_message_details(messages) {
 	}
 
 	query = await db.query(`
-		SELECT message_id, created
+		SELECT message_id, content, created
 		FROM message_facet
 		WHERE message_id IN (${placeholders})
 		  AND type = 'revision'
@@ -1703,10 +1716,12 @@ async function add_message_details(messages) {
 		revision.created = new Date(revision.created).toISOString();
 
 		if (! revisions[revision.message_id]) {
-			revisions[revision.message_id] = [revision.created];
-		} else {
-			revisions[revision.message_id].push(revision.created);
+			revisions[revision.message_id] = [];
 		}
+		revisions[revision.message_id].push({
+			created: revision.created,
+			content: revision.content
+		});
 	}
 
 	for (let message of messages) {
@@ -1725,7 +1740,11 @@ async function add_message_details(messages) {
 		} else {
 			message.revisions = [];
 		}
-		message.revisions.unshift(message.updated);
+		message.revisions.unshift({
+			created: message.updated,
+			content: message.content
+		});
+		message.revision_dates = message.revisions.map(rev => rev.created);
 	}
 
 	return messages;

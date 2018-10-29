@@ -38,7 +38,7 @@
 
 	function reply_form_handler(rsp, el) {
 		$(el).find('textarea[name="content"]').val('');
-		$.get('/api/message/' + rsp.message.id, function(rsp) {
+		$.get('/api/message/' + rsp.message.id + '?format=html', function(rsp) {
 
 			var $replies = $(el).closest('.replies');
 			var $message = $(el).closest('.message');
@@ -115,7 +115,7 @@
 		form_handler('#send', function(rsp) {
 			$('#send .response').html('Your message has been sent.');
 			$('#send textarea[name="content"]').val('');
-			$.get('/api/message/' + rsp.message.id, function(rsp) {
+			$.get('/api/message/' + rsp.message.id + '?format=html', function(rsp) {
 				$('#message-list').prepend(rsp);
 				format_timestamp($('#message-list .message:first-child .timestamp a'));
 				$('#members li:eq(0)').before($('#members li.curr-person'));
@@ -285,10 +285,50 @@
 		}
 
 		$('.revisions-link').click(function(e) {
+
 			e.preventDefault();
+
 			var $link = $(e.target);
-			var revisions = $link.data('revisions');
-			console.log(revisions);
+			var $revisions = $link.closest('.revisions');
+			var $message = $link.closest('.message');
+			var dates = $link.data('revisions').split(',');
+
+			$message.toggleClass('show-revisions');
+
+			if ($message.hasClass('show-revisions')) {
+
+				$link.html('Done');
+				var id = $message.attr('id');
+				var options = '';
+				var label;
+
+				for (var i = 0; i < dates.length; i++) {
+					label = moment(dates[i].trim()).fromNow();
+					options += '<option value="' + i + '">' + label + '</option>';
+				}
+
+				$message.find('.revision-select').html(
+					'Revisions → <select id="revisions-' + id + '">' +
+					options +
+					'</select>'
+				);
+
+				var content = $message.find('.message-content').html();
+				$message.find('.revision-content').html('<pre class="message-content">' + content + '</pre>');
+
+				$message.find('.revision-select select').change(function() {
+					var rev = $(this).val();
+					var url = '/api/message/' + id + '?revision=' + rev;
+					$.get(url, function(rsp) {
+						$message.find('.revision-content .message-content').html(rsp.message.content);
+					});
+				});
+
+			} else {
+				$link.html('Edited');
+				$message.find('.revision-select').html('');
+				$message.find('.revision-content').html('');
+			}
 		});
 
 	});
