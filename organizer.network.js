@@ -1187,8 +1187,8 @@ function send_message(person, context_id, in_reply_to, content) {
 
 			let query = await db.query(`
 				INSERT INTO message
-				(person_id, context_id, in_reply_to, content, created)
-				VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+				(person_id, context_id, in_reply_to, content, created, updated)
+				VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 				RETURNING *
 			`, [person.id, context_id, in_reply_to, content]);
 
@@ -1745,6 +1745,7 @@ async function add_message_details(messages) {
 			content: message.content
 		});
 		message.revision_dates = message.revisions.map(rev => rev.created);
+		console.log(message.revision_dates);
 	}
 
 	return messages;

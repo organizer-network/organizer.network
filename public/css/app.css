@@ -560,6 +560,10 @@ input[type="submit"]:active,
 	display: none;
 }
 
+.message.show-revisions .message-options {
+	display: none !important;
+}
+
 .heading {
 	margin: 2em 0 0 0;
 	padding: 0 0 2em 0;
