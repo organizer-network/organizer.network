@@ -77,6 +77,10 @@ Uncomment the `smtp` setting and update the keys with your personal email creden
 
 ## Database setup
 
+Make sure you have an instance of Postgres running.
+
+If you don't want to run a Postgres instance from the command line you can also install the [Postgres app](https://postgresapp.com/downloads.html).
+
 ```
 $ cd db/
 $ make setup
