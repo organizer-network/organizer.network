@@ -21,6 +21,7 @@ Organizer.network welcomes contributors!
 * Some issues in GitHub are [labeled as good for first-time contributors](https://github.com/organizer-network/organizer.network/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 * If you find something seems broken, please [write up an issue](https://github.com/organizer-network/organizer.network/issues).
 * New development happens on the `develop` branch, `master` branch reflects the current release.
+* If you'd like commit access to the repo, just send me your GitHub account.
 
 You may notice dphiffer uses [emoji codes](http://emoji-cheat-sheet.com/) in his commit messages, this is entirely optional.
 
