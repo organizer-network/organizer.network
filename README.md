@@ -108,13 +108,13 @@ $ cd ssl && openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 
 
 # Run the server
 
-Just go into the project folder and load up the server with `npm run`.
+Just go into the project folder and start the server.
 
 ```
 $ npm run start
 ```
 
-Load it up in a browser! By default it can be reached from `https://localhost:5000/`. If you used a self-signed SSL certificate you will need to click through a security warning.
+Then load it up in a browser! By default it can be reached from `https://localhost:5000/`. If you used a self-signed SSL certificate you will need to click through a security warning.
 
 ## Database tasks
 
