@@ -38,13 +38,16 @@
 
 	function reply_form_handler(rsp, el) {
 		$(el).find('textarea[name="content"]').val('');
-		$.get('/api/message/' + rsp.message.id, function(rsp) {
+		$.get('/api/message/' + rsp.message.id + '?format=html', function(rsp) {
 
 			var $replies = $(el).closest('.replies');
 			var $message = $(el).closest('.message');
 			var $link = $message.find('> .reply a');
 
 			$replies.find('.message-list').append(rsp);
+			var $msg_content = $replies.find('.message-list .message:last-child .message-content');
+			format_content($msg_content);
+
 			var $timestamp = $replies.find('.message-list .message:last-child .timestamp a');
 			format_timestamp($timestamp);
 
@@ -61,6 +64,54 @@
 		});
 	}
 
+	function revisions_handler(e) {
+
+		e.preventDefault();
+
+		var $link = $(e.target);
+		var $revisions = $link.closest('.revisions');
+		var $message = $link.closest('.message');
+		var dates = $link.data('revisions').split(',');
+
+		$message.toggleClass('show-revisions');
+
+		if ($message.hasClass('show-revisions')) {
+
+			$link.html('Done');
+			var id = $message.attr('id');
+			var options = '';
+			var label;
+
+			for (var i = 0; i < dates.length; i++) {
+				label = moment(dates[i].trim()).fromNow();
+				options += '<option value="' + i + '">' + label + '</option>';
+			}
+
+			$message.find('.revision-select').html(
+				'Revisions → <select id="revisions-' + id + '">' +
+				options +
+				'</select>'
+			);
+
+			var content = $message.find('.message-content').html();
+			$message.find('.revision-content').html('<pre class="message-content">' + content + '</pre>');
+
+			$message.find('.revision-select select').change(function() {
+				var rev = $(this).val();
+				var url = '/api/message/' + id + '?revision=' + rev;
+				$.get(url, function(rsp) {
+					$message.find('.revision-content .message-content').html(rsp.message.content);
+					format_content($message.find('.revision-content .message-content'));
+				});
+			});
+
+		} else {
+			$link.html('Edited');
+			$message.find('.revision-select').html('');
+			$message.find('.revision-content').html('');
+		}
+	}
+
 	function format_timestamp(el) {
 		var iso_date = $(el).html().trim();
 		var full_timestamp = moment(iso_date).format('MMM D, YYYY, h:mma');
@@ -68,6 +119,16 @@
 		$(el).attr('data-orig', iso_date);
 		$(el).attr('title', full_timestamp);
 		$(el).html(relative_time);
+	}
+
+	function format_content(el) {
+		var content = $(el).html();
+		$(el).data('content', content);
+		content = content.replace(/https?:\/\/\S+/g, function(url) {
+			var text = url;
+			return '<a href="' + url + '">' + text + '</a>';
+		});
+		$(el).html(content);
 	}
 
 	function setup_replies(query) {
@@ -83,6 +144,9 @@
 
 					$.get('/api/replies/' + id, function(rsp) {
 						$('#reply-' + id).html(rsp);
+						$('#reply-' + id).find('.message-content').each(function(index, el) {
+							format_content(el);
+						});
 						$('#reply-' + id).find('.timestamp a').each(function(index, el) {
 							format_timestamp(el);
 						});
@@ -115,8 +179,9 @@
 		form_handler('#send', function(rsp) {
 			$('#send .response').html('Your message has been sent.');
 			$('#send textarea[name="content"]').val('');
-			$.get('/api/message/' + rsp.message.id, function(rsp) {
+			$.get('/api/message/' + rsp.message.id + '?format=html', function(rsp) {
 				$('#message-list').prepend(rsp);
+				format_content($('#message-list .message:first-child .message-content'));
 				format_timestamp($('#message-list .message:first-child .timestamp a'));
 				$('#members li:eq(0)').before($('#members li.curr-person'));
 				setup_replies('#message-list .message:first-child .reply a');
@@ -162,6 +227,10 @@
 			}
 		}
 
+		$('.message-content').each(function(index, el) {
+			format_content(el);
+		});
+
 		$('.timestamp a').each(function(index, el) {
 			format_timestamp(el);
 		});
@@ -205,6 +274,9 @@
 			var group = $('#more-messages').data('group');
 			$.get('/api/group/' + group + '?before_id=' + before_id, function(rsp) {
 				$('#message-list').append(rsp);
+				$('#message-list .page:last-child .message-content').each(function(index, el) {
+					format_content(el);
+				});
 				$('#message-list .page:last-child .timestamp a').each(function(index, el) {
 					format_timestamp(el);
 				});
@@ -231,7 +303,7 @@
 			var classes = $(document.body).attr('class');
 			var person = classes.match(/person-\w+/);
 			if (person) {
-				$('<style>.message.' + person[0] + ':hover .message-options { display: block; }</style>').appendTo('head');
+				$('<style>.message.' + person[0] + ':hover > .message-options { display: block; }</style>').appendTo('head');
 			}
 			$('#message-list').click(function(e) {
 				if ($(e.target).hasClass('delete')) {
@@ -264,7 +336,7 @@
 							'<div class="response"></div>' +
 						'</form>'
 					);
-					$message.find('textarea').val($message.find('.message-content').html());
+					$message.find('textarea').val($message.find('.message-content').data('content'));
 					$message.find('.cancel').click(function(e) {
 						e.preventDefault();
 						$message.find('form').remove();
@@ -276,20 +348,16 @@
 							$message.find('form').remove();
 							$message.removeClass('editing');
 
-							var revisions = rsp.message.revisions.join(', ');
+							var revisions = rsp.message.revision_dates.join(', ');
 							$message.find('.revisions').html('<a href="#revisions" class="revisions-link" data-revisions="' + revisions + '">Edited</a>');
+							$message.find('.revisions-link').click(revisions_handler);
 						}
 					});
 				}
 			});
 		}
 
-		$('.revisions-link').click(function(e) {
-			e.preventDefault();
-			var $link = $(e.target);
-			var revisions = $link.data('revisions');
-			console.log(revisions);
-		});
+		$('.revisions-link').click(revisions_handler);
 
 	});
 

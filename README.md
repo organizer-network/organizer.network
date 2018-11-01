@@ -8,23 +8,33 @@ It's worth pointing out that this project is still in its early days, so proceed
 
 ## Versioning
 
-* Current release: __[v0.0.5 "eeeeee"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.5)__ (on the `master` branch)
-* Under development: __v0.0.6 "foom"__ (on the `develop` branch)
+* Current release: __[v0.0.5 "eeeeee"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.5)__
+* Under development: __v0.0.6 "foom"__
 
 Versions names are based on [Tom Gauld's *A Noisy Alphabet*](http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom).
 
-## Developer setup
+## Contributing
 
-_This has only been tested on macOS and Ubuntu, but there's no reason to think it wouldn't work on other platforms. I definitely welcome hearing about your experience on, for example, Windows._
+Organizer.network welcomes contributors!
 
-Dependencies:
+* Drop in on our [meta group](https://organizer.network/join/yycczw12923m2stb) and say hello.
+* Some issues in GitHub are [labeled as good for first-time contributors](https://github.com/organizer-network/organizer.network/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
+* If you find something seems broken, please [write up an issue](https://github.com/organizer-network/organizer.network/issues).
+* New development happens on the `develop` branch, `master` branch reflects the current release.
+* If you'd like commit access to the repo, just post your GitHub account in the meta group.
+
+You may notice dphiffer uses [emoji codes](http://emoji-cheat-sheet.com/) in his commit messages, this is entirely optional.
+
+## Dependencies
 
 * node.js 8 or 10
 * PostgreSQL 10 or 11
 
-## macOS setup
+## Developer setup
 
-Note that these instructions are assuming a macOS development environment. You may need to adjust for other platforms. If you're looking to install this on a server, you may want to check out the [server setup guide](setup/setup.md).
+This has only been tested on macOS and Ubuntu, but there's no reason to think it wouldn't work on other platforms. I definitely welcome hearing about your experience on, for example, Windows.
+
+These setup instructions assume a macOS development environment. You may need to adjust for other platforms. If you're looking to install this on a server, you may want to check out the [server setup guide](setup/setup.md).
 
 * Install [node.js](https://nodejs.org/en/)
 * Install PostgreSQL with Homebrew:
@@ -99,13 +109,13 @@ $ cd ssl && openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 
 
 # Run the server
 
-Just go into the project folder and load up the server with `npm run`.
+Just go into the project folder and start the server.
 
 ```
 $ npm run start
 ```
 
-Load it up in a browser! By default it can be reached from `https://localhost:5000/`. If you used a self-signed SSL certificate you will need to click through a security warning.
+Then load it up in a browser! By default it can be reached from `https://localhost:5000/`. If you used a self-signed SSL certificate you will need to click through a security warning.
 
 ## Database tasks
 
@@ -139,12 +149,6 @@ Edit `/etc/postgresql/10/main/pg_hba.conf` with the following line change.
 # IPv4 local connections:
 host    all             all             127.0.0.1/32            trust
 ```
-
-## Contributing
-
-This project welcomes contributors! Our process is still very much in development, but probably the first thing to do is drop in on our [meta group](https://organizer.network/join/yycczw12923m2stb) and say hello. Some issues in GitHub are [labeled as good for first-time contributors](https://github.com/organizer-network/organizer.network/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22), in case you want to jump right in.
-
-You may notice @dphiffer uses [emoji codes](http://emoji-cheat-sheet.com/) in his commit messages, this is entirely optional.
 
 ## Server setup
 
