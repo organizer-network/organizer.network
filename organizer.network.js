@@ -44,7 +44,7 @@ const sendgrid = require('@sendgrid/mail');
 const mkdirp = require('mkdirp');
 const multer = require('multer')
 
-const slug_regex = /^[a-z0-9_-][a-z0-9_-]+$/;
+const slug_regex = /^[a-z0-9_-][a-z0-9_-]+$/i;
 
 marked.setOptions({
 	gfm: true,
@@ -375,7 +375,7 @@ app.post('/api/login', async (req, rsp) => {
 Follow this link to login:
 ${login_url}
 
-(expires in 10 minutes)
+Link expires in 60 minutes.
 
 <3`;
 
@@ -425,7 +425,7 @@ ${login_url}
 			console.log(`${now}: ${count} logins pending`);
 			console.log(login_hashes);
 
-		}, 10 * 60 * 1000);
+		}, 60 * 60 * 1000);
 
 		await send_email(email, subject, body);
 
