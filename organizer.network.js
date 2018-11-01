@@ -1233,6 +1233,7 @@ async function send_notifications(sender, message, from) {
 			       context.name AS context_name, context.slug AS context_slug
 			FROM member, person, context
 			WHERE member.context_id = $1
+			  AND member.active = true
 			  AND member.person_id != $2
 			  AND person.id = member.person_id
 			  AND context.id = member.context_id
