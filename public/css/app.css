@@ -385,7 +385,7 @@ input[type="submit"]:active,
 
 .content {
 	width: 100%;
-	max-width: 900px;
+	max-width: 1024px;
 	margin: 0 auto;
 	padding: 15px;
 }
