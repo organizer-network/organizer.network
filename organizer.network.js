@@ -917,8 +917,8 @@ app.post('/api/delete', async (req, rsp) => {
 		`, [id]);
 
 		await db.query(`
-			DELETE FROM message_facet
-			WHERE message_id = $1
+			DELETE FROM facet
+			WHERE target_id = $1
 		`, [id]);
 
 		console.log(`Deleted message ${message.id} by ${person.slug} (${person.id}): ${message.content}`);
@@ -961,10 +961,10 @@ app.post('/api/update', async (req, rsp) => {
 		}
 
 		await db.query(`
-			INSERT INTO message_facet
-			(message_id, type, content, created, updated)
-			VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
-		`, [id, 'revision', message.content, message.updated]);
+			INSERT INTO facet
+			(target_id, target_type, facet_type, content, created, updated)
+			VALUES ($1, 'message', 'revision', $2, $3, CURRENT_TIMESTAMP)
+		`, [id, message.content, message.updated]);
 
 		await db.query(`
 			UPDATE message
@@ -1704,10 +1704,11 @@ async function add_message_details(messages) {
 	}
 
 	query = await db.query(`
-		SELECT message_id, content, created
-		FROM message_facet
-		WHERE message_id IN (${placeholders})
-		  AND type = 'revision'
+		SELECT target_id, content, created
+		FROM facet
+		WHERE target_id IN (${placeholders})
+		  AND target_type = 'message'
+		  AND facet_type = 'revision'
 		ORDER BY created DESC
 	`, ids);
 
@@ -1716,10 +1717,10 @@ async function add_message_details(messages) {
 
 		revision.created = new Date(revision.created).toISOString();
 
-		if (! revisions[revision.message_id]) {
-			revisions[revision.message_id] = [];
+		if (! revisions[revision.target_id]) {
+			revisions[revision.target_id] = [];
 		}
-		revisions[revision.message_id].push({
+		revisions[revision.target_id].push({
 			created: revision.created,
 			content: revision.content
 		});

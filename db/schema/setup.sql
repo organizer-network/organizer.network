@@ -44,15 +44,16 @@ CREATE TABLE IF NOT EXISTS message (
 );
 CREATE INDEX IF NOT EXISTS message_idx ON message (id, context_id, in_reply_to, created);
 
-CREATE TABLE IF NOT EXISTS message_facet (
-	message_id INTEGER,
-	type VARCHAR(255),
-	item_num INTEGER,
+CREATE TABLE IF NOT EXISTS facet (
+	target_id INTEGER NOT NULL,
+	target_type VARCHAR(255) NOT NULL,
+	facet_type VARCHAR(255) NOT NULL,
+	facet_num INTEGER,
 	content TEXT,
 	created TIMESTAMP,
 	updated TIMESTAMP
 );
-CREATE INDEX message_facet_idx ON message_facet (message_id);
+CREATE INDEX facet_idx ON facet (target_id, target_type, facet_type, facet_num);
 
 CREATE TABLE IF NOT EXISTS email_tx (
 	id VARCHAR(255) PRIMARY KEY,
