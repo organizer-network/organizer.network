@@ -207,7 +207,7 @@ app.get('/group/:slug', async (req, rsp) => {
 		}
 
 		let person = await curr_person(req);
-		let member = await check_membership(person, context.id, 'include inactive');
+		let member = await get_member(person, context.id, 'include inactive');
 
 		if (! member) {
 			return error_page(rsp, '404');
@@ -262,7 +262,7 @@ app.get('/group/:slug/:id', async (req, rsp) => {
 		}
 
 		let person = await curr_person(req);
-		let member = await check_membership(person, context.id);
+		let member = await get_member(person, context.id);
 
 		if (! member) {
 			return error_page(rsp, '404');
@@ -322,6 +322,48 @@ app.get('/join/:slug', async (req, rsp) => {
 			await join_context(person, invite.context.id, invited_by);
 			rsp.redirect(`${config.base_url}/group/${invite.context.slug}`);
 		}
+
+	} catch(err) {
+		console.log(err.stack);
+		return error_page(rsp, '500');
+	}
+
+});
+
+app.get('/settings/:slug', async (req, rsp) => {
+
+	try {
+
+		let person = await curr_person(req);
+		let context = await get_context(req.params.slug);
+
+		if (! context) {
+			return error_page(rsp, '404');
+		}
+
+		let member = await get_member(person, context.id);
+		let contexts = await get_contexts(person);
+
+		if (! member) {
+			return error_page(rsp, '404');
+		}
+
+		let email = 'send';
+		if (member.facets && member.facets.email) {
+			email = member.facets.email;
+		}
+
+		rsp.render('page', {
+			title: 'Settings',
+			view: 'settings',
+			content: {
+				context: context,
+				contexts: contexts,
+				person: person,
+				member: member,
+				email: email
+			}
+		});
 
 	} catch(err) {
 		console.log(err.stack);
@@ -611,7 +653,7 @@ app.post('/api/send', async (req, rsp) => {
 		}
 
 		let person = await curr_person(req);
-		let member = await check_membership(person, context_id);
+		let member = await get_member(person, context_id);
 
 		if (! member) {
 			return rsp.status(403).send({
@@ -807,7 +849,7 @@ app.get('/api/message/:id', async (req, rsp) => {
 		}
 
 		let person = await curr_person(req);
-		let member = await check_membership(person, message.context_id);
+		let member = await get_member(person, message.context_id);
 
 		if (! member) {
 			return rsp.status(403).send({
@@ -861,7 +903,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		await add_message_details([message]);
 
 		let person = await curr_person(req);
-		let member = await check_membership(person, message.context_id);
+		let member = await get_member(person, message.context_id);
 
 		query = await db.query(`
 			SELECT message.*,
@@ -919,6 +961,7 @@ app.post('/api/delete', async (req, rsp) => {
 		await db.query(`
 			DELETE FROM facet
 			WHERE target_id = $1
+			  AND type = 'message'
 		`, [id]);
 
 		console.log(`Deleted message ${message.id} by ${person.slug} (${person.id}): ${message.content}`);
@@ -1012,7 +1055,7 @@ app.get('/api/group/:slug', async (req, rsp) => {
 			});
 		}
 
-		let member = await check_membership(person, context.id);
+		let member = await get_member(person, context.id);
 
 		if (! member) {
 			return rsp.status(403).send({
@@ -1104,7 +1147,7 @@ app.post('/api/join', async (req, rsp) => {
 		}
 
 		let context_id = parseInt(req.body.context_id);
-		let member = await check_membership(person, context_id, 'include_inactive');
+		let member = await get_member(person, context_id, 'include_inactive');
 		if (! member) {
 			return rsp.status(403).send({
 				ok: false,
@@ -1134,6 +1177,66 @@ app.post('/api/join', async (req, rsp) => {
 		rsp.status(500).send({
 			ok: false,
 			error: 'Could not join group.'
+		});
+	}
+
+});
+
+app.post('/api/settings', async (req, rsp) => {
+
+	try {
+
+		if (! req.body.context_id) {
+			return rsp.status(400).send({
+				ok: false,
+				error: 'Please include a context_id argument.'
+			});
+		}
+
+		var person = await curr_person(req);
+		var context = await get_context(parseInt(req.body.context_id));
+
+		if (! person || ! context) {
+			return rsp.status(400).send({
+				ok: false,
+				error: 'Invalid context or person record.'
+			});
+		}
+
+		var member = await get_member(person, context.id);
+
+		if (! member) {
+			return rsp.status(403).send({
+				ok: false,
+				error: 'You are not a member of that group.'
+			});
+		}
+
+		const valid_email_values = [
+			'send',
+			'digest',
+			'none'
+		];
+
+		if (! req.body.email in valid_email_values) {
+			return rsp.status(400).send({
+				ok: false,
+				error: 'Invalid email setting.'
+			});
+		}
+
+		await set_facet(member, 'member', 'email', req.body.email, 'single');
+
+		rsp.send({
+			ok: true,
+			group_url: '/group/' + context.slug
+		});
+
+	} catch(err) {
+		console.log(err.stack);
+		rsp.status(500).send({
+			ok: false,
+			error: 'Could not update settings.'
 		});
 	}
 
@@ -1295,7 +1398,7 @@ function join_context(person, context_id, invited_by) {
 				WHERE id = $2
 			`, [context_id, person.id]);
 
-			let member = await check_membership(person, context_id);
+			let member = await get_member(person, context_id);
 			if (member) {
 				return resolve(member);
 			}
@@ -1331,7 +1434,7 @@ function join_context(person, context_id, invited_by) {
 	});
 }
 
-function check_membership(person, context_id, include_inactive) {
+function get_member(person, context_id, include_inactive) {
 	return new Promise(async (resolve, reject) => {
 
 		try {
@@ -1357,6 +1460,8 @@ function check_membership(person, context_id, include_inactive) {
 			if (! member.active && ! include_inactive) {
 				return resolve(false);
 			}
+
+			await add_facets(member, 'member');
 
 			resolve(member);
 
@@ -1747,10 +1852,88 @@ async function add_message_details(messages) {
 			content: message.content
 		});
 		message.revision_dates = message.revisions.map(rev => rev.created);
-		console.log(message.revision_dates);
 	}
 
 	return messages;
+}
+
+function add_facets(target, target_type) {
+
+	return new Promise(async (resolve, reject) => {
+
+		try {
+
+			let query = await db.query(`
+				SELECT *
+				FROM facet
+				WHERE target_id = $1
+				  AND target_type = $2
+				ORDER BY facet_num
+			`, [target.id, target_type]);
+
+			target.facets = {};
+
+			for (let facet of query.rows) {
+				if (facet.facet_num == -1) {
+					target.facets[facet.facet_type] = facet.content;
+				} else {
+					if (! target.facets[facet.facet_type]) {
+						target.facets[facet.facet_type] = [];
+					}
+					target.facets[facet.facet_type].push(facet.content);
+				}
+			}
+
+			resolve(target);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
+		}
+
+	});
+}
+
+function set_facet(target, target_type, facet_type, content, is_single) {
+	return new Promise(async (resolve, reject) => {
+
+		try {
+
+			let facet_num;
+
+			await add_facets(target, target_type);
+
+			if (is_single) {
+				facet_num = -1;
+				await db.query(`
+					DELETE FROM facet
+					WHERE target_id = $1
+					  AND target_type = $2
+					  AND facet_type = $3
+				`, [target.id, target_type, facet_type]);
+			} else {
+				facet_num = 0;
+				if (target.facets[facet_type]) {
+					facet_num = target.facets[facet_type].length;
+				}
+			}
+
+			await db.query(`
+				INSERT INTO facet
+				(target_id, target_type, facet_type, facet_num, content, created, updated)
+				VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+			`, [target.id, target_type, facet_type, facet_num, content]);
+
+			await add_facets(target, target_type);
+
+			resolve(target);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
+		}
+
+	});
 }
 
 function send_email(to, subject, body, from) {

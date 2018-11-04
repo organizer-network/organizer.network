@@ -383,6 +383,20 @@ input[type="submit"]:active,
 	margin-top: 5em;
 }
 
+#settings form {
+	margin-top: 2em;
+}
+
+#settings label {
+	margin-top: 1em;
+	margin-bottom: 0;
+}
+
+#settings .help {
+	margin-top: 0.5em;
+	margin-left: 2em;
+}
+
 .content {
 	width: 100%;
 	max-width: 1024px;

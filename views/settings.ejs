@@ -1,0 +1,36 @@
+<%- include('intro', {
+	person: person,
+	contexts: contexts
+}) %>
+<div id="context">
+	<div class="content">
+		<div id="settings">
+			<h1><%= context.name %></h1>
+			<form action="/api/settings" method="post">
+				<h2>Notification settings</h2>
+				<input type="hidden" name="context_id" value="<%= context.id %>">
+				<label>
+					<input type="radio" name="email" value="send"<% if (email == 'send') { %> checked<% } %>>
+					Send emails
+				</label>
+				<p class="help">Receive an email whenever someone sends a message to the group.</p>
+				<label>
+					<input type="radio" name="email" value="digest"<% if (email == 'digest') { %> checked<% } %>>
+					Email digest
+				</label>
+				<p class="help">Receive a maximum of one email per day with a summary of messages sent.</p>
+				<label>
+					<input type="radio" name="email" value="none"<% if (email == 'none') { %> checked<% } %>>
+					No emails please
+				</label>
+				<p class="help">Visit the website to read messages sent to the group.</p>
+				<input type="submit" value="Update →">
+				<a class="button cancel" href="/group/<%= context.slug %>">Cancel</a>
+				<div class="response"></div>
+			</form>
+			<h2 class="headroom">Ready to leave?</h2>
+			<p>You can unsubscribe from the group by pressing the button below.</p>
+			<a href="/leave/<%= member.leave_slug %>" class="button">Unsubscribe →</a>
+		</div>
+	</div>
+</div>

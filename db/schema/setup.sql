@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS context (
 );
 
 CREATE TABLE IF NOT EXISTS member (
+	id SERIAL PRIMARY KEY,
 	person_id INTEGER,
 	context_id INTEGER,
 	invited_by INTEGER,
