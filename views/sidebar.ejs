@@ -15,7 +15,10 @@
 		<p>Share this link to invite others to join the group.</p>
 		<input type="text" value="<%= `${base_url}/join/${member.invite_slug}` %>" id="invite-input">
 		<div id="invite-response"></div>
-		<h2>Ready to leave?</h2>
-		<p><a href="<%= `/leave/${member.leave_slug}` %>">Unsubscribe from this group</a></p>
+		<h2>Too much email?</h2>
+		<ul>
+			<li><a href="<%= `/settings/${context.slug}` %>">Update your settings</a></li>
+			<li><a href="<%= `/leave/${member.leave_slug}` %>">Unsubscribe from <%= context.name %></a></li>
+		</ul>
 	<% } %>
 </div>
