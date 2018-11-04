@@ -15,10 +15,14 @@
 		<p>Share this link to invite others to join the group.</p>
 		<input type="text" value="<%= `${base_url}/join/${member.invite_slug}` %>" id="invite-input">
 		<div id="invite-response"></div>
-		<h2>Too much email?</h2>
+		<h2>Settings</h2>
 		<ul>
-			<li><a href="<%= `/settings/${context.slug}` %>">Notification settings</a></li>
-			<li><a href="<%= `/leave/${member.leave_slug}` %>">Unsubscribe from this group</a></li>
+			<li>Notifications:
+				<% if (email == 'send') { %><%- '<strong>receive emails</strong>' %><% } %>
+				<% if (email == 'digest') { %><%- '<strong>digest emails</strong>' %><% } %>
+				<% if (email == 'none') { %><%- '<strong>no emails please</strong>' %><% } %>
+			</li>
+			<li><a href="<%= `/settings/${context.slug}` %>">Change your settings</a></li>
 		</ul>
 	<% } %>
 </div>

@@ -11,12 +11,12 @@
 				<input type="hidden" name="context_id" value="<%= context.id %>">
 				<label>
 					<input type="radio" name="email" value="send"<% if (email == 'send') { %> checked<% } %>>
-					Send emails
+					Receive emails
 				</label>
 				<p class="help">Receive an email whenever someone sends a message to the group.</p>
 				<label>
 					<input type="radio" name="email" value="digest"<% if (email == 'digest') { %> checked<% } %>>
-					Email digest
+					Digest emails
 				</label>
 				<p class="help">Receive a maximum of one email per day with a summary of messages sent.</p>
 				<label>
@@ -29,7 +29,7 @@
 				<div class="response"></div>
 			</form>
 			<h2 class="headroom">Ready to leave?</h2>
-			<p>You can unsubscribe from the group by pressing the button below.</p>
+			<p>You can always rejoin the group later if you decide to unsubscribe.</p>
 			<a href="/leave/<%= member.leave_slug %>" class="button">Unsubscribe →</a>
 		</div>
 	</div>

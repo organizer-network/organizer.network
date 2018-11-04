@@ -232,6 +232,11 @@ app.get('/group/:slug', async (req, rsp) => {
 			then = null;
 		}
 
+		let email = 'send';
+		if (member.facets && member.facets.email) {
+			email = member.facets.email;
+		}
+
 		rsp.render('page', {
 			title: context.name,
 			view: 'context',
@@ -241,7 +246,8 @@ app.get('/group/:slug', async (req, rsp) => {
 				context: contexts.current,
 				member: member,
 				base_url: config.base_url,
-				then: then
+				then: then,
+				email: email
 			}
 		});
 
@@ -273,6 +279,11 @@ app.get('/group/:slug/:id', async (req, rsp) => {
 		let id = parseInt(req.params.id);
 		let contexts = await get_contexts(person, id);
 
+		let email = 'send';
+		if (member.facets && member.facets.email) {
+			email = member.facets.email;
+		}
+
 		rsp.render('page', {
 			title: context.name,
 			view: 'thread',
@@ -281,7 +292,8 @@ app.get('/group/:slug/:id', async (req, rsp) => {
 				contexts: contexts,
 				context: contexts.current,
 				member: member,
-				base_url: config.base_url
+				base_url: config.base_url,
+				email: email
 			}
 		});
 
@@ -1331,15 +1343,20 @@ async function send_notifications(sender, message, from) {
 	try {
 
 		let query = await db.query(`
-			SELECT member.leave_slug, member.person_id,
+			SELECT member.invite_slug, member.leave_slug, member.person_id,
 			       person.email, person.name,
 			       context.name AS context_name, context.slug AS context_slug
-			FROM member, person, context
+			FROM member, person, context, facet
 			WHERE member.context_id = $1
 			  AND member.active = true
 			  AND member.person_id != $2
 			  AND person.id = member.person_id
 			  AND context.id = member.context_id
+			  AND facet.target_id = member.id
+			  AND facet.target_type = 'member'
+			  AND facet.facet_type = 'email'
+			  AND facet.content != 'digest'
+			  AND facet.content != 'none'
 		`, [message.context_id, message.person_id]);
 
 		let members = query.rows;
@@ -1361,11 +1378,21 @@ async function send_notifications(sender, message, from) {
 				}
 			}
 
+			let message_link = `${config.base_url}/group/${member.context_slug}/${message.id}`;
+			if (message.in_reply_to) {
+				message_link = `${config.base_url}/group/${member.context_slug}/${message.in_reply_to}#${message.id}`;
+			}
+
+			let then = encodeURIComponent(`/settings/${member.context_slug}`);
+
 			let rsp = await send_email(member.email, subject, `${message.content}
 
 ---
-Message link:
-${config.base_url}/group/${member.context_slug}/${message.id}
+You can reply to this email, or visit:
+${message_link}
+
+Too much email? Change your notification settings:
+${config.base_url}/join/${member.invite_slug}?then=${then}
 
 Unsubscribe from ${member.context_name}:
 ${config.base_url}/leave/${member.leave_slug}`, from);
