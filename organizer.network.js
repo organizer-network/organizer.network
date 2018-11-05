@@ -342,6 +342,55 @@ app.get('/join/:slug', async (req, rsp) => {
 
 });
 
+app.get('/settings', async (req, rsp) => {
+
+	try {
+
+		let person = await curr_person(req);
+
+		if (! person) {
+			let then = '/settings';
+			return rsp.render('page', {
+				title: 'Login to continue',
+				view: 'login',
+				content: {
+					invite: null,
+					then: then
+				}
+			});
+		}
+
+		let contexts = await get_contexts(person);
+
+		for (let context of contexts.member_of) {
+			let member = await get_member(person, context.id);
+			await add_facets(member, 'member', 'email');
+			if (! member.facets) {
+				member.facets = {};
+			}
+			if (! member.facets.email) {
+				member.facets.email = 'send';
+			}
+			context.email = member.facets.email;
+		}
+
+		rsp.render('page', {
+			title: 'Settings',
+			view: 'settings',
+			content: {
+				context: null,
+				contexts: contexts,
+				person: person
+			}
+		});
+
+	} catch(err) {
+		console.log(err.stack);
+		return error_page(rsp, '500');
+	}
+
+});
+
 app.get('/settings/:slug', async (req, rsp) => {
 
 	try {
@@ -365,6 +414,11 @@ app.get('/settings/:slug', async (req, rsp) => {
 			email = member.facets.email;
 		}
 
+		let then = `/group/${context.slug}`;
+		if (req.query.then) {
+			then = req.query.then;
+		}
+
 		rsp.render('page', {
 			title: 'Settings',
 			view: 'settings',
@@ -373,7 +427,8 @@ app.get('/settings/:slug', async (req, rsp) => {
 				contexts: contexts,
 				person: person,
 				member: member,
-				email: email
+				email: email,
+				then: then
 			}
 		});
 
@@ -1550,7 +1605,6 @@ async function send_notifications(sender, message, from) {
 				message_link = `${config.base_url}/group/${member.context_slug}/${message.in_reply_to}#${message.id}`;
 			}
 
-			let then = encodeURIComponent(`/settings/${member.context_slug}`);
 			let body = `${message.content}
 
 ---

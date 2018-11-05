@@ -212,9 +212,7 @@
 		});
 
 		form_handler('#settings form', function(rsp) {
-			if (rsp.ok && rsp.group_url) {
-				window.location = rsp.group_url;
-			}
+			window.location = $('input[name="then"]').val();
 		});
 
 		/*$("#send #content").keyup(function(e) {

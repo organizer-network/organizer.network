@@ -5,32 +5,48 @@
 <div id="context">
 	<div class="content">
 		<div id="settings">
-			<h1><%= context.name %></h1>
-			<form action="/api/settings" method="post">
-				<h2>Notification settings</h2>
-				<input type="hidden" name="context_id" value="<%= context.id %>">
-				<label>
-					<input type="radio" name="email" value="send"<% if (email == 'send') { %> checked<% } %>>
-					Receive emails
-				</label>
-				<p class="help">Receive an email whenever someone sends a message to the group.</p>
-				<label>
-					<input type="radio" name="email" value="digest"<% if (email == 'digest') { %> checked<% } %>>
-					Digest emails
-				</label>
-				<p class="help">Receive a maximum of one email per day with a summary of messages sent.</p>
-				<label>
-					<input type="radio" name="email" value="none"<% if (email == 'none') { %> checked<% } %>>
-					No emails
-				</label>
-				<p class="help">Visit the website to read messages sent to the group.</p>
-				<input type="submit" value="Update →">
-				<a class="button cancel" href="/group/<%= context.slug %>">Cancel</a>
-				<div class="response"></div>
-			</form>
-			<h2 class="headroom">Ready to leave?</h2>
-			<p>You can always rejoin the group later if you decide to unsubscribe.</p>
-			<a href="/leave/<%= member.leave_slug %>" class="button">Unsubscribe →</a>
+			<% if (context) { %>
+				<h1><%= context.name %></h1>
+				<form action="/api/settings" method="post">
+					<h2>Notification settings</h2>
+					<input type="hidden" name="context_id" value="<%= context.id %>">
+					<input type="hidden" name="then" value="<%= then %>">
+					<label>
+						<input type="radio" name="email" value="send"<% if (email == 'send') { %> checked<% } %>>
+						Receive emails
+					</label>
+					<p class="help">Receive an email whenever someone sends a message to the group.</p>
+					<label>
+						<input type="radio" name="email" value="digest"<% if (email == 'digest') { %> checked<% } %>>
+						Digest emails
+					</label>
+					<p class="help">Receive a maximum of one email per day with a summary of messages sent.</p>
+					<label>
+						<input type="radio" name="email" value="none"<% if (email == 'none') { %> checked<% } %>>
+						No emails
+					</label>
+					<p class="help">Visit the website to read messages sent to the group.</p>
+					<input type="submit" value="Update →">
+					<a class="button cancel" href="<%= then %>">Cancel</a>
+					<div class="response"></div>
+				</form>
+				<h2 class="headroom">Ready to leave?</h2>
+				<p>You can always rejoin the group later if you decide to unsubscribe.</p>
+				<a href="/leave/<%= member.leave_slug %>" class="button">Unsubscribe →</a>
+			<% } else { %>
+				<h1>Your groups</h1>
+				<% for (let context of contexts.member_of) { %>
+					<h2 class="headroom"><%= context.name %></h2>
+					<ul>
+						<li>Notifications:
+							<% if (context.email == 'send') { %><%- '<strong>receive emails</strong>' %><% } %>
+							<% if (context.email == 'digest') { %><%- '<strong>digest emails</strong>' %><% } %>
+							<% if (context.email == 'none') { %><%- '<strong>no emails</strong>' %><% } %>
+						</li>
+						<li><a href="/settings/<%= context.slug %>?then=<%= encodeURIComponent('/settings') %>">Change your settings</a></li>
+					</ul>
+				<% } %>
+			<% } %>
 		</div>
 	</div>
 </div>
