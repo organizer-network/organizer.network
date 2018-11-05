@@ -392,6 +392,153 @@ app.post('/api/ping', (req, rsp) => {
 	});
 });
 
+app.get('/api/digest', async (req, rsp) => {
+
+	try {
+
+		let count = 0;
+
+		let query = await db.query(`
+			SELECT member.person_id, member.context_id
+			FROM member, facet
+			WHERE member.active = true
+			  AND facet.target_id = member.id
+			  AND facet.target_type = 'member'
+			  AND facet.facet_type = 'email'
+			  AND facet.content = 'digest'
+		`);
+
+		let digests = {};
+		for (let member of query.rows) {
+			if (! digests[member.person_id]) {
+				digests[member.person_id] = [];
+			}
+			digests[member.person_id].push(member.context_id);
+		}
+
+		for (let person_id in digests) {
+			count += await send_digest_emails(person_id, digests[person_id]);
+		}
+
+		rsp.send(`Sent ${count} digest emails.`);
+
+	} catch(err) {
+		console.log(err.stack);
+		rsp.status(500).send("Could not send digest emails.");
+	}
+
+});
+
+function send_digest_emails(person_id, contexts) {
+	return new Promise(async (resolve, reject) => {
+
+		try {
+
+			let person = await get_person(parseInt(person_id));
+
+			for (let context_id of contexts) {
+
+				let context = await get_context(parseInt(context_id));
+
+				let facet = `last_digest_message_${context_id}`;
+				await add_facets(person, 'person', facet);
+
+				let values = [context_id, person_id];
+
+				let id_clause = '';
+				if (person.facets && person.facets[facet]) {
+					id_clause = 'AND message.id > $3';
+					values.push(person.facets[facet]);
+				}
+
+				let query = await db.query(`
+					SELECT message.id, message.content, message.created,
+					       message.in_reply_to, person.name
+					FROM message, person
+					WHERE message.context_id = $1
+					  AND message.person_id != $2
+					  AND message.created > CURRENT_TIMESTAMP - interval '1 day'
+					  ${id_clause}
+					  AND person.id = message.person_id
+					ORDER BY message.created
+				`, values);
+
+				let messages = query.rows;
+				let reply_msgs = {};
+				let last_message_id = null;
+
+				if (messages.length == 0) {
+					return resolve(0);
+				}
+
+				let placeholders = [];
+				values = [];
+				for (let i = 0; i < messages.length; i++) {
+					if (messages[i].in_reply_to) {
+						placeholders.push('$' + (placeholders.length + 1));
+						values.push(messages[i].in_reply_to);
+					}
+					last_message_id = messages[i].id;
+				}
+
+				if (values.length > 0) {
+					placeholders = placeholders.join(', ');
+					query = await db.query(`
+						SELECT id, content
+						FROM message
+						WHERE id IN (${placeholders})
+					`, values);
+
+					for (let reply of query.rows) {
+						let content = reply.content;
+						content = content.replace(/\s+/g, ' ');
+						if (content.length > 48) {
+							content = content.substr(0, 48) + '...';
+						}
+						reply_msgs[reply.id] = content;
+					}
+				}
+
+				let digest = [];
+				for (let message of messages) {
+
+					let subject = 'New message';
+					let message_url = `${config.base_url}/group/${context.slug}/${message.id}`;
+
+					if (message.in_reply_to) {
+						subject = `Re: ${reply_msgs[message.in_reply_to]}`;
+						message_url = `${config.base_url}/group/${context.slug}/${message.in_reply_to}#${message.id}`;
+					}
+
+					digest.push(`${subject}
+${message.name} at ${message.created}:
+
+${message.content}
+
+Message link:
+${message_url}`);
+				}
+
+				if (digest.length > 0) {
+					let plural = (digest.length == 1) ? '' : 's';
+					let subject = `Digest: ${digest.length} message${plural}`;
+					let body = digest.join('\n\n---\n\n');
+					await send_email(person.email, subject, body);
+					await set_facet(person, 'person', facet, last_message_id, 'single');
+					return resolve(1);
+				}
+
+				resolve(0);
+			}
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
+		}
+
+	});
+}
+
 // Because the login hashes are stored in memory (and not in the database), it
 // is important to check for pending logins when restarting the server. There is
 // a console.log() of the number of pending logins whenever the number changes.
@@ -1884,19 +2031,28 @@ async function add_message_details(messages) {
 	return messages;
 }
 
-function add_facets(target, target_type) {
+function add_facets(target, target_type, facet_type) {
 
 	return new Promise(async (resolve, reject) => {
 
 		try {
+
+			let facet_type_clause = '';
+			let values = [target.id, target_type];
+
+			if (facet_type) {
+				facet_type_clause = 'AND facet_type = $3';
+				values.push(facet_type);
+			}
 
 			let query = await db.query(`
 				SELECT *
 				FROM facet
 				WHERE target_id = $1
 				  AND target_type = $2
+				  ${facet_type_clause}
 				ORDER BY facet_num
-			`, [target.id, target_type]);
+			`, values);
 
 			target.facets = {};
 
