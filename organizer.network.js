@@ -490,6 +490,8 @@ function send_digest_emails(person_id, contexts) {
 		try {
 
 			let person = await get_person(parseInt(person_id));
+			let digest = [];
+			let msg_count = 0;
 
 			for (let context_id of contexts) {
 
@@ -554,19 +556,18 @@ function send_digest_emails(person_id, contexts) {
 					}
 				}
 
-				let digest = [];
+				let context_digest = [];
 				for (let message of messages) {
 
-					let subject = 'New message';
+					let subject = '';
 					let message_url = `${config.base_url}/group/${context.slug}/${message.id}`;
 
 					if (message.in_reply_to) {
-						subject = `Re: ${reply_msgs[message.in_reply_to]}`;
+						subject = `Re: ${reply_msgs[message.in_reply_to]}\n`;
 						message_url = `${config.base_url}/group/${context.slug}/${message.in_reply_to}#${message.id}`;
 					}
 
-					digest.push(`${subject}
-${message.name} at ${message.created}:
+					context_digest.push(`${subject}${message.name} at ${message.created}:
 
 ${message.content}
 
@@ -574,17 +575,23 @@ Message link:
 ${message_url}`);
 				}
 
-				if (digest.length > 0) {
-					let plural = (digest.length == 1) ? '' : 's';
-					let subject = `Digest: ${digest.length} message${plural}`;
-					let body = digest.join('\n\n---\n\n');
-					await send_email(person.email, subject, body);
+				if (context_digest.length > 0) {
 					await set_facet(person, 'person', facet, last_message_id, 'single');
-					return resolve(1);
+					let context_txt = `${context.name}\n==================================================\n\n` + context_digest.join('\n\n---\n\n');
+					digest.push(context_txt);
+					msg_count += context_digest.length;
 				}
-
-				resolve(0);
 			}
+
+			if (msg_count > 0) {
+				let plural = (msg_count == 1) ? '' : 's';
+				let subject = `Digest: ${msg_count} message${plural}`;
+				let body = digest.join('\n\n\n') + `\n\n---\nNotification settings:\n${config.base_url}/settings`;
+				await send_email(person.email, subject, body);
+				return resolve(1);
+			}
+
+			resolve(0);
 
 		} catch(err) {
 			console.log(err.stack);
@@ -1564,19 +1571,21 @@ async function send_notifications(sender, message, from) {
 			values.push(member.id);
 			placeholders.push(`$${values.length}`);
 		}
-
-		placeholders = placeholders.join(', ');
-		query = await db.query(`
-			SELECT target_id, content
-			FROM facet
-			WHERE target_id IN (${placeholders})
-			  AND target_type = 'member'
-			  AND facet_type = 'email'
-		`, values);
-
 		let email_settings = {};
-		for (let facet of query.rows) {
-			email_settings[facet.target_id] = facet.content;
+
+		if (values.length > 0) {
+			placeholders = placeholders.join(', ');
+			query = await db.query(`
+				SELECT target_id, content
+				FROM facet
+				WHERE target_id IN (${placeholders})
+				  AND target_type = 'member'
+				  AND facet_type = 'email'
+			`, values);
+
+			for (let facet of query.rows) {
+				email_settings[facet.target_id] = facet.content;
+			}
 		}
 
 		let subject = message.content;
