@@ -1,6 +1,6 @@
 {
   "name": "organizer.network",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Tools and strategies for social justice organizing",
   "main": "organizer.network.js",
   "scripts": {

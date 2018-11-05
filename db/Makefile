@@ -1,5 +1,5 @@
-VERSION := grrr
-VERSIONS = aarg bzzt craw dibdib foom grrr
+VERSION := hup
+VERSIONS = aarg bzzt craw dibdib foom grrr hup
 NOW := $(shell TZ=UTC date +%Y%m%d-%H%M%S)
 
 setup:
