@@ -1490,39 +1490,59 @@ async function send_notifications(sender, message, from) {
 	try {
 
 		let query = await db.query(`
-			SELECT member.invite_slug, member.leave_slug, member.person_id,
-			       person.email, person.name,
+			SELECT member.id, member.invite_slug, member.leave_slug,
+			       person.id, person.email, person.name,
 			       context.name AS context_name, context.slug AS context_slug
-			FROM member, person, context, facet
+			FROM member, person, context
 			WHERE member.context_id = $1
 			  AND member.active = true
 			  AND member.person_id != $2
 			  AND person.id = member.person_id
 			  AND context.id = member.context_id
-			  AND facet.target_id = member.id
-			  AND facet.target_type = 'member'
-			  AND facet.facet_type = 'email'
-			  AND facet.content != 'digest'
-			  AND facet.content != 'none'
 		`, [message.context_id, message.person_id]);
 
 		let members = query.rows;
 
+		let placeholders = [];
+		let values = [];
 		for (let member of members) {
-			let subject = `New message in ${member.context_name}`;
+			values.push(member.id);
+			placeholders.push(`$${values.length}`);
+		}
 
-			if (message.in_reply_to) {
-				query = await db.query(`
-					SELECT content
-					FROM message
-					WHERE id = $1
-				`, [message.in_reply_to]);
+		placeholders = placeholders.join(', ');
+		query = await db.query(`
+			SELECT target_id, content
+			FROM facet
+			WHERE target_id IN (${placeholders})
+			  AND target_type = 'member'
+			  AND facet_type = 'email'
+		`, values);
 
-				subject = `Re: ${query.rows[0].content}`;
-				subject = subject.replace(/\s+/g, ' ');
-				if (subject.length > 100) {
-					subject = subject.substr(0, 100) + '...';
-				}
+		let email_settings = {};
+		for (let facet of query.rows) {
+			email_settings[facet.target_id] = facet.content;
+		}
+
+		let subject = message.content;
+		if (message.in_reply_to) {
+			query = await db.query(`
+				SELECT content
+				FROM message
+				WHERE id = $1
+			`, [message.in_reply_to]);
+			subject = `Re: ${query.rows[0].content}`;
+		}
+		subject = subject.replace(/\s+/g, ' ');
+		if (subject.length > 48) {
+			subject = subject.substr(0, 48) + '...';
+		}
+
+		for (let member of members) {
+
+			if (email_settings[member.id] &&
+			    email_settings[member.id] != 'send') {
+				continue;
 			}
 
 			let message_link = `${config.base_url}/group/${member.context_slug}/${message.id}`;
@@ -1531,18 +1551,19 @@ async function send_notifications(sender, message, from) {
 			}
 
 			let then = encodeURIComponent(`/settings/${member.context_slug}`);
-
-			let rsp = await send_email(member.email, subject, `${message.content}
+			let body = `${message.content}
 
 ---
-You can reply to this email, or visit:
+Message link:
 ${message_link}
 
-Too much email? Change your notification settings:
-${config.base_url}/join/${member.invite_slug}?then=${then}
+Notification settings:
+${config.base_url}/settings
 
 Unsubscribe from ${member.context_name}:
-${config.base_url}/leave/${member.leave_slug}`, from);
+${config.base_url}/leave/${member.leave_slug}`;
+
+			let rsp = await send_email(member.email, subject, body, from);
 
 			if (rsp && rsp.length > 0 && rsp[0].headers) {
 				let email_id = rsp[0].headers['x-message-id'];

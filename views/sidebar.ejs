@@ -20,7 +20,7 @@
 			<li>Notifications:
 				<% if (email == 'send') { %><%- '<strong>receive emails</strong>' %><% } %>
 				<% if (email == 'digest') { %><%- '<strong>digest emails</strong>' %><% } %>
-				<% if (email == 'none') { %><%- '<strong>no emails please</strong>' %><% } %>
+				<% if (email == 'none') { %><%- '<strong>no emails</strong>' %><% } %>
 			</li>
 			<li><a href="<%= `/settings/${context.slug}` %>">Change your settings</a></li>
 		</ul>
