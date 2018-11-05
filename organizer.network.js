@@ -576,7 +576,7 @@ app.post('/api/login', async (req, rsp) => {
 Follow this link to login:
 ${login_url}
 
-Link expires in 60 minutes.
+Link expires in 1 hour.
 
 <3`;
 
