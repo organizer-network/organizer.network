@@ -13,7 +13,7 @@ endif
 
 migrate:
 	@for version in $(VERSIONS) ; do \
-		if [ $$prev ] && [ -a $$prev ] && [ ! -a $$version ] ; then \
+		if [ $$prev ] && [ -d $$prev ] && [ ! -d $$version ] ; then \
 			FROM=$$prev TO=$$version make migrate_versions ; \
 		fi ; \
 		prev=$$version ; \
