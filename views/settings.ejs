@@ -34,9 +34,9 @@
 				<p>You can always rejoin the group later if you decide to unsubscribe.</p>
 				<a href="/leave/<%= member.leave_slug %>" class="button">Unsubscribe →</a>
 			<% } else { %>
-				<h1>Your groups</h1>
+				<h1>Settings</h1>
 				<% for (let context of contexts.member_of) { %>
-					<h2 class="headroom"><%= context.name %></h2>
+					<h2 class="headroom"><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
 					<ul>
 						<li>Notifications:
 							<% if (context.email == 'send') { %><%- '<strong>receive emails</strong>' %><% } %>
