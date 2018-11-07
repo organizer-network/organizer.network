@@ -615,6 +615,41 @@ ${message_url}`);
 // a console.log() of the number of pending logins whenever the number changes.
 // (20181022/dphiffer)
 const login_hashes = {};
+const login_ips = {};
+
+function reset_login_throttle(req) {
+	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	delete login_ips[ip];
+}
+
+function throttle_logins(req) {
+
+	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	console.log(`Login request from ${ip}`);
+
+	if (! login_ips[ip]) {
+		login_ips[ip] = 1;
+	} else {
+		login_ips[ip]++;
+	}
+
+	let count = config.login_throttle_count || 5;
+	let timeout = config.login_throttle_timeout || 1000 * 60 * 5;
+
+	if (login_ips[ip] == count + 1) {
+		console.log(`Login throttle enabled for ${ip}`);
+		setTimeout(function() {
+			console.log(`Login throttle disabled for ${ip}`);
+			reset_login_throttle(req);
+		}, timeout);
+	}
+
+	if (login_ips[ip] > count) {
+		return true;
+	}
+
+	return false;
+}
 
 app.post('/api/login', async (req, rsp) => {
 
@@ -630,6 +665,13 @@ app.post('/api/login', async (req, rsp) => {
 
 		let hash = random(16);
 		let login_url = `${config.base_url}/login/${hash}`;
+
+		if (throttle_logins(req)) {
+			return rsp.status(403).send({
+				ok: false,
+				error: "Sorry, you have requested too many logins. Please try again later."
+			});
+		}
 
 		while (hash in login_hashes) {
 
@@ -719,6 +761,10 @@ app.get('/login/:hash', async (req, rsp) => {
 
 	try {
 
+		if (throttle_logins(req)) {
+			return error_page(rsp, 'invalid-login');
+		}
+
 		let hash = req.params.hash;
 
 		if (login_hashes[hash]) {
@@ -743,6 +789,7 @@ app.get('/login/:hash', async (req, rsp) => {
 
 			let person = query.rows[0];
 			req.session.person = person;
+			reset_login_throttle(req);
 
 			let redirect = '/';
 
