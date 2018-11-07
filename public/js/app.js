@@ -180,7 +180,7 @@
 			$('#send .response').html('Your message has been sent.');
 			$('#send textarea[name="content"]').val('');
 			$.get('/api/message/' + rsp.message.id + '?format=html', function(rsp) {
-				$('#message-list').prepend(rsp);
+				$('#message-list .page:first-child').prepend(rsp);
 				format_content($('#message-list .message:first-child .message-content'));
 				format_timestamp($('#message-list .message:first-child .timestamp a'));
 				$('#members li:eq(0)').before($('#members li.curr-person'));
