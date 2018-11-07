@@ -81,6 +81,15 @@ app.use(session({
 		maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days
 	}
 }));
+app.use((req, rsp, next) => {
+	rsp.append('X-Frame-Options', 'deny');
+	rsp.append('Cache-Control', 'no-cache,no-store');
+	rsp.append('Pragma', 'no-cache');
+	rsp.append('X-Content-Type-Options', 'nosniff');
+	rsp.append('X-XSS-Protection', '1; mode=block');
+	rsp.append('Content-Security-Policy', "default-src 'self'");
+	next();
+});
 app.enable('trust proxy');
 
 server.listen(config.port, () => {
