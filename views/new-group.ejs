@@ -9,6 +9,15 @@
 				<h1>Create a new group</h1>
 				<label for="name">Name</label>
 				<input type="text" id="name" name="name">
+				<label for="about-input">About</label>
+				<textarea name="about" id="about-input" cols="40" rows="4"></textarea>
+				<label for="parent">Create this group inside of</label>
+				<select name="parent" id="parent">
+					<option value="0">(no parent group)</option>
+					<% for (context of contexts.member_of) { %>
+						<option value="<%= context.id %>"><%= context.name %></option>
+					<% } %>
+				</select>
 				<label for="slug-input">Group URL</label>
 				<div><code><%= base_url %>/group/</code><input type="text" id="slug-input" name="slug" value="<%= default_slug %>"></div>
 				<input type="submit" value="Create Group">
