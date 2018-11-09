@@ -798,7 +798,8 @@ app.get('/login/:hash', async (req, rsp) => {
 				query = await db.query(`
 					SELECT *
 					FROM member
-					WHERE invite_slug = $1
+					WHERE active = true
+					  AND invite_slug = $1
 				`, [login.invite]);
 
 				let member = query.rows[0];
@@ -1370,7 +1371,8 @@ app.get('/leave/:id', async (req, rsp) => {
 			SELECT member.leave_slug, member.person_id, member.context_id,
 			       context.name AS context_name
 			FROM member, context
-			WHERE member.leave_slug = $1
+			WHERE member.active = true
+			  AND member.leave_slug = $1
 			  AND member.context_id = context.id
 		`, [req.params.id]);
 
@@ -1792,7 +1794,8 @@ function get_invite(slug) {
 			let query = await db.query(`
 				SELECT *
 				FROM member
-				WHERE invite_slug = $1
+				WHERE active = true
+				  AND invite_slug = $1
 			`, [slug]);
 
 			let invite;
@@ -1932,7 +1935,8 @@ function get_contexts(person, message_id) {
 				query = await db.query(`
 					SELECT context.*
 					FROM member, context
-					WHERE member.person_id = $1
+					WHERE member.active = true
+					  AND member.person_id = $1
 					  AND member.context_id = context.id
 				`, [person.id]);
 
@@ -2085,7 +2089,8 @@ async function add_context_details(context, before_id) {
 	query = await db.query(`
 		SELECT member.person_id, person.name, person.slug
 		FROM member, person
-		WHERE member.context_id = $1
+		WHERE member.active = true
+		  AND member.context_id = $1
 		  AND member.person_id = person.id
 		ORDER BY member.updated DESC
 	`, [context.id]);
