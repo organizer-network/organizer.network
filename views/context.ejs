@@ -5,7 +5,8 @@
 <div id="context">
 	<div class="content">
 		<div id="messages">
-			<h2><%= context.name %></h2>
+			<h1><%= context.name %></h1>
+			<p class="topic"><%= context.topic %></p>
 			<% if (member) { %>
 				<form id="send" action="/api/send" method="post">
 					<input type="hidden" name="context_id" value="<%= context.id %>">

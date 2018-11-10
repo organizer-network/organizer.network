@@ -9,14 +9,16 @@
 				<h1>Create a new group</h1>
 				<label for="name">Name</label>
 				<input type="text" id="name" name="name">
-				<label for="about-input">About</label>
-				<textarea name="about" id="about-input" cols="40" rows="4"></textarea>
+				<label for="topic-input">Topic</label>
+				<textarea name="topic" id="topic-input" cols="40" rows="4"></textarea>
 				<% if (contexts.member_of.length > 0) { %>
 					<label for="parent-group">Create as a sub-group of</label>
 					<select name="parent" id="parent-group">
 						<option value="0">(no parent group)</option>
 						<% for (context of contexts.member_of) { %>
-							<option value="<%= context.id %>" data-slug="<%= context.slug %>"><%= context.name %></option>
+							<% if (! context.parent_id) { %>
+								<option value="<%= context.id %>" data-slug="<%= context.slug %>"><%= context.name %></option>
+							<% } %>
 						<% } %>
 					</select>
 				<% } %>

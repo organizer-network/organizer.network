@@ -868,6 +868,8 @@ app.post('/api/group', async (req, rsp) => {
 
 		let name = req.body.name;
 		let slug = req.body.slug;
+		let topic = req.body.topic || '';
+		let parent = parseInt(req.body.parent) || null;
 
 		if (! slug.match(slug_regex)) {
 			return rsp.status(400).send({
@@ -894,10 +896,10 @@ app.post('/api/group', async (req, rsp) => {
 
 		let query = await db.query(`
 			INSERT INTO context
-			(name, slug, created)
-			VALUES ($1, $2, CURRENT_TIMESTAMP)
+			(name, slug, topic, parent_id, created)
+			VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
 			RETURNING *
-		`, [name, slug]);
+		`, [name, slug, topic, parent]);
 
 		let group = query.rows[0];
 

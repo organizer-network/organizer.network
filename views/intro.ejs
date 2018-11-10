@@ -20,7 +20,9 @@
 			<% } else { %>
 				<ul>
 					<% for (let context of contexts.member_of) { %>
-						<li><a href="/group/<%= context.slug %>"><%= context.name %></a></li>
+						<% if (! context.parent_id) { %>
+							<li><a href="/group/<%= context.slug %>"><%= context.name %></a></li>
+						<% } %>
 					<% } %>
 				</ul>
 			<% } %>
