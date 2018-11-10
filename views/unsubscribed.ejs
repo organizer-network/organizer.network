@@ -2,12 +2,20 @@
 	<div class="content">
 		<div class="heading">
 			<h1><%= context.name %></h1>
-			<h2 class="tagline">You are no longer a member of the group, but you can rejoin.</h2>
+			<% if (inactive) { %>
+				<h2 class="tagline">You are no longer a member of the group, but you can rejoin.</h2>
+			<% } else { %>
+				<h2 class="tagline">You can join this subgroup as a member of its parent group.</h2>
+			<% } %>
 		</div>
 		<form action="/api/join" id="unsubscribed">
 			<input type="hidden" name="context_id" value="<%= context.id %>">
-			<div class="headroom"><strong>You are unsubscribed.</strong></div>
-			<input type="submit" value="Rejoin group">
+			<div class="headroom"><strong>You are not subscribed to this group.</strong></div>
+			<% if (inactive) { %>
+				<input type="submit" value="Rejoin group →">
+			<% } else { %>
+				<input type="submit" value="Subscribe →">
+			<% } %>
 			<div class="response"></div>
 		</form>
 		<div id="about">

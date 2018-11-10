@@ -218,18 +218,27 @@ app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 
 		let person = await curr_person(req);
 		let member = await get_member(person, context.id, 'include inactive');
+		let parent_member = false;
 
-		if (! member) {
+		if (context.parent_id) {
+			parent_member = await get_member(person, context.parent_id);
+		}
+
+		if (! member &&
+		    ! parent_member) {
 			return error_page(rsp, '404');
 		}
 
-		if (! member.active) {
+		if (! member.active ||
+		    (! member && parent_member)) {
+			let inactive = ! (! member && parent_member);
 			return rsp.render('page', {
 				title: context.name,
 				view: 'unsubscribed',
 				content: {
 					person: person,
-					context: context
+					context: context,
+					inactive: inactive
 				}
 			});
 		}
@@ -1454,6 +1463,18 @@ app.post('/api/join', async (req, rsp) => {
 		let context_id = parseInt(req.body.context_id);
 		let member = await get_member(person, context_id, 'include_inactive');
 		if (! member) {
+
+			let context = await get_context(context_id);
+			if (context.parent_id) {
+				let parent_member = await get_member(person, context.parent_id);
+				if (parent_member) {
+					await join_context(person, context_id);
+					return rsp.send({
+						ok: true
+					});
+				}
+			}
+
 			return rsp.status(403).send({
 				ok: false,
 				error: 'Sorry you cannot join that group.'
@@ -1704,7 +1725,7 @@ async function send_notifications(sender, message, from) {
 Message link:
 ${message_link}
 
-Notification settings:
+Too many emails? Update your notification settings:
 ${config.base_url}/settings
 
 Unsubscribe from ${member.context_name}:
@@ -1729,7 +1750,6 @@ ${config.base_url}/leave/${member.leave_slug}`;
 }
 
 function join_context(person, context_id, invited_by) {
-
 	return new Promise(async (resolve, reject) => {
 
 		try {
