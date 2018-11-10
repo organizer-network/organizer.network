@@ -87,7 +87,7 @@ app.use((req, rsp, next) => {
 	rsp.append('Pragma', 'no-cache');
 	rsp.append('X-Content-Type-Options', 'nosniff');
 	rsp.append('X-XSS-Protection', '1; mode=block');
-	rsp.append('Content-Security-Policy', "default-src 'self'");
+	rsp.append('Content-Security-Policy', "default-src 'self';");
 	next();
 });
 app.enable('trust proxy');
@@ -444,6 +444,23 @@ app.get('/settings/:slug', async (req, rsp) => {
 	} catch(err) {
 		console.log(err.stack);
 		return error_page(rsp, '500');
+	}
+
+});
+
+app.get('/user.css', async (req, rsp) => {
+
+	rsp.append('Content-Type', 'text/css');
+
+	const person = await curr_person(req);
+	if (person) {
+		rsp.send(`
+			.message.person-${person.slug}:hover > .message-options {
+				display: block;
+			}
+		`);
+	} else {
+		rsp.send('');
 	}
 
 });
