@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS person (
 	context_id INTEGER DEFAULT 1,
 	created TIMESTAMP
 );
-CREATE UNIQUE INDEX IF NOT EXISTS person_idx ON person (email, slug);
+CREATE INDEX IF NOT EXISTS person_idx ON person (email, slug);
+CREATE UNIQUE INDEX IF NOT EXISTS person_slug_idx ON person (slug);
 
 CREATE TABLE IF NOT EXISTS context (
 	id SERIAL PRIMARY KEY,
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS context (
 	topic TEXT,
 	created TIMESTAMP
 );
+CREATE UNIQUE INDEX IF NOT EXISTS context_slug_idx ON context (slug);
 
 CREATE TABLE IF NOT EXISTS member (
 	id SERIAL PRIMARY KEY,

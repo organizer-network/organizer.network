@@ -47,6 +47,14 @@ li {
 	margin-top: 0.5em;
 }
 
+ul ul {
+	margin-top: 0;
+}
+
+ul ul li {
+	margin-left: 1.5em;
+}
+
 ul li::before {
 	content: "→ ";
 }
@@ -332,7 +340,7 @@ input[type="submit"]:active,
 }
 
 #send {
-	margin-top: 1.25em;
+	margin-top: 2em;
 }
 
 #profile {
@@ -646,7 +654,6 @@ input[type="submit"]:active,
 .topic {
 	font-style: italic;
 	margin-top: 0.5em;
-	margin-bottom: 2em;
 }
 
 @media screen and (min-width: 760px) {

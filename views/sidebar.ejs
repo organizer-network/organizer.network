@@ -10,19 +10,25 @@
 			</li>
 		<% } %>
 	</ul>
-	<% if (member) { %>
-		<h2>Invite link</h2>
-		<p>Share this link to invite others to join the group.</p>
-		<input type="text" value="<%= `${base_url}/join/${member.invite_slug}` %>" id="invite-input">
-		<div id="invite-response"></div>
-		<h2>Settings</h2>
+	<% if (context.subgroups && context.subgroups.length > 0) { %>
+		<h2>Subgroups</h2>
 		<ul>
-			<li>Notifications:
-				<% if (email == 'send') { %><%- '<strong>receive emails</strong>' %><% } %>
-				<% if (email == 'digest') { %><%- '<strong>digest emails</strong>' %><% } %>
-				<% if (email == 'none') { %><%- '<strong>no emails</strong>' %><% } %>
-			</li>
-			<li><a href="<%= `/settings/${context.slug}` %>">Change your settings</a></li>
+			<% for (let subgroup of context.subgroups) { %>
+				<li><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></li>
+			<% } %>
 		</ul>
 	<% } %>
+	<h2>Invite link</h2>
+	<p>Share this link to invite others to join the group.</p>
+	<input type="text" value="<%= `${base_url}/join/${member.invite_slug}` %>" id="invite-input">
+	<div id="invite-response"></div>
+	<h2>Settings</h2>
+	<ul>
+		<li>Notifications:
+			<% if (email == 'send') { %><%- '<strong>receive emails</strong>' %><% } %>
+			<% if (email == 'digest') { %><%- '<strong>digest emails</strong>' %><% } %>
+			<% if (email == 'none') { %><%- '<strong>no emails</strong>' %><% } %>
+		</li>
+		<li><a href="<%= `/settings/${context.slug}` %>">Change your settings</a></li>
+	</ul>
 </div>

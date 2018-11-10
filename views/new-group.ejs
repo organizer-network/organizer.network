@@ -12,8 +12,8 @@
 				<label for="topic-input">Topic</label>
 				<textarea name="topic" id="topic-input" cols="40" rows="4"></textarea>
 				<% if (contexts.member_of.length > 0) { %>
-					<label for="parent-group">Create as a sub-group of</label>
-					<select name="parent" id="parent-group">
+					<label for="parent-group">Create as a subgroup of</label>
+					<select name="parent_id" id="parent-group">
 						<option value="0">(no parent group)</option>
 						<% for (context of contexts.member_of) { %>
 							<% if (! context.parent_id) { %>
@@ -38,7 +38,7 @@
 					<li>Groups are not listed anywhere.</li>
 					<li>Content is only visible to members.</li>
 					<% if (contexts.member_of.length > 0) { %>
-						<li>Sub-groups can be discovered and joined by members of their parent group.</li>
+						<li>Subgroups can be discovered and joined by members of their parent group.</li>
 					<% } %>
 				</ul>
 			</div>

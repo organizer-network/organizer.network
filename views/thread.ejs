@@ -7,7 +7,7 @@
 		<div id="messages">
 			<h2><%= context.name %></h2>
 			<ul class="back">
-				<li><a href="/group/<%= context.slug %>" id="group-link">Group page</a></li>
+				<li><a href="/group/<%= context.slug %>" id="group-link">Group: <%= context.name %></a></li>
 				<% if (context.messages[0].in_reply_to) { %>
 					<li><a href="/group/<%= context.slug %>/<%= context.messages[0].in_reply_to %>">In reply to message</a></li>
 				<% } %>

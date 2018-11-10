@@ -44,7 +44,7 @@ const sendgrid = require('@sendgrid/mail');
 const mkdirp = require('mkdirp');
 const multer = require('multer')
 
-const slug_regex = /^[a-z0-9_-][a-z0-9_-]+$/i;
+const slug_regex = /^[a-z][a-z0-9_-]+$/i;
 
 marked.setOptions({
 	gfm: true,
@@ -187,7 +187,7 @@ app.get('/group', async (req, rsp) => {
 			return rsp.redirect('/?then=%2Fgroup');
 		}
 
-		let default_slug = random(16);
+		let default_slug = random(16, 'slug');
 
 		rsp.render('page', {
 			title: 'Create a new group',
@@ -206,7 +206,8 @@ app.get('/group', async (req, rsp) => {
 	}
 });
 
-app.get('/group/:slug', async (req, rsp) => {
+let subgroup_path = '/group/:slug([a-z][a-z0-9_-]+/[a-z][a-z0-9_-]+)';
+app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 
 	try {
 
@@ -267,7 +268,8 @@ app.get('/group/:slug', async (req, rsp) => {
 
 });
 
-app.get('/group/:slug/:id', async (req, rsp) => {
+let subthread_path = '/group/:slug([a-z][a-z0-9_-]+/[a-z][a-z0-9_-]+)/:id';
+app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
 
 	try {
 
@@ -723,7 +725,7 @@ Link expires in 1 hour.
 			id = query.rows[0].id;
 			slug = query.rows[0].slug;
 		} else {
-			slug = random(6);
+			slug = random(6, 'slug');
 			query = await db.query(`
 				INSERT INTO person
 				(email, slug, created)
@@ -869,13 +871,18 @@ app.post('/api/group', async (req, rsp) => {
 		let name = req.body.name;
 		let slug = req.body.slug;
 		let topic = req.body.topic || '';
-		let parent = parseInt(req.body.parent) || null;
+		let parent_id = parseInt(req.body.parent_id) || null;
 
 		if (! slug.match(slug_regex)) {
 			return rsp.status(400).send({
 				ok: false,
 				error: "The URL format is: at least 2 letters, numbers, hyphens, or underscores."
 			});
+		}
+
+		if (parent_id) {
+			let parent = await get_context(parent_id);
+			slug = `${parent.slug}/${slug}`;
 		}
 
 		let person = await curr_person(req);
@@ -899,7 +906,7 @@ app.post('/api/group', async (req, rsp) => {
 			(name, slug, topic, parent_id, created)
 			VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
 			RETURNING *
-		`, [name, slug, topic, parent]);
+		`, [name, slug, topic, parent_id]);
 
 		let group = query.rows[0];
 
@@ -1901,7 +1908,6 @@ function curr_person(req) {
 }
 
 function get_context(id_or_slug) {
-
 	return new Promise(async (resolve, reject) => {
 
 		try {
@@ -1941,7 +1947,6 @@ function get_context(id_or_slug) {
 }
 
 function get_contexts(person, message_id) {
-
 	return new Promise(async (resolve, reject) => {
 
 		try {
@@ -1960,6 +1965,24 @@ function get_contexts(person, message_id) {
 				`, [person.id]);
 
 				contexts.member_of = query.rows;
+
+				let subgroups = {};
+				for (let context of contexts.member_of) {
+					if (context.parent_id) {
+						if (! subgroups[context.parent_id]) {
+							subgroups[context.parent_id] = [];
+						}
+						subgroups[context.parent_id].push(context);
+					}
+				}
+
+				for (let context of contexts.member_of) {
+					if (subgroups[context.id]) {
+						context.subgroups = subgroups[context.id];
+					} else {
+						context.subgroups = [];
+					}
+				}
 
 				let thread = null;
 				let context_id = null;
@@ -2056,147 +2079,175 @@ function get_message(id, revision) {
 	});
 }
 
-async function add_context_details(context, before_id) {
+function add_context_details(context, before_id) {
+	return new Promise(async (resolve, reject) => {
 
-	let query;
+		try {
 
-	if (! context) {
-		return;
-	}
+			let query;
 
-	if (context.thread) {
+			if (! context) {
+				return resolve(context);
+			}
 
-		await add_message_details(context.thread);
-		context.messages = context.thread.splice(0, 1);
-		context.messages[0].replies = context.thread;
+			if (context.thread) {
 
-	} else {
+				await add_message_details(context.thread);
+				context.messages = context.thread.splice(0, 1);
+				context.messages[0].replies = context.thread;
 
-		let before_clause = '';
-		let values = [context.id];
-		if (before_id) {
-			before_clause = 'AND message.id < $2';
-			values.push(before_id);
+			} else {
+
+				let before_clause = '';
+				let values = [context.id];
+				if (before_id) {
+					before_clause = 'AND message.id < $2';
+					values.push(before_id);
+				}
+
+				query = await db.query(`
+					SELECT message.*,
+					       person.name AS person_name, person.slug AS person_slug
+					FROM message, person
+					WHERE message.context_id = $1
+					  ${before_clause}
+					  AND message.person_id = person.id
+					  AND message.in_reply_to IS NULL
+					ORDER BY message.created DESC
+					LIMIT 10
+				`, values);
+
+				context.messages = query.rows;
+
+				query = await db.query(`
+					SELECT COUNT(id) AS total_messages
+					FROM message
+					WHERE context_id = $1
+					  AND in_reply_to IS NULL
+				`, [context.id]);
+
+				context.total_messages = query.rows[0].total_messages;
+
+				await add_message_details(context.messages);
+			}
+
+			query = await db.query(`
+				SELECT member.person_id, person.name, person.slug
+				FROM member, person
+				WHERE member.active = true
+				  AND member.context_id = $1
+				  AND member.person_id = person.id
+				ORDER BY member.updated DESC
+			`, [context.id]);
+
+			context.members = query.rows;
+
+			query = await db.query(`
+				SELECT *
+				FROM context
+				WHERE parent_id = $1
+			`, [context.id]);
+			context.subgroups = query.rows;
+
+			if (context.parent_id) {
+				context.parent = await get_context(context.parent_id);
+			}
+
+			resolve(context);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
 		}
-
-		query = await db.query(`
-			SELECT message.*,
-			       person.name AS person_name, person.slug AS person_slug
-			FROM message, person
-			WHERE message.context_id = $1
-			  ${before_clause}
-			  AND message.person_id = person.id
-			  AND message.in_reply_to IS NULL
-			ORDER BY message.created DESC
-			LIMIT 10
-		`, values);
-
-		context.messages = query.rows;
-
-		query = await db.query(`
-			SELECT COUNT(id) AS total_messages
-			FROM message
-			WHERE context_id = $1
-			  AND in_reply_to IS NULL
-		`, [context.id]);
-
-		context.total_messages = query.rows[0].total_messages;
-
-		await add_message_details(context.messages);
-	}
-
-	query = await db.query(`
-		SELECT member.person_id, person.name, person.slug
-		FROM member, person
-		WHERE member.active = true
-		  AND member.context_id = $1
-		  AND member.person_id = person.id
-		ORDER BY member.updated DESC
-	`, [context.id]);
-
-	context.members = query.rows;
-
-	return context;
+	});
 }
 
-async function add_message_details(messages) {
+function add_message_details(messages) {
+	return new Promise(async (resolve, reject) => {
 
-	if (! 'length' in messages || messages.length == 0) {
-		return messages;
-	}
+		try {
 
-	let ids = messages.map(msg => msg.id);
-	let placeholders = [];
-	for (let i = 0; i < ids.length; i++) {
-		placeholders.push('$' + (i + 1));
-	}
+			if (! 'length' in messages || messages.length == 0) {
+				return resolve(messages);
+			}
 
-	placeholders = placeholders.join(', ');
+			let ids = messages.map(msg => msg.id);
+			let placeholders = [];
+			for (let i = 0; i < ids.length; i++) {
+				placeholders.push('$' + (i + 1));
+			}
 
-	let query = await db.query(`
-		SELECT in_reply_to AS id,
-			   COUNT(id) AS reply_count
-		FROM message
-		WHERE in_reply_to IN (${placeholders})
-		GROUP BY in_reply_to
-	`, ids);
+			placeholders = placeholders.join(', ');
 
-	let replies = {};
-	for (let reply of query.rows) {
-		replies[reply.id] = reply.reply_count;
-	}
+			let query = await db.query(`
+				SELECT in_reply_to AS id,
+					   COUNT(id) AS reply_count
+				FROM message
+				WHERE in_reply_to IN (${placeholders})
+				GROUP BY in_reply_to
+			`, ids);
 
-	query = await db.query(`
-		SELECT target_id, content, created
-		FROM facet
-		WHERE target_id IN (${placeholders})
-		  AND target_type = 'message'
-		  AND facet_type = 'revision'
-		ORDER BY created DESC
-	`, ids);
+			let replies = {};
+			for (let reply of query.rows) {
+				replies[reply.id] = reply.reply_count;
+			}
 
-	let revisions = {};
-	for (let revision of query.rows) {
+			query = await db.query(`
+				SELECT target_id, content, created
+				FROM facet
+				WHERE target_id IN (${placeholders})
+				  AND target_type = 'message'
+				  AND facet_type = 'revision'
+				ORDER BY created DESC
+			`, ids);
 
-		revision.created = new Date(revision.created).toISOString();
+			let revisions = {};
+			for (let revision of query.rows) {
 
-		if (! revisions[revision.target_id]) {
-			revisions[revision.target_id] = [];
+				revision.created = new Date(revision.created).toISOString();
+
+				if (! revisions[revision.target_id]) {
+					revisions[revision.target_id] = [];
+				}
+				revisions[revision.target_id].push({
+					created: revision.created,
+					content: revision.content
+				});
+			}
+
+			for (let message of messages) {
+
+				message.created = new Date(message.created).toISOString();
+				message.updated = new Date(message.updated).toISOString();
+
+				if (message.id in replies) {
+					message.reply_count = replies[message.id];
+				} else {
+					message.reply_count = 0;
+				}
+
+				if (revisions[message.id]) {
+					message.revisions = revisions[message.id];
+				} else {
+					message.revisions = [];
+				}
+				message.revisions.unshift({
+					created: message.updated,
+					content: message.content
+				});
+				message.revision_dates = message.revisions.map(rev => rev.created);
+			}
+
+			resolve(messages);
+
+		} catch(err) {
+			console.log(err.stack);
+			reject(err);
 		}
-		revisions[revision.target_id].push({
-			created: revision.created,
-			content: revision.content
-		});
-	}
-
-	for (let message of messages) {
-
-		message.created = new Date(message.created).toISOString();
-		message.updated = new Date(message.updated).toISOString();
-
-		if (message.id in replies) {
-			message.reply_count = replies[message.id];
-		} else {
-			message.reply_count = 0;
-		}
-
-		if (revisions[message.id]) {
-			message.revisions = revisions[message.id];
-		} else {
-			message.revisions = [];
-		}
-		message.revisions.unshift({
-			created: message.updated,
-			content: message.content
-		});
-		message.revision_dates = message.revisions.map(rev => rev.created);
-	}
-
-	return messages;
+	});
 }
 
 function add_facets(target, target_type, facet_type) {
-
 	return new Promise(async (resolve, reject) => {
 
 		try {
@@ -2320,16 +2371,36 @@ function normalize_email(email) {
 	return email.trim().toLowerCase();
 }
 
-function random(count) {
+function random(count, is_slug) {
+
 	const chars = 'abcdefghijkmnpqrstuwxyz0123456789';
+	const letters = 'abcdefghijkmnpqrstuwxyz';
+
+	// Note that we do not include the letters l or o to reduce the confusion
+	// with numeric 1 and 0. (20181110/dphiffer)
+
 	const rnd = crypto.randomBytes(count);
 	const value = new Array(count);
-	const len = Math.min(256, chars.length);
-	const d = 256 / len;
 
 	for (var i = 0; i < count; i++) {
-		value[i] = chars[Math.floor(rnd[i] / d)]
-	};
+		if (is_slug && i == 0) {
+
+			// Context slugs cannot start with a number, which has to do with
+			// matching subgroups and message IDs, so we just need to check
+			// those ones. We enforce the same restriction on person slugs, only
+			// to reduce the number of special cases for permalinks.
+			// (20181110/dphiffer)
+
+			let len = Math.min(256, letters.length);
+			let d = 256 / len;
+			value[i] = letters[Math.floor(rnd[i] / d)];
+
+		} else {
+			let len = Math.min(256, chars.length);
+			let d = 256 / len;
+			value[i] = chars[Math.floor(rnd[i] / d)];
+		}
+	}
 
 	return value.join('');
 }

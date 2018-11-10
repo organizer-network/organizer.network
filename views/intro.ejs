@@ -21,7 +21,16 @@
 				<ul>
 					<% for (let context of contexts.member_of) { %>
 						<% if (! context.parent_id) { %>
-							<li><a href="/group/<%= context.slug %>"><%= context.name %></a></li>
+							<li>
+								<a href="/group/<%= context.slug %>"><%= context.name %></a>
+								<% if (context.subgroups && context.subgroups.length > 0) { %>
+									<ul>
+										<% for (let subgroup of context.subgroups) { %>
+											<li><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></li>
+										<% } %>
+									</ul>
+								<% } %>
+							</li>
 						<% } %>
 					<% } %>
 				</ul>
