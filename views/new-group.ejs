@@ -11,13 +11,15 @@
 				<input type="text" id="name" name="name">
 				<label for="about-input">About</label>
 				<textarea name="about" id="about-input" cols="40" rows="4"></textarea>
-				<label for="parent-group">Create as a sub-group of</label>
-				<select name="parent" id="parent-group">
-					<option value="0">(no parent group)</option>
-					<% for (context of contexts.member_of) { %>
-						<option value="<%= context.id %>" data-slug="<%= context.slug %>"><%= context.name %></option>
-					<% } %>
-				</select>
+				<% if (contexts.member_of.length > 0) { %>
+					<label for="parent-group">Create as a sub-group of</label>
+					<select name="parent" id="parent-group">
+						<option value="0">(no parent group)</option>
+						<% for (context of contexts.member_of) { %>
+							<option value="<%= context.id %>" data-slug="<%= context.slug %>"><%= context.name %></option>
+						<% } %>
+					</select>
+				<% } %>
 				<label for="slug-input">Group URL</label>
 				<div id="group-url"><code><%= base_url %>/group/<span id="parent-slug"></span></code><input type="text" id="slug-input" name="slug" value="<%= default_slug %>"></div>
 				<input type="submit" value="Create Group →">
@@ -33,7 +35,9 @@
 					<li>All members must be invited.</li>
 					<li>Groups are not listed anywhere.</li>
 					<li>Content is only visible to members.</li>
-					<li>Sub-groups can be discovered and joined by members of their parent group.</li>
+					<% if (contexts.member_of.length > 0) { %>
+						<li>Sub-groups can be discovered and joined by members of their parent group.</li>
+					<% } %>
 				</ul>
 			</div>
 		</div>
