@@ -80,7 +80,8 @@ pre {
 
 input[type="email"],
 input[type="text"],
-textarea {
+textarea,
+select {
 	display: block;
 	font-family: menlo, monospace;
 	font-size: 16px;
@@ -93,6 +94,11 @@ textarea {
 
 textarea {
 	line-height: 1.5em;
+}
+
+select {
+	display: inline-block;
+	width: auto;
 }
 
 input[type="email"]:focus,
@@ -675,6 +681,10 @@ input[type="submit"]:active,
 	#intro .contexts {
 		width: 50%;
 		float: left;
+	}
+
+	#group-url {
+		white-space: nowrap;
 	}
 
 	.clear {

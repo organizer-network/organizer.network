@@ -304,11 +304,6 @@
 		}
 
 		if ($(document.body).hasClass('logged-in')) {
-			var classes = $(document.body).attr('class');
-			var person = classes.match(/person-\w+/);
-			if (person) {
-				$('<style>.message.' + person[0] + ':hover > .message-options { display: block; }</style>').appendTo('head');
-			}
 			$('#message-list').click(function(e) {
 				if ($(e.target).hasClass('delete')) {
 					if (! confirm('Are you sure you want to delete your message?')) {
@@ -362,6 +357,16 @@
 		}
 
 		$('.revisions-link').click(revisions_handler);
+
+		$('#parent-group').change(function() {
+			var option = this.options[this.selectedIndex];
+			var slug = $(option).data('slug');
+			if (slug) {
+				$('#parent-slug').html(slug + '/');
+			} else {
+				$('#parent-slug').html('');
+			}
+		});
 
 	});
 
