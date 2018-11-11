@@ -562,7 +562,7 @@ function send_digest_emails(person_id, contexts) {
 				let last_message_id = null;
 
 				if (messages.length == 0) {
-					return resolve(0);
+					continue;
 				}
 
 				let placeholders = [];
@@ -1658,7 +1658,7 @@ async function send_notifications(sender, message, from) {
 
 		let query = await db.query(`
 			SELECT member.id, member.invite_slug, member.leave_slug,
-			       person.id, person.email, person.name,
+			       person.email, person.name,
 			       context.name AS context_name, context.slug AS context_slug
 			FROM member, person, context
 			WHERE member.context_id = $1
