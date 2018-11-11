@@ -8,8 +8,8 @@ It's worth pointing out that this project is still in its early days, so proceed
 
 ## Versioning
 
-* Current release: __[v0.0.8 "hup"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.8)__
-* Under development: __v0.0.9 "ifff"__
+* Current release: __[v0.0.9 "ifff"](https://github.com/organizer-network/organizer.network/releases/tag/v0.0.9)__
+* Under development: __v0.1.0 "jiji"__
 
 Versions names are based on [Tom Gauld's *A Noisy Alphabet*](http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom).
 
