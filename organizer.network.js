@@ -1,5 +1,5 @@
 // organizer.network
-// v0.0.8 "hup"
+// v0.0.9 "ifff"
 
 // versioning based on Tom Gauld's A Noisy Alphabet
 // http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom
