@@ -1,5 +1,5 @@
-VERSION := ifff
-VERSIONS = aarg bzzt craw dibdib foom grrr hup ifff
+VERSION := jiji
+VERSIONS = aarg bzzt craw dibdib foom grrr hup ifff jiji
 NOW := $(shell TZ=UTC date +%Y%m%d-%H%M%S)
 
 setup:
