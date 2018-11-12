@@ -1658,7 +1658,7 @@ async function send_notifications(sender, message, from) {
 
 		let query = await db.query(`
 			SELECT member.id, member.invite_slug, member.leave_slug,
-			       person.email, person.name,
+			       person.id AS person_id, person.email, person.name,
 			       context.name AS context_name, context.slug AS context_slug
 			FROM member, person, context
 			WHERE member.context_id = $1
