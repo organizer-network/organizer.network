@@ -1,4 +1,4 @@
-### [Organizer Network Docs](../index.md) → [Developer Documentation](index.md)
+### [Organizer Network Docs](../README.md) → [Developer Documentation](README.md)
 
 # Getting Started
 

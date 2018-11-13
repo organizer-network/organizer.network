@@ -28,4 +28,5 @@ You may notice dphiffer uses [emoji codes](http://emoji-cheat-sheet.com/) in his
 
 ## Documentation
 
-* [Developer Documentation](docs/developer/index.md)
+* [Developer Documentation](docs/developer/README.md)
+* [Running Organizer Network](docs/running/README.md)
