@@ -1,4 +1,4 @@
-### [Organizer Network Docs](../index.md) → [Running Organizer Network](index.md)
+### [Organizer Network Docs](../README.md) → [Running Organizer Network](README.md)
 
 # Server setup
 
