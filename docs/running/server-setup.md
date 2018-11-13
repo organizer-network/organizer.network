@@ -1,3 +1,5 @@
+### [Organizer Network Docs](../index.md) → [Running Organizer Network](index.md)
+
 # Server setup
 
 We run the public [organizer.network](https://organizer.network/) website on [pm2](http://pm2.keymetrics.io/) behind an [nginx reverse proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/). DigitalOcean has [a tutorial](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-16-04) that might be worth looking at.
@@ -6,15 +8,15 @@ I'll describe the specific setup process we used as a reference.
 
 * Create a new Ubuntu 18.04 Droplet on [Digital Ocean](https://www.digitalocean.com/) (or on your preferred hosting provider). The smallest size should be sufficient.
 
-![Create Droplet](1.png)
+![Create Droplet](img/1.png)
 
 * Copy/paste your a SSH public key.
 
-![SSH public key](2.png)
+![SSH public key](img/2.png)
 
 * Give your droplet a name.
 
-![Hostname](3.png)
+![Hostname](img/3.png)
 
 * Copy the IP address for your new droplet, once it finishes booting.
 * SSH into your new machine as `root`.
