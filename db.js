@@ -14,37 +14,81 @@ module.exports = {
 
 			try {
 
-				let query;
+				let sql;
+				const values = [id_or_slug];
 
 				if (typeof id_or_slug == 'string') {
-					let slug = id_or_slug;
-					query = await db.query(`
+					sql = `
 						SELECT *
 						FROM person
 						WHERE slug = $1
-					`, [slug]);
+					`;
 				} else if (typeof id_or_slug == 'number') {
-					let id = id_or_slug;
-					query = await db.query(`
+					sql = `
 						SELECT *
 						FROM person
 						WHERE id = $1
-					`, [id]);
+					`;
 				} else {
 					throw new Error('Argument should be a string or number type.');
 				}
 
-				if (query.rows.length > 0) {
-					return resolve(query.rows[0]);
+				const query = await db.query(sql, values);
+
+				if (query.rows.length == 0) {
+					// No person found, but we still resolve().
+					return resolve(null);
 				}
 
-				return resolve(null);
+				return resolve(query.rows[0]);
 
 			} catch(err) {
+				console.log(sql, values);
 				console.log(err.stack);
 				reject(err);
 			}
 
+		});
+	},
+
+	get_context: (id_or_slug) => {
+		return new Promise(async (resolve, reject) => {
+
+			try {
+
+				let sql;
+				const values = [id_or_slug];
+
+				if (typeof id_or_slug == 'string') {
+					sql = `
+						SELECT *
+						FROM context
+						WHERE slug = $1
+					`;
+				} else if (typeof id_or_slug == 'number') {
+					sql = `
+						SELECT *
+						FROM context
+						WHERE id = $1
+					`;
+				} else {
+					throw new Error(`Argument ${id_or_slug} should be a string or number type.`);
+				}
+
+				const query = await db.query(sql, values);
+
+				if (query.rows.length == 0) {
+					// No context found, but we still resolve().
+					return resolve(null);
+				}
+
+				resolve(query.rows[0]);
+
+			} catch(err) {
+				console.log(sql, values);
+				console.log(err.stack);
+				reject(err);
+			}
 		});
 	},
 

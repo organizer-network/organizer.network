@@ -39,7 +39,7 @@ function send_digest_emails(person_id, contexts) {
 
 			for (let context_id of contexts) {
 
-				let context = await get_context(parseInt(context_id));
+				let context = await db.get_context(parseInt(context_id));
 
 				let facet = `last_digest_message_${context_id}`;
 				await add_facets(person, 'person', facet);
