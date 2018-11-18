@@ -3,7 +3,7 @@ const pg = require('pg');
 const db = new pg.Client(config.db_dsn);
 db.connect();
 
-module.exports = {
+const self = {
 
 	query: (sql, values) => {
 		 return db.query(sql, values);
@@ -92,6 +92,102 @@ module.exports = {
 		});
 	},
 
+	add_facets: (target, target_type, facet_type) => {
+		return new Promise(async (resolve, reject) => {
+
+			try {
+
+				let sql;
+				let facet_type_clause = '';
+				const values = [target.id, target_type];
+
+				if (facet_type) {
+					facet_type_clause = 'AND facet_type = $3';
+					values.push(facet_type);
+				}
+
+				sql = `
+					SELECT *
+					FROM facet
+					WHERE target_id = $1
+					  AND target_type = $2
+					  ${facet_type_clause}
+					ORDER BY facet_num
+				`;
+				const query = await db.query(sql, values);
+
+				target.facets = {};
+
+				for (let facet of query.rows) {
+					if (facet.facet_num == -1) {
+						target.facets[facet.facet_type] = facet.content;
+					} else {
+						if (! target.facets[facet.facet_type]) {
+							target.facets[facet.facet_type] = [];
+						}
+						target.facets[facet.facet_type].push(facet.content);
+					}
+				}
+
+				resolve(target);
+
+			} catch(err) {
+				console.log(sql, values);
+				console.log(err.stack);
+				reject(err);
+			}
+
+		});
+	},
+
+	set_facet: (target, target_type, facet_type, content, is_single) => {
+		return new Promise(async (resolve, reject) => {
+
+			try {
+
+				let sql, values;
+				let facet_num;
+
+				await self.add_facets(target, target_type);
+
+				if (is_single) {
+					facet_num = -1;
+					sql = `
+						DELETE FROM facet
+						WHERE target_id = $1
+						  AND target_type = $2
+						  AND facet_type = $3
+					`;
+					values = [target.id, target_type, facet_type];
+					await db.query(sql, values);
+				} else {
+					facet_num = 0;
+					if (target.facets[facet_type]) {
+						facet_num = target.facets[facet_type].length;
+					}
+				}
+
+				sql = `
+					INSERT INTO facet
+					(target_id, target_type, facet_type, facet_num, content, created, updated)
+					VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+				`;
+				values = [target.id, target_type, facet_type, facet_num, content];
+				await db.query(sql, values);
+
+				await self.add_facets(target, target_type);
+
+				resolve(target);
+
+			} catch(err) {
+				console.log(sql, values);
+				console.log(err.stack);
+				reject(err);
+			}
+
+		});
+	},
+
 	query_digest_members: () => {
 		return db.query(`
 			SELECT member.person_id, member.context_id
@@ -167,3 +263,5 @@ module.exports = {
 	}
 
 };
+
+module.exports = self;
