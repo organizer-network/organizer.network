@@ -6,16 +6,21 @@ db.connect();
 const self = {
 
 	query: (sql, values) => {
-		 return db.query(sql, values);
+		try {
+			return db.query(sql, values);
+		} catch(err) {
+			console.log('error: cannot query');
+			console.log(sql, values);
+		}
 	},
 
 	get_person: (id_or_slug) => {
 		return new Promise(async (resolve, reject) => {
 
-			try {
+			let sql;
+			const values = [id_or_slug];
 
-				let sql;
-				const values = [id_or_slug];
+			try {
 
 				if (typeof id_or_slug == 'string') {
 					sql = `
@@ -43,8 +48,8 @@ const self = {
 				return resolve(query.rows[0]);
 
 			} catch(err) {
+				console.log('error: cannot get_person');
 				console.log(sql, values);
-				console.log(err.stack);
 				reject(err);
 			}
 
@@ -54,10 +59,10 @@ const self = {
 	get_context: (id_or_slug) => {
 		return new Promise(async (resolve, reject) => {
 
-			try {
+			let sql;
+			const values = [id_or_slug];
 
-				let sql;
-				const values = [id_or_slug];
+			try {
 
 				if (typeof id_or_slug == 'string') {
 					sql = `
@@ -85,8 +90,8 @@ const self = {
 				resolve(query.rows[0]);
 
 			} catch(err) {
+				console.log('error: cannot get_context');
 				console.log(sql, values);
-				console.log(err.stack);
 				reject(err);
 			}
 		});
@@ -95,11 +100,12 @@ const self = {
 	add_facets: (target, target_type, facet_type) => {
 		return new Promise(async (resolve, reject) => {
 
+			let sql;
+			const values = [target.id, target_type];
+
 			try {
 
-				let sql;
 				let facet_type_clause = '';
-				const values = [target.id, target_type];
 
 				if (facet_type) {
 					facet_type_clause = 'AND facet_type = $3';
@@ -132,8 +138,8 @@ const self = {
 				resolve(target);
 
 			} catch(err) {
+				console.log('error: cannot add_facets');
 				console.log(sql, values);
-				console.log(err.stack);
 				reject(err);
 			}
 
@@ -143,9 +149,10 @@ const self = {
 	set_facet: (target, target_type, facet_type, content, is_single) => {
 		return new Promise(async (resolve, reject) => {
 
+			let sql, values;
+
 			try {
 
-				let sql, values;
 				let facet_num;
 
 				await self.add_facets(target, target_type);
@@ -180,8 +187,8 @@ const self = {
 				resolve(target);
 
 			} catch(err) {
+				console.log('error: cannot set_facet');
 				console.log(sql, values);
-				console.log(err.stack);
 				reject(err);
 			}
 
@@ -189,7 +196,8 @@ const self = {
 	},
 
 	query_digest_members: () => {
-		return db.query(`
+
+		let sql = `
 			SELECT member.person_id, member.context_id
 			FROM member, facet
 			WHERE member.active = true
@@ -197,35 +205,54 @@ const self = {
 			  AND facet.target_type = 'member'
 			  AND facet.facet_type = 'email'
 			  AND facet.content = 'digest'
-		`);
+		`;
+
+		try {
+			return db.query(sql);
+		} catch(err) {
+			console.log('error: cannot query_digest_members');
+			console.log(sql);
+		}
 	},
 
 	query_digest_messages: (person, context) => {
 
-		let values = [context_id, person_id];
-		let facet = `last_digest_message_${context.id}`;
+		let sql;
+		const values = [context.id, person.id];
 
-		let id_clause = '';
-		if (person.facets && person.facets[facet]) {
-			id_clause = 'AND message.id > $3';
-			values.push(person.facets[facet]);
+		try {
+			let facet = `last_digest_message_${context.id}`;
+
+			let id_clause = '';
+			if (person.facets && person.facets[facet]) {
+				id_clause = 'AND message.id > $3';
+				values.push(person.facets[facet]);
+			}
+
+			sql = `
+				SELECT message.id, message.content, message.created,
+					   message.in_reply_to, person.name
+				FROM message, person
+				WHERE message.context_id = $1
+				  AND message.person_id != $2
+				  AND message.created > CURRENT_TIMESTAMP - interval '1 day'
+				  ${id_clause}
+				  AND person.id = message.person_id
+				ORDER BY message.created
+			`;
+
+			return db.query(sql, values);
+
+		} catch(err) {
+			console.log('error: cannot query_digest_messages');
+			console.log(sql, values);
 		}
-
-		return db.query(`
-			SELECT message.id, message.content, message.created,
-				   message.in_reply_to, person.name
-			FROM message, person
-			WHERE message.context_id = $1
-			  AND message.person_id != $2
-			  AND message.created > CURRENT_TIMESTAMP - interval '1 day'
-			  ${id_clause}
-			  AND person.id = message.person_id
-			ORDER BY message.created
-		`, values);
 	},
 
 	get_digest_replies: (messages) => {
 		return new Promise(async (resolve, reject) => {
+
+			let sql, values;
 
 			try {
 
@@ -244,7 +271,7 @@ const self = {
 				}
 
 				placeholders = placeholders.join(', ');
-				let sql = `
+				sql = `
 					SELECT id, content
 					FROM message
 					WHERE id IN (${placeholders})
@@ -254,8 +281,8 @@ const self = {
 				resolve(query.rows);
 
 			} catch(err) {
+				console.log('error: cannot get_digest_replies');
 				console.log(sql, values);
-				console.log(err.stack);
 				reject(err);
 			}
 
