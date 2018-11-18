@@ -25,8 +25,6 @@ const sharp = require('sharp');
 const session = require('express-session');
 const pg_session = require('connect-pg-simple')(session);
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const sendgrid = require('@sendgrid/mail');
 const mkdirp = require('mkdirp');
 const multer = require('multer')
 
@@ -65,17 +63,7 @@ app.use((req, rsp, next) => {
 });
 app.enable('trust proxy');
 
-const db = require('./db');
-
-// Setup SMTP if it's configured
-if ('smtp' in config) {
-	var smtp_transport = nodemailer.createTransport(config.smtp);
-}
-
-// Setup SendGrid if it's configured
-if ('sendgrid_api_key' in config) {
-	sendgrid.setApiKey(config.sendgrid_api_key);
-}
+const db = require('./lib/db');
 
 const upload = multer();
 
@@ -1997,39 +1985,6 @@ function add_message_details(messages) {
 		} catch(err) {
 			console.log(err.stack);
 			reject(err);
-		}
-	});
-}
-
-function send_email(to, subject, body, from) {
-	return new Promise((resolve, reject) => {
-
-		if (! from) {
-			from = config.email_from;
-		}
-
-		const message = {
-			from: from,
-			to: to,
-			subject: subject,
-			text: body
-		};
-
-		if ('sendgrid_api_key' in config) {
-			sendgrid.send(message)
-			.then((rsp) => {
-				resolve(rsp);
-			})
-			.catch(err => {
-				reject(err);
-			});
-		} else if ('smtp' in config) {
-			smtp_transport.sendMail(message, (err, info) => {
-				if (err) {
-					return reject(err);
-				}
-				return resolve(info);
-			});
 		}
 	});
 }
