@@ -195,58 +195,68 @@ const self = {
 		});
 	},
 
-	query_digest_members: () => {
+	get_digest_members: () => {
+		return new Promise(async (resolve, reject) => {
 
-		let sql = `
-			SELECT member.person_id, member.context_id
-			FROM member, facet
-			WHERE member.active = true
-			  AND facet.target_id = member.id
-			  AND facet.target_type = 'member'
-			  AND facet.facet_type = 'email'
-			  AND facet.content = 'digest'
-		`;
-
-		try {
-			return db.query(sql);
-		} catch(err) {
-			console.log('error: cannot query_digest_members');
-			console.log(sql);
-		}
-	},
-
-	query_digest_messages: (person, context) => {
-
-		let sql;
-		const values = [context.id, person.id];
-
-		try {
-			let facet = `last_digest_message_${context.id}`;
-
-			let id_clause = '';
-			if (person.facets && person.facets[facet]) {
-				id_clause = 'AND message.id > $3';
-				values.push(person.facets[facet]);
-			}
-
-			sql = `
-				SELECT message.id, message.content, message.created,
-					   message.in_reply_to, person.name
-				FROM message, person
-				WHERE message.context_id = $1
-				  AND message.person_id != $2
-				  AND message.created > CURRENT_TIMESTAMP - interval '1 day'
-				  ${id_clause}
-				  AND person.id = message.person_id
-				ORDER BY message.created
+			let sql = `
+				SELECT member.person_id, member.context_id
+				FROM member, facet
+				WHERE member.active = true
+				  AND facet.target_id = member.id
+				  AND facet.target_type = 'member'
+				  AND facet.facet_type = 'email'
+				  AND facet.content = 'digest'
 			`;
 
-			return db.query(sql, values);
+			try {
 
-		} catch(err) {
-			console.log('error: cannot query_digest_messages');
-			console.log(sql, values);
-		}
+				let query = await db.query(sql);
+				resolve(query.rows);
+
+			} catch(err) {
+				console.log('error: cannot query_digest_members');
+				console.log(sql);
+				reject(err);
+			}
+		});
+	},
+
+	get_digest_messages: (person, context) => {
+		return new Promise(async (resolve, reject) => {
+
+			let sql;
+			const values = [context.id, person.id];
+
+			try {
+				let facet = `last_digest_message_${context.id}`;
+
+				let id_clause = '';
+				if (person.facets && person.facets[facet]) {
+					id_clause = 'AND message.id > $3';
+					values.push(person.facets[facet]);
+				}
+
+				sql = `
+					SELECT message.id, message.content, message.created,
+						   message.in_reply_to, person.name
+					FROM message, person
+					WHERE message.context_id = $1
+					  AND message.person_id != $2
+					  AND message.created > CURRENT_TIMESTAMP - interval '1 day'
+					  ${id_clause}
+					  AND person.id = message.person_id
+					ORDER BY message.created
+				`;
+
+				let query = await db.query(sql, values);
+				resolve(query.rows);
+
+			} catch(err) {
+				console.log('error: cannot query_digest_messages');
+				console.log(sql, values);
+				reject(err);
+			}
+		});
 	},
 
 	get_digest_replies: (messages) => {
