@@ -11,26 +11,12 @@ if (! fs.existsSync(`${__dirname}/config.js`)) {
 	console.log('Please set up config.js');
 	return;
 }
-const config = require('./config.js');
+const config = require('./config');
 
 // server
 const express = require('express');
 const app = express();
-var server;
 
-if ('ssl' in config) {
-	// Setup HTTPS server
-	let https_options = {};
-	for (let key in config.ssl) {
-		https_options[key] = fs.readFileSync(`${__dirname}/${config.ssl[key]}`);
-	}
-	server = require('https').createServer(https_options, app);
-} else {
-	// Setup HTTP server
-	server = require('http').createServer(app);
-}
-
-const io = require('socket.io')(server);
 const body_parser = require('body-parser');
 const marked = require('marked');
 const yaml = require('js-yaml');
@@ -49,19 +35,6 @@ const slug_regex = /^[a-z][a-z0-9_-]+$/i;
 marked.setOptions({
 	gfm: true,
 	smartypants: true
-});
-
-// Setup CORS
-io.origins((origin, callback) => {
-	if (config.cors_origins.indexOf('*') !== -1) {
-		callback(null, true);
-	} else if (config.cors_origins.indexOf(origin) !== -1 ||
-	           config.cors_origins.indexOf(origin + '/') !== -1) {
-		callback(null, true);
-	} else {
-		console.log(`CORS blocked origin: ${origin}`);
-		return callback('origin not allowed', false);
-	}
 });
 
 app.set('view engine', 'ejs');
@@ -91,10 +64,6 @@ app.use((req, rsp, next) => {
 	next();
 });
 app.enable('trust proxy');
-
-server.listen(config.port, () => {
-	console.log(`listening on *:${config.port}`);
-});
 
 // Connect to PostgreSQL
 const pg = require('pg');
@@ -2424,3 +2393,5 @@ function random(count, is_slug) {
 
 	return value.join('');
 }
+
+module.exports = app;
