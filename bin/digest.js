@@ -1,40 +1,48 @@
 #!/usr/bin/env node
 
-(async () => {
-	try {
+const db = require('../lib/db');
+const config = require('../config');
 
-		const db = require('../db');
-
-		let count = 0;
-		let members = await db.get_digest_members();
-		let digests = {};
-
-		for (let member of members) {
-			if (! digests[member.person_id]) {
-				digests[member.person_id] = [];
-			}
-			digests[member.person_id].push(member.context_id);
-		}
-
-		for (let person_id in digests) {
-			count += await send_digest_emails(person_id, digests[person_id]);
-		}
-
-		console.log(`Sent ${count} digest emails.`);
-
-	} catch(err) {
-		console.log(err.stack);
-		console.log("Could not send digest emails.");
+find_digests()
+.then(async (digests) => {
+	let count = 0;
+	for (let person_id in digests) {
+		count += await send_digest_email(person_id, digests[person_id]);
 	}
-})();
+	console.log(`Sent ${count} digest emails.`);
+})
+.catch((err) => {
+	console.log(err.stack);
+});
 
-function send_digest_emails(person_id, contexts) {
+console.log('got here');
+async function find_digests() {
+	return new Promise(async (resolve, reject) => {
+		try {
+
+			let members = await db.get_digest_members();
+			let digests = {};
+
+			for (let member of members) {
+				if (! digests[member.person_id]) {
+					digests[member.person_id] = [];
+				}
+				digests[member.person_id].push(member.context_id);
+			}
+
+			resolve(digests);
+
+		} catch(err) {
+			console.log("Could not find digests.");
+			reject(err);
+		}
+	});
+}
+
+function send_digest_email(person_id, contexts) {
 	return new Promise(async (resolve, reject) => {
 
 		try {
-
-			const db = require('../db');
-			const config = require('../config');
 
 			let person = await db.get_person(parseInt(person_id));
 			let digest = [];
@@ -97,14 +105,14 @@ ${message_url}`);
 				let plural = (msg_count == 1) ? '' : 's';
 				let subject = `Digest: ${msg_count} message${plural}`;
 				let body = digest.join('\n\n\n') + `\n\n---\nNotification settings:\n${config.base_url}/settings`;
-				await send_email(person.email, subject, body);
+				await notify.send_email(person.email, subject, body);
 				return resolve(1);
 			}
 
 			resolve(0);
 
 		} catch(err) {
-			console.log(err.stack);
+			console.log('Could not send digest emails');
 			reject(err);
 		}
 
