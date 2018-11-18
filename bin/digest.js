@@ -42,7 +42,7 @@ function send_digest_emails(person_id, contexts) {
 				let context = await db.get_context(parseInt(context_id));
 
 				let facet = `last_digest_message_${context_id}`;
-				await add_facets(person, 'person', facet);
+				await db.add_facets(person, 'person', facet);
 
 				let query = await db.query_digest_messages(person, context);
 
@@ -85,7 +85,7 @@ ${message_url}`);
 				}
 
 				if (context_digest.length > 0) {
-					await set_facet(person, 'person', facet, last_message_id, 'single');
+					await db.set_facet(person, 'person', facet, last_message_id, 'single');
 					let context_txt = `${context.name}\n==================================================\n\n` + context_digest.join('\n\n---\n\n');
 					digest.push(context_txt);
 					msg_count += context_digest.length;

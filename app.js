@@ -350,7 +350,7 @@ app.get('/settings', async (req, rsp) => {
 
 		for (let context of contexts.member_of) {
 			let member = await get_member(person, context.id);
-			await add_facets(member, 'member', 'email');
+			await db.add_facets(member, 'member', 'email');
 			if (! member.facets) {
 				member.facets = {};
 			}
@@ -1363,7 +1363,7 @@ app.post('/api/settings', async (req, rsp) => {
 			});
 		}
 
-		await set_facet(member, 'member', 'email', req.body.email, 'single');
+		await db.set_facet(member, 'member', 'email', req.body.email, 'single');
 
 		rsp.send({
 			ok: true,
@@ -1635,7 +1635,7 @@ function get_member(person, context_id, include_inactive) {
 				return resolve(false);
 			}
 
-			await add_facets(member, 'member');
+			await db.add_facets(member, 'member');
 
 			resolve(member);
 
@@ -1998,93 +1998,6 @@ function add_message_details(messages) {
 			console.log(err.stack);
 			reject(err);
 		}
-	});
-}
-
-function add_facets(target, target_type, facet_type) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let facet_type_clause = '';
-			let values = [target.id, target_type];
-
-			if (facet_type) {
-				facet_type_clause = 'AND facet_type = $3';
-				values.push(facet_type);
-			}
-
-			let query = await db.query(`
-				SELECT *
-				FROM facet
-				WHERE target_id = $1
-				  AND target_type = $2
-				  ${facet_type_clause}
-				ORDER BY facet_num
-			`, values);
-
-			target.facets = {};
-
-			for (let facet of query.rows) {
-				if (facet.facet_num == -1) {
-					target.facets[facet.facet_type] = facet.content;
-				} else {
-					if (! target.facets[facet.facet_type]) {
-						target.facets[facet.facet_type] = [];
-					}
-					target.facets[facet.facet_type].push(facet.content);
-				}
-			}
-
-			resolve(target);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-
-	});
-}
-
-function set_facet(target, target_type, facet_type, content, is_single) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let facet_num;
-
-			await add_facets(target, target_type);
-
-			if (is_single) {
-				facet_num = -1;
-				await db.query(`
-					DELETE FROM facet
-					WHERE target_id = $1
-					  AND target_type = $2
-					  AND facet_type = $3
-				`, [target.id, target_type, facet_type]);
-			} else {
-				facet_num = 0;
-				if (target.facets[facet_type]) {
-					facet_num = target.facets[facet_type].length;
-				}
-			}
-
-			await db.query(`
-				INSERT INTO facet
-				(target_id, target_type, facet_type, facet_num, content, created, updated)
-				VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-			`, [target.id, target_type, facet_type, facet_num, content]);
-
-			await add_facets(target, target_type);
-
-			resolve(target);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-
 	});
 }
 
