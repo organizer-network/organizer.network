@@ -37,4 +37,6 @@ module.exports = () => {
 		}
 	});
 
+	return server;
+
 };
