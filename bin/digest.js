@@ -6,10 +6,10 @@
 		const db = require('../db');
 
 		let count = 0;
-		let query = await db.query_digest_members();
+		let members = await db.get_digest_members();
 		let digests = {};
 
-		for (let member of query.rows) {
+		for (let member of members) {
 			if (! digests[member.person_id]) {
 				digests[member.person_id] = [];
 			}
@@ -33,6 +33,9 @@ function send_digest_emails(person_id, contexts) {
 
 		try {
 
+			const db = require('../db');
+			const config = require('../config');
+
 			let person = await db.get_person(parseInt(person_id));
 			let digest = [];
 			let msg_count = 0;
@@ -44,9 +47,7 @@ function send_digest_emails(person_id, contexts) {
 				let facet = `last_digest_message_${context_id}`;
 				await db.add_facets(person, 'person', facet);
 
-				let query = await db.query_digest_messages(person, context);
-
-				let messages = query.rows;
+				let messages = await db.get_digest_messages(person, context);
 				let reply_msgs = {};
 
 				if (messages.length == 0) {
