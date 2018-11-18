@@ -9,6 +9,45 @@ module.exports = {
 		 return db.query(sql, values);
 	},
 
+	get_person: (id_or_slug) => {
+		return new Promise(async (resolve, reject) => {
+
+			try {
+
+				let query;
+
+				if (typeof id_or_slug == 'string') {
+					let slug = id_or_slug;
+					query = await db.query(`
+						SELECT *
+						FROM person
+						WHERE slug = $1
+					`, [slug]);
+				} else if (typeof id_or_slug == 'number') {
+					let id = id_or_slug;
+					query = await db.query(`
+						SELECT *
+						FROM person
+						WHERE id = $1
+					`, [id]);
+				} else {
+					throw new Error('Argument should be a string or number type.');
+				}
+
+				if (query.rows.length > 0) {
+					return resolve(query.rows[0]);
+				}
+
+				return resolve(null);
+
+			} catch(err) {
+				console.log(err.stack);
+				reject(err);
+			}
+
+		});
+	},
+
 	query_digest_members: () => {
 		return db.query(`
 			SELECT member.person_id, member.context_id

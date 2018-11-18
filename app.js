@@ -865,7 +865,7 @@ app.post('/api/reply', upload.none(), async (req, rsp) => {
 				in_reply_to = parseInt(in_reply_to_msg.in_reply_to);
 			}
 
-			let person = await get_person(person_id);
+			let person = await db.get_person(person_id);
 			let message = await send_message(person, context_id, in_reply_to, content);
 			message_id = message.id;
 		}
@@ -929,7 +929,7 @@ app.post('/api/profile', async (req, rsp) => {
 			});
 		}
 
-		let person_with_slug = await get_person(req.body.slug);
+		let person_with_slug = await db.get_person(req.body.slug);
 		if (person_with_slug && person_with_slug.id !== person.id) {
 			return rsp.status(400).send({
 				ok: false,
@@ -1391,7 +1391,7 @@ app.use(async (req, rsp) => {
 		}
 
 		if (req.path.substr(1).match(slug_regex)) {
-			let person = await get_person(req.path.substr(1));
+			let person = await db.get_person(req.path.substr(1));
 			if (person) {
 				let then = req.query.then;
 				if (then && ! (/^\//)) {
@@ -1662,7 +1662,7 @@ function get_invite(slug) {
 				resolve(false);
 			} else {
 				invite = query.rows[0];
-				invite.person = await get_person(invite.person_id);
+				invite.person = await db.get_person(invite.person_id);
 				invite.context = await get_context(invite.context_id);
 				resolve(invite);
 			}
@@ -1670,45 +1670,6 @@ function get_invite(slug) {
 			console.log(err.stack);
 			reject(err);
 		}
-	});
-}
-
-function get_person(id_or_slug) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let query;
-
-			if (typeof id_or_slug == 'string') {
-				let slug = id_or_slug;
-				query = await db.query(`
-					SELECT *
-					FROM person
-					WHERE slug = $1
-				`, [slug]);
-			} else if (typeof id_or_slug == 'number') {
-				let id = id_or_slug;
-				query = await db.query(`
-					SELECT *
-					FROM person
-					WHERE id = $1
-				`, [id]);
-			} else {
-				throw new Error('Argument should be a string or number type.');
-			}
-
-			if (query.rows.length > 0) {
-				return resolve(query.rows[0]);
-			}
-
-			return resolve(null);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-
 	});
 }
 

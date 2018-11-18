@@ -33,7 +33,7 @@ function send_digest_emails(person_id, contexts) {
 
 		try {
 
-			let person = await get_person(parseInt(person_id));
+			let person = await db.get_person(parseInt(person_id));
 			let digest = [];
 			let msg_count = 0;
 
