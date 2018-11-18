@@ -2,9 +2,9 @@
   "name": "organizer.network",
   "version": "0.1.0",
   "description": "Tools and strategies for social justice organizing",
-  "main": "organizer.network.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node organizer.network.js"
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
