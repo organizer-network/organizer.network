@@ -15,8 +15,7 @@ find_digests()
 	console.log(err.stack);
 });
 
-console.log('got here');
-async function find_digests() {
+function find_digests() {
 	return new Promise(async (resolve, reject) => {
 		try {
 
