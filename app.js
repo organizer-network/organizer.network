@@ -114,7 +114,7 @@ app.get('/', async (req, rsp) => {
 
 			// If the person is logged in, and has a group context ID, redirect.
 
-			let context = await get_context(person.context_id);
+			let context = await db.get_context(person.context_id);
 			return rsp.redirect(`/group/${context.slug}`);
 		}
 
@@ -177,7 +177,7 @@ app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 
 	try {
 
-		let context = await get_context(req.params.slug);
+		let context = await db.get_context(req.params.slug);
 		if (! context) {
 			return error_page(rsp, '404');
 		}
@@ -248,7 +248,7 @@ app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
 
 	try {
 
-		let context = await get_context(req.params.slug);
+		let context = await db.get_context(req.params.slug);
 		if (! context) {
 			return error_page(rsp, '404');
 		}
@@ -382,7 +382,7 @@ app.get('/settings/:slug', async (req, rsp) => {
 	try {
 
 		let person = await curr_person(req);
-		let context = await get_context(req.params.slug);
+		let context = await db.get_context(req.params.slug);
 
 		if (! context) {
 			return error_page(rsp, '404');
@@ -645,7 +645,7 @@ app.get('/login/:hash', async (req, rsp) => {
 				let member = query.rows[0];
 				let invited_by = member.person_id;
 				await join_context(person, member.context_id, invited_by);
-				let context = await get_context(member.context_id);
+				let context = await db.get_context(member.context_id);
 
 				redirect = `/group/${context.slug}`;
 			}
@@ -702,7 +702,7 @@ app.post('/api/group', async (req, rsp) => {
 		}
 
 		if (parent_id) {
-			let parent = await get_context(parent_id);
+			let parent = await db.get_context(parent_id);
 			slug = `${parent.slug}/${slug}`;
 		}
 
@@ -714,7 +714,7 @@ app.post('/api/group', async (req, rsp) => {
 			});
 		}
 
-		let context = await get_context(slug);
+		let context = await db.get_context(slug);
 		if (context) {
 			return rsp.status(400).send({
 				ok: false,
@@ -1171,7 +1171,7 @@ app.get('/api/group/:slug', async (req, rsp) => {
 			});
 		}
 
-		let context = await get_context(req.params.slug);
+		let context = await db.get_context(req.params.slug);
 
 		if (! context) {
 			return rsp.status(404).send({
@@ -1242,7 +1242,7 @@ app.get('/leave/:id', async (req, rsp) => {
 			  AND context_id = $2
 		`, [member.person_id, member.context_id]);
 
-		let context = await get_context(member.context_id);
+		let context = await db.get_context(member.context_id);
 
 		rsp.redirect(`/group/${context.slug}`);
 
@@ -1276,7 +1276,7 @@ app.post('/api/join', async (req, rsp) => {
 		let member = await get_member(person, context_id, 'include_inactive');
 		if (! member) {
 
-			let context = await get_context(context_id);
+			let context = await db.get_context(context_id);
 			if (context.parent_id) {
 				let parent_member = await get_member(person, context.parent_id);
 				if (parent_member) {
@@ -1332,7 +1332,7 @@ app.post('/api/settings', async (req, rsp) => {
 		}
 
 		var person = await curr_person(req);
-		var context = await get_context(parseInt(req.body.context_id));
+		var context = await db.get_context(parseInt(req.body.context_id));
 
 		if (! person || ! context) {
 			return rsp.status(400).send({
@@ -1663,7 +1663,7 @@ function get_invite(slug) {
 			} else {
 				invite = query.rows[0];
 				invite.person = await db.get_person(invite.person_id);
-				invite.context = await get_context(invite.context_id);
+				invite.context = await db.get_context(invite.context_id);
 				resolve(invite);
 			}
 		} catch(err) {
@@ -1692,45 +1692,6 @@ function curr_person(req) {
 				}
 			}
 			resolve(null);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
-}
-
-function get_context(id_or_slug) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-			let query;
-
-			if (typeof id_or_slug == 'string') {
-				let slug = id_or_slug;
-				query = await db.query(`
-					SELECT *
-					FROM context
-					WHERE slug = $1
-				`, [slug]);
-			} else if (typeof id_or_slug == 'number') {
-				let id = id_or_slug;
-				query = await db.query(`
-					SELECT *
-					FROM context
-					WHERE id = $1
-				`, [id]);
-			} else {
-				throw new Error(`Argument ${id_or_slug} should be a string or number type.`);
-			}
-
-			if (query.rows.length == 0) {
-				// No context found, but we still resolve().
-				return resolve(null);
-			}
-
-			let context = query.rows[0];
-			resolve(context);
 
 		} catch(err) {
 			console.log(err.stack);
@@ -1943,7 +1904,7 @@ function add_context_details(context, before_id) {
 			context.subgroups = query.rows;
 
 			if (context.parent_id) {
-				context.parent = await get_context(context.parent_id);
+				context.parent = await db.get_context(context.parent_id);
 			}
 
 			resolve(context);
