@@ -52,37 +52,8 @@ app.enable('trust proxy');
 
 const upload = multer();
 
-app.use(require('./routes/home'));
-
-app.get('/group', async (req, rsp) => {
-
-	try {
-
-		let person = await db.curr_person(req);
-		let contexts = await db.get_contexts(person);
-
-		if (! person) {
-			return rsp.redirect('/?then=%2Fgroup');
-		}
-
-		let default_slug = utils.random(16, 'slug');
-
-		rsp.render('page', {
-			title: 'Create a new group',
-			view: 'new-group',
-			content: {
-				person: person,
-				contexts: contexts,
-				base_url: config.base_url,
-				default_slug: default_slug
-			}
-		});
-
-	} catch(err) {
-		console.log(err.stack);
-		error_page(rsp, '500');
-	}
-});
+app.use(require('./routes/home'));				// /
+app.use(require('./routes/group_create'));		// /group
 
 let subgroup_path = '/group/:slug([a-z][a-z0-9_-]+/[a-z][a-z0-9_-]+)';
 app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
@@ -91,7 +62,7 @@ app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 
 		let context = await db.get_context(req.params.slug);
 		if (! context) {
-			return error_page(rsp, '404');
+			return utils.error_page(rsp, '404');
 		}
 
 		let person = await db.curr_person(req);
@@ -104,7 +75,7 @@ app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 
 		if (! member &&
 		    ! parent_member) {
-			return error_page(rsp, '404');
+			return utils.error_page(rsp, '404');
 		}
 
 		if (! member.active ||
@@ -150,7 +121,7 @@ app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 
 	} catch(err) {
 		console.log(err.stack);
-		error_page(rsp, '500');
+		utils.error_page(rsp, '500');
 	}
 
 });
@@ -162,14 +133,14 @@ app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
 
 		let context = await db.get_context(req.params.slug);
 		if (! context) {
-			return error_page(rsp, '404');
+			return utils.error_page(rsp, '404');
 		}
 
 		let person = await db.curr_person(req);
 		let member = await get_member(person, context.id);
 
 		if (! member) {
-			return error_page(rsp, '404');
+			return utils.error_page(rsp, '404');
 		}
 
 		set_context(person, context);
@@ -197,7 +168,7 @@ app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
 
 	} catch(err) {
 		console.log(err.stack);
-		error_page(rsp, '500');
+		utils.error_page(rsp, '500');
 	}
 
 });
@@ -208,7 +179,7 @@ app.get('/join/:slug', async (req, rsp) => {
 
 		let invite = await get_invite(req.params.slug);
 		if (! invite) {
-			return error_page(rsp, '404');
+			return utils.error_page(rsp, '404');
 		}
 
 		let person = await db.curr_person(req);
@@ -235,7 +206,7 @@ app.get('/join/:slug', async (req, rsp) => {
 
 	} catch(err) {
 		console.log(err.stack);
-		return error_page(rsp, '500');
+		return utils.error_page(rsp, '500');
 	}
 
 });
@@ -284,7 +255,7 @@ app.get('/settings', async (req, rsp) => {
 
 	} catch(err) {
 		console.log(err.stack);
-		return error_page(rsp, '500');
+		return utils.error_page(rsp, '500');
 	}
 
 });
@@ -297,14 +268,14 @@ app.get('/settings/:slug', async (req, rsp) => {
 		let context = await db.get_context(req.params.slug);
 
 		if (! context) {
-			return error_page(rsp, '404');
+			return utils.error_page(rsp, '404');
 		}
 
 		let member = await get_member(person, context.id);
 		let contexts = await db.get_contexts(person);
 
 		if (! member) {
-			return error_page(rsp, '404');
+			return utils.error_page(rsp, '404');
 		}
 
 		let email = 'send';
@@ -332,7 +303,7 @@ app.get('/settings/:slug', async (req, rsp) => {
 
 	} catch(err) {
 		console.log(err.stack);
-		return error_page(rsp, '500');
+		return utils.error_page(rsp, '500');
 	}
 
 });
@@ -514,7 +485,7 @@ app.get('/login/:hash', async (req, rsp) => {
 	try {
 
 		if (throttle_logins(req)) {
-			return error_page(rsp, 'invalid-login');
+			return utils.error_page(rsp, 'invalid-login');
 		}
 
 		let hash = req.params.hash;
@@ -536,7 +507,7 @@ app.get('/login/:hash', async (req, rsp) => {
 			`, [login.id]);
 
 			if (query.rows.length != 1) {
-				return error_page(rsp, 'invalid-login');
+				return utils.error_page(rsp, 'invalid-login');
 			}
 
 			let person = query.rows[0];
@@ -576,11 +547,11 @@ app.get('/login/:hash', async (req, rsp) => {
 			return rsp.redirect(`${config.base_url}${redirect}`);
 		}
 
-		error_page(rsp, 'invalid-login');
+		utils.error_page(rsp, 'invalid-login');
 
 	} catch(err) {
 		console.log(err.stack);
-		error_page(rsp, '500');
+		utils.error_page(rsp, '500');
 	}
 });
 
@@ -912,7 +883,7 @@ app.get('/api/message/:id', async (req, rsp) => {
 
 	} catch (err) {
 		console.log(err.stack);
-		return error_page(rsp, '500');
+		return utils.error_page(rsp, '500');
 	}
 });
 
@@ -965,7 +936,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 
 	} catch (err) {
 		console.log(err.stack);
-		return error_page(rsp, '500');
+		return utils.error_page(rsp, '500');
 	}
 });
 
@@ -1136,7 +1107,7 @@ app.get('/leave/:id', async (req, rsp) => {
 		`, [req.params.id]);
 
 		if (query.rows.length < 1) {
-			return error_page(rsp, 'invalid-unsubscribe');
+			return utils.error_page(rsp, 'invalid-unsubscribe');
 		}
 
 		let member = query.rows[0];
@@ -1160,7 +1131,7 @@ app.get('/leave/:id', async (req, rsp) => {
 
 	} catch(err) {
 		console.log(err.stack);
-		return error_page(rsp, '500');
+		return utils.error_page(rsp, '500');
 	}
 
 });
@@ -1325,11 +1296,11 @@ app.use(async (req, rsp) => {
 		}
 
 		rsp.status(404);
-		error_page(rsp, '404');
+		utils.error_page(rsp, '404');
 
 	} catch(err) {
 		console.log(err.stack);
-		return error_page(rsp, '500');
+		return utils.error_page(rsp, '500');
 	}
 });
 
