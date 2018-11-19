@@ -64,59 +64,7 @@ app.use(require('./routes/api/send'));          // /api/send
 app.use(require('./routes/api/reply'));         // /api/reply
 app.use(require('./routes/api/profile'));       // /api/profile
 app.use(require('./routes/api/message'));       // /api/message
-
-app.get('/api/replies/:id', async (req, rsp) => {
-
-	try {
-		let query = await db.query(`
-			SELECT message.*,
-			       person.name AS person_name, person.slug AS person_slug,
-			       context.slug AS context_slug
-			FROM message, person, context
-			WHERE message.id = $1
-			  AND message.person_id = person.id
-			  AND message.context_id = context.id
-		`, [req.params.id]);
-
-		if (query.rows.length == 0) {
-			return rsp.status(404).send({
-				ok: false,
-				error: 'Message not found.'
-			});
-		}
-
-		let message = query.rows[0];
-		await db.add_message_details([message]);
-
-		let person = await db.curr_person(req);
-		let member = await db.get_member(person, message.context_id);
-
-		query = await db.query(`
-			SELECT message.*,
-			       person.name AS person_name, person.slug AS person_slug
-			FROM message, person
-			WHERE message.in_reply_to = $1
-			  AND message.person_id = person.id
-			ORDER BY message.created
-		`, [req.params.id]);
-
-		message.replies = query.rows;
-		await db.add_message_details(message.replies);
-
-		rsp.render('replies', {
-			message: message,
-			context: {
-				id: message.context_id,
-				slug: message.context_slug
-			},
-			member: member
-		});
-
-	} catch (err) {
-		console.log(err.stack);
-		return utils.error_page(rsp, '500');
-	}
-});
+app.use(require('./routes/api/replies'));       // /api/replies
 
 app.post('/api/delete', async (req, rsp) => {
 

@@ -1,5 +1,4 @@
 const db = require('../../lib/db');
-const utils = require('../../lib/utils');
 
 const express = require('express');
 const router = express.Router();
@@ -45,7 +44,7 @@ router.get('/api/message/:id', async (req, rsp) => {
 
 	} catch (err) {
 		console.log(err.stack);
-		return utils.error_page(rsp, '500');
+		return rsp.status(500).send('<div class="response">Could not load message.</div>');
 	}
 });
 
