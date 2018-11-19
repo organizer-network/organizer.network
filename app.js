@@ -61,97 +61,7 @@ app.use(require('./routes/api/login'));         // /api/login
                                                 // /logout
 app.use(require('./routes/api/group'));         // /api/group
 app.use(require('./routes/api/send'));          // /api/send
-
-const multer = require('multer');
-const upload = multer();
-
-app.post('/api/reply', upload.none(), async (req, rsp) => {
-
-	try {
-
-		let reply = req.body;
-
-		let id = reply.headers.match(/Message-Id: <([^@]+)@/i);
-		let in_reply_to = reply.headers.match(/In-Reply-To: <([^@]+)@/i);
-
-		let context_id = -1;
-		let message_id = -1;
-		let person_id = -1;
-
-		if (! id || ! in_reply_to) {
-			console.log('Could not parse reply.');
-			console.log(reply);
-			return;
-		}
-
-		id = id[1];
-		in_reply_to = in_reply_to[1];
-
-		let lines = reply.text.trim().split('\n');
-		let content = [];
-		let quoted = [];
-
-		for (let line of lines) {
-			if (line.match(/^>/)) {
-				quoted.push(line);
-			} else if (line.match(/^(>\s*)*---$/)) {
-				break;
-			} else {
-				if (quoted.length > 0) {
-					content = content.concat(quoted);
-					quoted = [];
-				}
-				content.push(line);
-			}
-		}
-
-		content = content.join('\n').trim();
-
-		let query = await db.query(`
-			SELECT *
-			FROM email_tx
-			WHERE id = $1
-		`, [in_reply_to]);
-
-		if (query.rows.length > 0) {
-			let email_tx = query.rows[0];
-
-			context_id = parseInt(email_tx.context_id);
-			person_id = parseInt(email_tx.person_id);
-			in_reply_to = parseInt(email_tx.message_id);
-
-			// See also: https://github.com/organizer-network/organizer.network/issues/2
-			// (20181027/dphiffer)
-			let in_reply_to_msg = await get_message(in_reply_to);
-			if (in_reply_to_msg.in_reply_to) {
-				in_reply_to = parseInt(in_reply_to_msg.in_reply_to);
-			}
-
-			let person = await db.get_person(person_id);
-			let message = await notify.send_message(person, context_id, in_reply_to, content);
-			message_id = message.id;
-		}
-
-		let reply_json = JSON.stringify(reply);
-
-		await db.query(`
-			INSERT INTO email_rx
-			(id, message_id, person_id, reply_json, created)
-			VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
-		`, [id, message_id, person_id, reply_json]);
-
-		rsp.send({
-			'ok': true
-		});
-
-	} catch(err) {
-		console.log(err.stack);
-		rsp.status(500).send({
-			'ok': false
-		});
-	}
-
-});
+app.use(require('./routes/api/reply'));         // /api/reply
 
 app.post('/api/profile', async (req, rsp) => {
 
@@ -778,44 +688,6 @@ ${config.base_url}/leave/${member.leave_slug}`;
 	} catch(err) {
 		console.log(err.stack);
 	}
-}
-
-function get_message(id, revision) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			id = parseInt(id);
-			let query = await db.query(`
-				SELECT message.*,
-					   person.name AS person_name, person.slug AS person_slug,
-					   context.slug AS context_slug
-				FROM message, person, context
-				WHERE message.id = $1
-				  AND message.person_id = person.id
-				  AND message.context_id = context.id
-			`, [id]);
-
-			if (query.rows.length == 0) {
-				// No message found, but we still resolve().
-				return resolve(null);
-			}
-
-			let message = query.rows[0];
-			await db.add_message_details([message]);
-
-			if (revision) {
-				message.revision = revision;
-				message.content = message.revisions[revision].content;
-			}
-
-			resolve(message);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
 }
 
 module.exports = app;
