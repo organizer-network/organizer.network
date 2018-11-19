@@ -5,7 +5,11 @@
 			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
 		</div>
 		<div class="options">
-			<h2>Hello, <%= person.name %>.</h2>
+			<% if (person.name) { %>
+				<h2>Hello, <%= person.name %>.</h2>
+			<% } else { %>
+				<h2>Hello.</h2>
+			<% } %>
 			<ul>
 				<li><a href="/group">Create a new group</a></li>
 				<li><a href="/<%= person.slug %>">View your profile</a>
