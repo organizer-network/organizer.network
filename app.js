@@ -67,75 +67,14 @@ app.enable('trust proxy');
 
 const upload = multer();
 
-function error_page(rsp, type) {
-	rsp.render('page', {
-		title: 'Error',
-		view: 'error',
-		content: {
-			type: type
-		}
-	});
-}
-
-app.get('/', async (req, rsp) => {
-
-	try {
-
-		let person = await curr_person(req);
-
-		if (! person) {
-			let then = req.query.then;
-			if (then && ! then.match(/^\//)) {
-				then = null;
-			}
-			return rsp.render('page', {
-				title: 'Welcome',
-				view: 'login',
-				content: {
-					invite: null,
-					then: then
-				}
-			});
-		}
-
-		if (person.context_id) {
-
-			// If the person is logged in, and has a group context ID, redirect.
-
-			let context = await db.get_context(person.context_id);
-			return rsp.redirect(`/group/${context.slug}`);
-		}
-
-		let contexts = await get_contexts(person);
-
-		let then = req.query.then;
-		if (then && ! then.match(/^\//)) {
-			then = null;
-		}
-
-		rsp.render('page', {
-			title: 'Hello',
-			view: 'home',
-			content: {
-				person: person,
-				contexts: contexts,
-				base_url: config.base_url,
-				then: then
-			}
-		});
-
-	} catch(err) {
-		console.log(err.stack);
-		error_page(rsp, '500');
-	}
-});
+app.use(require('./routes/home'));
 
 app.get('/group', async (req, rsp) => {
 
 	try {
 
-		let person = await curr_person(req);
-		let contexts = await get_contexts(person);
+		let person = await db.curr_person(req);
+		let contexts = await db.get_contexts(person);
 
 		if (! person) {
 			return rsp.redirect('/?then=%2Fgroup');
@@ -170,7 +109,7 @@ app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 			return error_page(rsp, '404');
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		let member = await get_member(person, context.id, 'include inactive');
 		let parent_member = false;
 
@@ -198,7 +137,7 @@ app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 		}
 
 		set_context(person, context);
-		let contexts = await get_contexts(person);
+		let contexts = await db.get_contexts(person);
 
 		let then = req.query.then;
 		if (then && ! then.match(/^\//)) {
@@ -241,7 +180,7 @@ app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
 			return error_page(rsp, '404');
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		let member = await get_member(person, context.id);
 
 		if (! member) {
@@ -251,7 +190,7 @@ app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
 		set_context(person, context);
 
 		let id = parseInt(req.params.id);
-		let contexts = await get_contexts(person, id);
+		let contexts = await db.get_contexts(person, id);
 
 		let email = 'send';
 		if (member.facets && member.facets.email) {
@@ -287,7 +226,7 @@ app.get('/join/:slug', async (req, rsp) => {
 			return error_page(rsp, '404');
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 
 		let then = req.query.then;
 		if (then && ! then.match(/^\//)) {
@@ -320,7 +259,7 @@ app.get('/settings', async (req, rsp) => {
 
 	try {
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 
 		if (! person) {
 			let then = '/settings';
@@ -334,7 +273,7 @@ app.get('/settings', async (req, rsp) => {
 			});
 		}
 
-		let contexts = await get_contexts(person);
+		let contexts = await db.get_contexts(person);
 
 		for (let context of contexts.member_of) {
 			let member = await get_member(person, context.id);
@@ -369,7 +308,7 @@ app.get('/settings/:slug', async (req, rsp) => {
 
 	try {
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		let context = await db.get_context(req.params.slug);
 
 		if (! context) {
@@ -377,7 +316,7 @@ app.get('/settings/:slug', async (req, rsp) => {
 		}
 
 		let member = await get_member(person, context.id);
-		let contexts = await get_contexts(person);
+		let contexts = await db.get_contexts(person);
 
 		if (! member) {
 			return error_page(rsp, '404');
@@ -417,7 +356,7 @@ app.get('/user.css', async (req, rsp) => {
 
 	rsp.append('Content-Type', 'text/css');
 
-	const person = await curr_person(req);
+	const person = await db.curr_person(req);
 	if (person) {
 		rsp.send(`
 			.message.person-${person.slug}:hover > .message-options {
@@ -694,7 +633,7 @@ app.post('/api/group', async (req, rsp) => {
 			slug = `${parent.slug}/${slug}`;
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		if (! person) {
 			return rsp.status(403).send({
 				ok: false,
@@ -765,7 +704,7 @@ app.post('/api/send', async (req, rsp) => {
 			in_reply_to = parseInt(req.body.in_reply_to);
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		let member = await get_member(person, context_id);
 
 		if (! member) {
@@ -895,7 +834,7 @@ app.post('/api/profile', async (req, rsp) => {
 			});
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		if (person.id !== parseInt(req.body.id)) {
 			return rsp.status(403).send({
 				ok: false,
@@ -931,7 +870,7 @@ app.post('/api/profile', async (req, rsp) => {
 			WHERE id = $4
 		`, [req.body.name, req.body.about, req.body.slug, req.body.id]);
 
-		person = await curr_person(req);
+		person = await db.curr_person(req);
 
 		return rsp.send({
 			ok: true,
@@ -961,7 +900,7 @@ app.get('/api/message/:id', async (req, rsp) => {
 			});
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		let member = await get_member(person, message.context_id);
 
 		if (! member) {
@@ -1013,9 +952,9 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		}
 
 		let message = query.rows[0];
-		await add_message_details([message]);
+		await db.get_message_details([message]);
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		let member = await get_member(person, message.context_id);
 
 		query = await db.query(`
@@ -1028,7 +967,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		`, [req.params.id]);
 
 		message.replies = query.rows;
-		await add_message_details(message.replies);
+		await db.get_message_details(message.replies);
 
 		rsp.render('replies', {
 			message: message,
@@ -1057,7 +996,7 @@ app.post('/api/delete', async (req, rsp) => {
 			});
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		let message = await get_message(id);
 		if (message.person_id != person.id) {
 			return rsp.status(403).send({
@@ -1106,7 +1045,7 @@ app.post('/api/update', async (req, rsp) => {
 			});
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		let message = await get_message(id);
 
 		if (message.person_id != person.id) {
@@ -1150,7 +1089,7 @@ app.get('/api/group/:slug', async (req, rsp) => {
 
 	try {
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 
 		if (! person) {
 			return rsp.status(403).send({
@@ -1181,7 +1120,7 @@ app.get('/api/group/:slug', async (req, rsp) => {
 		if ('before_id' in req.query) {
 			before_id = parseInt(req.query.before_id);
 		}
-		await add_context_details(context, before_id);
+		await db.get_context_details(context, before_id);
 
 		rsp.render('message-page', {
 			context: context,
@@ -1252,7 +1191,7 @@ app.post('/api/join', async (req, rsp) => {
 			});
 		}
 
-		let person = await curr_person(req);
+		let person = await db.curr_person(req);
 		if (! person) {
 			return rsp.status(403).send({
 				ok: false,
@@ -1319,7 +1258,7 @@ app.post('/api/settings', async (req, rsp) => {
 			});
 		}
 
-		var person = await curr_person(req);
+		var person = await db.curr_person(req);
 		var context = await db.get_context(parseInt(req.body.context_id));
 
 		if (! person || ! context) {
@@ -1373,7 +1312,7 @@ app.use(async (req, rsp) => {
 	try {
 
 		let curr_id = null;
-		let curr = await curr_person(req);
+		let curr = await db.curr_person(req);
 		if (curr) {
 			curr_id = curr.id;
 		}
@@ -1422,7 +1361,7 @@ function send_message(person, context_id, in_reply_to, content) {
 			`, [person.id, context_id, in_reply_to, content]);
 
 			let message = query.rows[0];
-			await add_message_details([message]);
+			await db.get_message_details([message]);
 
 			resolve(message);
 
@@ -1661,117 +1600,6 @@ function get_invite(slug) {
 	});
 }
 
-function curr_person(req) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			if ('session' in req &&
-			    'person' in req.session) {
-
-				let query = await db.query(`
-					SELECT *
-					FROM person
-					WHERE id = $1
-				`, [req.session.person.id]);
-
-				if (query.rows.length > 0) {
-					return resolve(query.rows[0]);
-				}
-			}
-			resolve(null);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
-}
-
-function get_contexts(person, message_id) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let query;
-			const contexts = {};
-
-			if (person) {
-
-				query = await db.query(`
-					SELECT context.*
-					FROM member, context
-					WHERE member.active = true
-					  AND member.person_id = $1
-					  AND member.context_id = context.id
-				`, [person.id]);
-
-				contexts.member_of = query.rows;
-
-				let subgroups = {};
-				for (let context of contexts.member_of) {
-					if (context.parent_id) {
-						if (! subgroups[context.parent_id]) {
-							subgroups[context.parent_id] = [];
-						}
-						subgroups[context.parent_id].push(context);
-					}
-				}
-
-				for (let context of contexts.member_of) {
-					if (subgroups[context.id]) {
-						context.subgroups = subgroups[context.id];
-					} else {
-						context.subgroups = [];
-					}
-				}
-
-				let thread = null;
-				let context_id = null;
-
-				if (person.context_id) {
-					context_id = person.context_id;
-				}
-
-				if (message_id) {
-					query = await db.query(`
-						SELECT message.*,
-							   person.slug AS person_slug, person.name AS person_name
-						FROM message, person
-						WHERE (message.id = $1 OR in_reply_to = $1)
-						  AND message.person_id = person.id
-						ORDER BY created
-					`, [message_id]);
-					thread = query.rows;
-					context_id = thread[0].context_id;
-				}
-
-				if (context_id) {
-
-					query = await db.query(`
-						SELECT *
-						FROM context
-						WHERE id = $1
-					`, [context_id]);
-
-					let current = query.rows[0];
-
-					if (thread) {
-						current.thread = thread;
-					}
-
-					contexts.current = await add_context_details(current);
-				}
-			}
-
-			resolve(contexts);
-
-		} catch(err) {
-			reject(err);
-		}
-	});
-}
-
 function set_context(person, context) {
 	if (person.context_id != context.id) {
 		person.context_id = context.id;
@@ -1805,7 +1633,7 @@ function get_message(id, revision) {
 			}
 
 			let message = query.rows[0];
-			await add_message_details([message]);
+			await db.get_message_details([message]);
 
 			if (revision) {
 				message.revision = revision;
@@ -1813,174 +1641,6 @@ function get_message(id, revision) {
 			}
 
 			resolve(message);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
-}
-
-function add_context_details(context, before_id) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let query;
-
-			if (! context) {
-				return resolve(context);
-			}
-
-			if (context.thread) {
-
-				await add_message_details(context.thread);
-				context.messages = context.thread.splice(0, 1);
-				context.messages[0].replies = context.thread;
-
-			} else {
-
-				let before_clause = '';
-				let values = [context.id];
-				if (before_id) {
-					before_clause = 'AND message.id < $2';
-					values.push(before_id);
-				}
-
-				query = await db.query(`
-					SELECT message.*,
-					       person.name AS person_name, person.slug AS person_slug
-					FROM message, person
-					WHERE message.context_id = $1
-					  ${before_clause}
-					  AND message.person_id = person.id
-					  AND message.in_reply_to IS NULL
-					ORDER BY message.created DESC
-					LIMIT 10
-				`, values);
-
-				context.messages = query.rows;
-
-				query = await db.query(`
-					SELECT COUNT(id) AS total_messages
-					FROM message
-					WHERE context_id = $1
-					  AND in_reply_to IS NULL
-				`, [context.id]);
-
-				context.total_messages = query.rows[0].total_messages;
-
-				await add_message_details(context.messages);
-			}
-
-			query = await db.query(`
-				SELECT member.person_id, person.name, person.slug
-				FROM member, person
-				WHERE member.active = true
-				  AND member.context_id = $1
-				  AND member.person_id = person.id
-				ORDER BY member.updated DESC
-			`, [context.id]);
-
-			context.members = query.rows;
-
-			query = await db.query(`
-				SELECT *
-				FROM context
-				WHERE parent_id = $1
-			`, [context.id]);
-			context.subgroups = query.rows;
-
-			if (context.parent_id) {
-				context.parent = await db.get_context(context.parent_id);
-			}
-
-			resolve(context);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
-}
-
-function add_message_details(messages) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			if (! 'length' in messages || messages.length == 0) {
-				return resolve(messages);
-			}
-
-			let ids = messages.map(msg => msg.id);
-			let placeholders = [];
-			for (let i = 0; i < ids.length; i++) {
-				placeholders.push('$' + (i + 1));
-			}
-
-			placeholders = placeholders.join(', ');
-
-			let query = await db.query(`
-				SELECT in_reply_to AS id,
-					   COUNT(id) AS reply_count
-				FROM message
-				WHERE in_reply_to IN (${placeholders})
-				GROUP BY in_reply_to
-			`, ids);
-
-			let replies = {};
-			for (let reply of query.rows) {
-				replies[reply.id] = reply.reply_count;
-			}
-
-			query = await db.query(`
-				SELECT target_id, content, created
-				FROM facet
-				WHERE target_id IN (${placeholders})
-				  AND target_type = 'message'
-				  AND facet_type = 'revision'
-				ORDER BY created DESC
-			`, ids);
-
-			let revisions = {};
-			for (let revision of query.rows) {
-
-				revision.created = new Date(revision.created).toISOString();
-
-				if (! revisions[revision.target_id]) {
-					revisions[revision.target_id] = [];
-				}
-				revisions[revision.target_id].push({
-					created: revision.created,
-					content: revision.content
-				});
-			}
-
-			for (let message of messages) {
-
-				message.created = new Date(message.created).toISOString();
-				message.updated = new Date(message.updated).toISOString();
-
-				if (message.id in replies) {
-					message.reply_count = replies[message.id];
-				} else {
-					message.reply_count = 0;
-				}
-
-				if (revisions[message.id]) {
-					message.revisions = revisions[message.id];
-				} else {
-					message.revisions = [];
-				}
-				message.revisions.unshift({
-					created: message.updated,
-					content: message.content
-				});
-				message.revision_dates = message.revisions.map(rev => rev.created);
-			}
-
-			resolve(messages);
 
 		} catch(err) {
 			console.log(err.stack);
