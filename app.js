@@ -47,75 +47,20 @@ app.use((req, rsp, next) => {
 });
 app.enable('trust proxy');
 
-app.use(require('./routes/home'));				// /
-app.use(require('./routes/group_create'));		// /group
-app.use(require('./routes/group_index'));		// /group/:slug
-app.use(require('./routes/group_thread'));		// /group/:slug/:id
-app.use(require('./routes/join'));				// /join/:slug
-app.use(require('./routes/settings_index'));	// /settings
-app.use(require('./routes/settings_group'));	// /settings/:slug
-app.use(require('./routes/person_css'));		// /person.css
-app.use(require('./routes/api/ping'));			// /api/ping
-app.use(require('./routes/api/login'));			// /api/login
-												// /login/:slug
-												// /logout
-app.use(require('./routes/api/group'));			// /api/group
-
-
-app.post('/api/send', async (req, rsp) => {
-
-	if (! 'body' in req ||
-	    ! 'content' in req.body ||
-	    req.body.content == '') {
-		return rsp.status(400).send({
-			ok: false,
-			error: "You gotta type something in."
-		});
-	}
-
-	if (! 'body' in req ||
-	    ! 'context' in req.body) {
-		return rsp.status(400).send({
-			ok: false,
-			error: "Please include a 'context' arg."
-		});
-	}
-
-	try {
-
-		let content = req.body.content.trim();
-		let context_id = parseInt(req.body.context_id);
-
-		let in_reply_to = null;
-		if ('in_reply_to' in req.body) {
-			in_reply_to = parseInt(req.body.in_reply_to);
-		}
-
-		let person = await db.curr_person(req);
-		let member = await db.get_member(person, context_id);
-
-		if (! member) {
-			return rsp.status(403).send({
-				ok: false,
-				error: "You cannot send messages to that context."
-			});
-		}
-
-		let message = await send_message(person, context_id, in_reply_to, content);
-		return rsp.send({
-			ok: true,
-			message: message
-		});
-
-	} catch(err) {
-		console.log(err.stack);
-		return rsp.status(500).send({
-			ok: false,
-			error: "Could not send message."
-		});
-	}
-
-});
+app.use(require('./routes/home'));              // /
+app.use(require('./routes/group_create'));      // /group
+app.use(require('./routes/group_index'));       // /group/:slug
+app.use(require('./routes/group_thread'));      // /group/:slug/:id
+app.use(require('./routes/join'));              // /join/:slug
+app.use(require('./routes/settings_index'));    // /settings
+app.use(require('./routes/settings_group'));    // /settings/:slug
+app.use(require('./routes/person_css'));        // /person.css
+app.use(require('./routes/api/ping'));          // /api/ping
+app.use(require('./routes/api/login'));         // /api/login
+                                                // /login/:slug
+                                                // /logout
+app.use(require('./routes/api/group'));         // /api/group
+app.use(require('./routes/api/send'));          // /api/send
 
 const multer = require('multer');
 const upload = multer();
@@ -183,7 +128,7 @@ app.post('/api/reply', upload.none(), async (req, rsp) => {
 			}
 
 			let person = await db.get_person(person_id);
-			let message = await send_message(person, context_id, in_reply_to, content);
+			let message = await notify.send_message(person, context_id, in_reply_to, content);
 			message_id = message.id;
 		}
 
@@ -239,7 +184,7 @@ app.post('/api/profile', async (req, rsp) => {
 			});
 		}
 
-		if (! req.body.slug.match(slug_regex)) {
+		if (! utils.url_slug_match(req.body.slug)) {
 			return rsp.status(400).send({
 				ok: false,
 				error: "The URL format is: at least 2 letters, numbers, hyphens, or underscores."
@@ -342,7 +287,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		}
 
 		let message = query.rows[0];
-		await db.get_message_details([message]);
+		await db.add_message_details([message]);
 
 		let person = await db.curr_person(req);
 		let member = await db.get_member(person, message.context_id);
@@ -357,7 +302,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		`, [req.params.id]);
 
 		message.replies = query.rows;
-		await db.get_message_details(message.replies);
+		await db.add_message_details(message.replies);
 
 		rsp.render('replies', {
 			message: message,
@@ -707,7 +652,7 @@ app.use(async (req, rsp) => {
 			curr_id = curr.id;
 		}
 
-		if (req.path.substr(1).match(slug_regex)) {
+		if (utils.url_slug_match(req.path.substr(1))) {
 			let person = await db.get_person(req.path.substr(1));
 			if (person) {
 				let then = req.query.then;
@@ -737,49 +682,6 @@ app.use(async (req, rsp) => {
 		return utils.error_page(rsp, '500');
 	}
 });
-
-function send_message(person, context_id, in_reply_to, content) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let query = await db.query(`
-				INSERT INTO message
-				(person_id, context_id, in_reply_to, content, created, updated)
-				VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-				RETURNING *
-			`, [person.id, context_id, in_reply_to, content]);
-
-			let message = query.rows[0];
-			await db.get_message_details([message]);
-
-			resolve(message);
-
-			let from = config.email_from;
-			let email_match = from.match(/<([^>]+)>/);
-
-			if (email_match) {
-				from = `"${person.name}" <${email_match[1]}>`;
-			} else {
-				// This is assuming config.from_email is set to an email address
-				// without a "name" part, e.g. 'foo@bar.com'
-				from = `"${person.name}" <${from}>`;
-			}
-
-			send_notifications(person, message, from);
-			await db.query(`
-				UPDATE member
-				SET updated = CURRENT_TIMESTAMP
-				WHERE person_id = $1
-				  AND context_id = $2
-			`, [person.id, context_id]);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
-}
 
 async function send_notifications(sender, message, from) {
 
@@ -900,7 +802,7 @@ function get_message(id, revision) {
 			}
 
 			let message = query.rows[0];
-			await db.get_message_details([message]);
+			await db.add_message_details([message]);
 
 			if (revision) {
 				message.revision = revision;
