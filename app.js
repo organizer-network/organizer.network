@@ -51,53 +51,7 @@ app.enable('trust proxy');
 app.use(require('./routes/home'));				// /
 app.use(require('./routes/group_create'));		// /group
 app.use(require('./routes/group_index'));		// /group/:slug
-
-let subthread_path = '/group/:slug([a-z][a-z0-9_-]+/[a-z][a-z0-9_-]+)/:id';
-app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
-
-	try {
-
-		let context = await db.get_context(req.params.slug);
-		if (! context) {
-			return utils.error_page(rsp, '404');
-		}
-
-		let person = await db.curr_person(req);
-		let member = await get_member(person, context.id);
-
-		if (! member) {
-			return utils.error_page(rsp, '404');
-		}
-
-		set_context(person, context);
-
-		let id = parseInt(req.params.id);
-		let contexts = await db.get_contexts(person, id);
-
-		let email = 'send';
-		if (member.facets && member.facets.email) {
-			email = member.facets.email;
-		}
-
-		rsp.render('page', {
-			title: context.name,
-			view: 'thread',
-			content: {
-				person: person,
-				contexts: contexts,
-				context: contexts.current,
-				member: member,
-				base_url: config.base_url,
-				email: email
-			}
-		});
-
-	} catch(err) {
-		console.log(err.stack);
-		utils.error_page(rsp, '500');
-	}
-
-});
+app.use(require('./routes/group_thread'));		// /group/:slug/:id
 
 app.get('/join/:slug', async (req, rsp) => {
 
@@ -158,7 +112,7 @@ app.get('/settings', async (req, rsp) => {
 		let contexts = await db.get_contexts(person);
 
 		for (let context of contexts.member_of) {
-			let member = await get_member(person, context.id);
+			let member = await db.get_member(person, context.id);
 			await db.add_facets(member, 'member', 'email');
 			if (! member.facets) {
 				member.facets = {};
@@ -197,7 +151,7 @@ app.get('/settings/:slug', async (req, rsp) => {
 			return utils.error_page(rsp, '404');
 		}
 
-		let member = await get_member(person, context.id);
+		let member = await db.get_member(person, context.id);
 		let contexts = await db.get_contexts(person);
 
 		if (! member) {
@@ -587,7 +541,7 @@ app.post('/api/send', async (req, rsp) => {
 		}
 
 		let person = await db.curr_person(req);
-		let member = await get_member(person, context_id);
+		let member = await db.get_member(person, context_id);
 
 		if (! member) {
 			return rsp.status(403).send({
@@ -786,7 +740,7 @@ app.get('/api/message/:id', async (req, rsp) => {
 		}
 
 		let person = await db.curr_person(req);
-		let member = await get_member(person, message.context_id);
+		let member = await db.get_member(person, message.context_id);
 
 		if (! member) {
 			return rsp.status(403).send({
@@ -840,7 +794,7 @@ app.get('/api/replies/:id', async (req, rsp) => {
 		await db.get_message_details([message]);
 
 		let person = await db.curr_person(req);
-		let member = await get_member(person, message.context_id);
+		let member = await db.get_member(person, message.context_id);
 
 		query = await db.query(`
 			SELECT message.*,
@@ -992,7 +946,7 @@ app.get('/api/group/:slug', async (req, rsp) => {
 			});
 		}
 
-		let member = await get_member(person, context.id);
+		let member = await db.get_member(person, context.id);
 
 		if (! member) {
 			return rsp.status(403).send({
@@ -1085,12 +1039,12 @@ app.post('/api/join', async (req, rsp) => {
 		}
 
 		let context_id = parseInt(req.body.context_id);
-		let member = await get_member(person, context_id, 'include_inactive');
+		let member = await db.get_member(person, context_id, 'include_inactive');
 		if (! member) {
 
 			let context = await db.get_context(context_id);
 			if (context.parent_id) {
-				let parent_member = await get_member(person, context.parent_id);
+				let parent_member = await db.get_member(person, context.parent_id);
 				if (parent_member) {
 					await join_context(person, context_id);
 					return rsp.send({
@@ -1153,7 +1107,7 @@ app.post('/api/settings', async (req, rsp) => {
 			});
 		}
 
-		var member = await get_member(person, context.id);
+		var member = await db.get_member(person, context.id);
 
 		if (! member) {
 			return rsp.status(403).send({
@@ -1384,7 +1338,7 @@ function join_context(person, context_id, invited_by) {
 				WHERE id = $2
 			`, [context_id, person.id]);
 
-			let member = await get_member(person, context_id);
+			let member = await db.get_member(person, context_id);
 			if (member) {
 				return resolve(member);
 			}
