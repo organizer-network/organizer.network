@@ -57,17 +57,11 @@ app.use(require('./routes/join'));				// /join/:slug
 app.use(require('./routes/settings_index'));	// /settings
 app.use(require('./routes/settings_group'));	// /settings/:slug
 app.use(require('./routes/person_css'));		// /person.css
+app.use(require('./routes/api/ping'));			// /api/ping
 app.use(require('./routes/api/login'));			// /api/login
 												// /login/:slug
 												// /logout
 
-app.post('/api/ping', (req, rsp) => {
-	const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-	return rsp.send({
-		ok: true,
-		pong: ip
-	});
-});
 
 
 
