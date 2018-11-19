@@ -1,0 +1,1 @@
+ALTER TABLE person ALTER context_id DROP DEFAULT;
