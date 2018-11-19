@@ -56,23 +56,7 @@ app.use(require('./routes/group_thread'));		// /group/:slug/:id
 app.use(require('./routes/join'));				// /join/:slug
 app.use(require('./routes/settings_index'));	// /settings
 app.use(require('./routes/settings_group'));	// /settings/:slug
-
-app.get('/user.css', async (req, rsp) => {
-
-	rsp.append('Content-Type', 'text/css');
-
-	const person = await db.curr_person(req);
-	if (person) {
-		rsp.send(`
-			.message.person-${person.slug}:hover > .message-options {
-				display: block;
-			}
-		`);
-	} else {
-		rsp.send('');
-	}
-
-});
+app.use(require('./routes/person_css'));		// /person.css
 
 app.post('/api/ping', (req, rsp) => {
 	const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
