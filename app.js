@@ -63,51 +63,7 @@ app.use(require('./routes/api/group'));         // /api/group
 app.use(require('./routes/api/send'));          // /api/send
 app.use(require('./routes/api/reply'));         // /api/reply
 app.use(require('./routes/api/profile'));       // /api/profile
-
-app.get('/api/message/:id', async (req, rsp) => {
-
-	try {
-		let id = parseInt(req.params.id);
-		let revision = req.query.revision || null;
-		let message = await get_message(id, revision);
-
-		if (! message) {
-			return rsp.status(404).send({
-				ok: false,
-				error: 'Message not found.'
-			});
-		}
-
-		let person = await db.curr_person(req);
-		let member = await db.get_member(person, message.context_id);
-
-		if (! member) {
-			return rsp.status(403).send({
-				ok: false,
-				error: 'You are not authorized to load that message.'
-			});
-		}
-
-		if (req.query.format == 'html') {
-			rsp.render('message', {
-				message: message,
-				context: {
-					slug: message.context_slug
-				},
-				member: member
-			});
-		} else {
-			rsp.send({
-				ok: true,
-				message: message
-			});
-		}
-
-	} catch (err) {
-		console.log(err.stack);
-		return utils.error_page(rsp, '500');
-	}
-});
+app.use(require('./routes/api/message'));       // /api/message
 
 app.get('/api/replies/:id', async (req, rsp) => {
 
@@ -175,7 +131,7 @@ app.post('/api/delete', async (req, rsp) => {
 		}
 
 		let person = await db.curr_person(req);
-		let message = await get_message(id);
+		let message = await db.get_message(id);
 		if (message.person_id != person.id) {
 			return rsp.status(403).send({
 				ok: false,
@@ -224,7 +180,7 @@ app.post('/api/update', async (req, rsp) => {
 		}
 
 		let person = await db.curr_person(req);
-		let message = await get_message(id);
+		let message = await db.get_message(id);
 
 		if (message.person_id != person.id) {
 			return rsp.status(403).send({
@@ -246,7 +202,7 @@ app.post('/api/update', async (req, rsp) => {
 			WHERE id = $2
 		`, [content, id]);
 
-		message = await get_message(id);
+		message = await db.get_message(id);
 
 		rsp.send({
 			ok: true,
