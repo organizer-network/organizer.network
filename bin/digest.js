@@ -1,19 +1,28 @@
 #!/usr/bin/env node
 
-const db = require('../lib/db');
 const config = require('../config');
+const db = require('../lib/db');
+const notify = require('../lib/notify');
+let email_count = 0;
 
-find_digests()
-.then(async (digests) => {
-	let count = 0;
-	for (let person_id in digests) {
-		count += await send_digest_email(person_id, digests[person_id]);
+(async () => {
+	try {
+		let digests = await find_digests();
+		let promises = [];
+		for (let person_id in digests) {
+			promises.push(send_digest_email(person_id, digests[person_id]));
+		}
+		Promise.all(promises).then(() => {
+			console.log(`Sent ${email_count} digest emails.`);
+			db.end();
+		})
+		.catch((err) => {
+			console.log(err.stack);
+		});
+	} catch(err) {
+		console.log(err.stack);
 	}
-	console.log(`Sent ${count} digest emails.`);
-})
-.catch((err) => {
-	console.log(err.stack);
-});
+})();
 
 function find_digests() {
 	return new Promise(async (resolve, reject) => {
@@ -32,8 +41,7 @@ function find_digests() {
 			resolve(digests);
 
 		} catch(err) {
-			console.log("Could not find digests.");
-			reject(err);
+			reject(new Error("Could not find digests."));
 		}
 	});
 }
@@ -105,13 +113,13 @@ ${message_url}`);
 				let subject = `Digest: ${msg_count} message${plural}`;
 				let body = digest.join('\n\n\n') + `\n\n---\nNotification settings:\n${config.base_url}/settings`;
 				await notify.send_email(person.email, subject, body);
-				return resolve(1);
+
+				email_count++;
 			}
 
-			resolve(0);
+			resolve();
 
 		} catch(err) {
-			console.log('Could not send digest emails');
 			reject(err);
 		}
 

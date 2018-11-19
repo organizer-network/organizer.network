@@ -11,7 +11,9 @@ if (! fs.existsSync(`${__dirname}/config.js`)) {
 	console.log('Please set up config.js');
 	return;
 }
+
 const config = require('./config');
+const db = require('./lib/db');
 
 // server
 const express = require('express');
@@ -41,7 +43,7 @@ app.use(body_parser.urlencoded({ extended: false }));
 app.use(body_parser.json());
 app.use(session({
 	store: new pg_session({
-		conString: config.db_dsn
+		pool: db.pool()
 	}),
 	secret: config.session_secret,
 	resave: false,
@@ -62,8 +64,6 @@ app.use((req, rsp, next) => {
 	next();
 });
 app.enable('trust proxy');
-
-const db = require('./lib/db');
 
 const upload = multer();
 
