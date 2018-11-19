@@ -9,6 +9,7 @@ utils.check_config();
 
 const config = require('./config');
 const db = require('./lib/db');
+const notify = require('./lib/notify');
 
 // server
 const express = require('express');
@@ -52,44 +53,7 @@ app.use(require('./routes/home'));				// /
 app.use(require('./routes/group_create'));		// /group
 app.use(require('./routes/group_index'));		// /group/:slug
 app.use(require('./routes/group_thread'));		// /group/:slug/:id
-
-app.get('/join/:slug', async (req, rsp) => {
-
-	try {
-
-		let invite = await get_invite(req.params.slug);
-		if (! invite) {
-			return utils.error_page(rsp, '404');
-		}
-
-		let person = await db.curr_person(req);
-
-		let then = req.query.then;
-		if (then && ! then.match(/^\//)) {
-			then = null;
-		}
-
-		if (! person) {
-			rsp.render('page', {
-				title: 'Welcome',
-				view: 'login',
-				content: {
-					invite: invite,
-					then: then
-				}
-			});
-		} else {
-			let invited_by = invite.person_id;
-			await join_context(person, invite.context.id, invited_by);
-			rsp.redirect(`${config.base_url}/group/${invite.context.slug}`);
-		}
-
-	} catch(err) {
-		console.log(err.stack);
-		return utils.error_page(rsp, '500');
-	}
-
-});
+app.use(require('./routes/join'));				// /join/:slug
 
 app.get('/settings', async (req, rsp) => {
 
@@ -344,7 +308,7 @@ Link expires in 1 hour.
 
 		}, 60 * 60 * 1000);
 
-		await send_email(email, subject, body);
+		await notify.send_email(email, subject, body);
 
 		return rsp.send({
 			ok: true
@@ -407,7 +371,7 @@ app.get('/login/:hash', async (req, rsp) => {
 
 				let member = query.rows[0];
 				let invited_by = member.person_id;
-				await join_context(person, member.context_id, invited_by);
+				await db.join_context(person, member.context_id, invited_by);
 				let context = await db.get_context(member.context_id);
 
 				redirect = `/group/${context.slug}`;
@@ -494,7 +458,7 @@ app.post('/api/group', async (req, rsp) => {
 
 		let group = query.rows[0];
 
-		await join_context(person, group.id);
+		await db.join_context(person, group.id);
 
 		rsp.send({
 			ok: true,
@@ -1046,7 +1010,7 @@ app.post('/api/join', async (req, rsp) => {
 			if (context.parent_id) {
 				let parent_member = await db.get_member(person, context.parent_id);
 				if (parent_member) {
-					await join_context(person, context_id);
+					await db.join_context(person, context_id);
 					return rsp.send({
 						ok: true
 					});
@@ -1309,7 +1273,7 @@ ${config.base_url}/settings
 Unsubscribe from ${member.context_name}:
 ${config.base_url}/leave/${member.leave_slug}`;
 
-			let rsp = await send_email(member.email, subject, body, from);
+			let rsp = await notify.send_email(member.email, subject, body, from);
 
 			if (rsp && rsp.length > 0 && rsp[0].headers) {
 				let email_id = rsp[0].headers['x-message-id'];
@@ -1325,80 +1289,6 @@ ${config.base_url}/leave/${member.leave_slug}`;
 	} catch(err) {
 		console.log(err.stack);
 	}
-}
-
-function join_context(person, context_id, invited_by) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			await db.query(`
-				UPDATE person
-				SET context_id = $1
-				WHERE id = $2
-			`, [context_id, person.id]);
-
-			let member = await db.get_member(person, context_id);
-			if (member) {
-				return resolve(member);
-			}
-
-			let leave_slug = utils.random(16);
-			let invite_slug = utils.random(16);
-			let query;
-
-			if (invited_by) {
-				query = await db.query(`
-					INSERT INTO member
-					(person_id, context_id, leave_slug, invite_slug, invited_by, created, updated)
-					VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-					RETURNING *
-				`, [person.id, context_id, leave_slug, invite_slug, invited_by]);
-			} else {
-				query = await db.query(`
-					INSERT INTO member
-					(person_id, context_id, leave_slug, invite_slug, created, updated)
-					VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-					RETURNING *
-				`, [person.id, context_id, leave_slug, invite_slug]);
-			}
-
-			member = query.rows[0];
-			return resolve(member);
-
-		} catch (err) {
-			console.log(err.stack);
-			reject(err);
-		}
-
-	});
-}
-
-function get_invite(slug) {
-	return new Promise(async (resolve, reject) => {
-		try {
-			let query = await db.query(`
-				SELECT *
-				FROM member
-				WHERE active = true
-				  AND invite_slug = $1
-			`, [slug]);
-
-			let invite;
-
-			if (query.rows.length == 0) {
-				resolve(false);
-			} else {
-				invite = query.rows[0];
-				invite.person = await db.get_person(invite.person_id);
-				invite.context = await db.get_context(invite.context_id);
-				resolve(invite);
-			}
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
 }
 
 function get_message(id, revision) {
