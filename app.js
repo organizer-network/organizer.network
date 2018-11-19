@@ -4,13 +4,8 @@
 // versioning based on Tom Gauld's A Noisy Alphabet
 // http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom
 
-// config.js
-const fs = require('fs');
-const path = require('path');
-if (! fs.existsSync(`${__dirname}/config.js`)) {
-	console.log('Please set up config.js');
-	return;
-}
+const utils = require('./lib/utils');
+utils.check_config();
 
 const config = require('./config');
 const db = require('./lib/db');
@@ -20,22 +15,12 @@ const express = require('express');
 const app = express();
 
 const body_parser = require('body-parser');
-const marked = require('marked');
-const yaml = require('js-yaml');
-const mime = require('mime');
-const sharp = require('sharp');
 const session = require('express-session');
 const pg_session = require('connect-pg-simple')(session);
-const crypto = require('crypto');
-const mkdirp = require('mkdirp');
+
 const multer = require('multer')
 
 const slug_regex = /^[a-z][a-z0-9_-]+$/i;
-
-marked.setOptions({
-	gfm: true,
-	smartypants: true
-});
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -80,7 +65,7 @@ app.get('/group', async (req, rsp) => {
 			return rsp.redirect('/?then=%2Fgroup');
 		}
 
-		let default_slug = random(16, 'slug');
+		let default_slug = utils.random(16, 'slug');
 
 		rsp.render('page', {
 			title: 'Create a new group',
@@ -430,7 +415,7 @@ app.post('/api/login', async (req, rsp) => {
 			});
 		}
 
-		let hash = random(16);
+		let hash = utils.random(16);
 		let login_url = `${config.base_url}/login/${hash}`;
 
 		if (throttle_logins(req)) {
@@ -445,11 +430,11 @@ app.post('/api/login', async (req, rsp) => {
 			// This is extremely improbable and will likely never happen.
 
 			console.log('Login hash collision!');
-			hash = random(16);
+			hash = utils.random(16);
 			login_url = `${config.base_url}/login/${hash}`;
 		}
 
-		const email = normalize_email(req.body.email);
+		const email = utils.normalize_email(req.body.email);
 		const subject = 'organizer.network login link';
 		const body = `Hello,
 
@@ -473,7 +458,7 @@ Link expires in 1 hour.
 			id = query.rows[0].id;
 			slug = query.rows[0].slug;
 		} else {
-			slug = random(6, 'slug');
+			slug = utils.random(6, 'slug');
 			query = await db.query(`
 				INSERT INTO person
 				(email, slug, created)
@@ -1504,8 +1489,8 @@ function join_context(person, context_id, invited_by) {
 				return resolve(member);
 			}
 
-			let leave_slug = random(16);
-			let invite_slug = random(16);
+			let leave_slug = utils.random(16);
+			let invite_slug = utils.random(16);
 			let query;
 
 			if (invited_by) {
@@ -1647,44 +1632,6 @@ function get_message(id, revision) {
 			reject(err);
 		}
 	});
-}
-
-function normalize_email(email) {
-	return email.trim().toLowerCase();
-}
-
-function random(count, is_slug) {
-
-	const chars = 'abcdefghijkmnpqrstuwxyz0123456789';
-	const letters = 'abcdefghijkmnpqrstuwxyz';
-
-	// Note that we do not include the letters l or o to reduce the confusion
-	// with numeric 1 and 0. (20181110/dphiffer)
-
-	const rnd = crypto.randomBytes(count);
-	const value = new Array(count);
-
-	for (var i = 0; i < count; i++) {
-		if (is_slug && i == 0) {
-
-			// Context slugs cannot start with a number, which has to do with
-			// matching subgroups and message IDs, so we just need to check
-			// those ones. We enforce the same restriction on person slugs, only
-			// to reduce the number of special cases for permalinks.
-			// (20181110/dphiffer)
-
-			let len = Math.min(256, letters.length);
-			let d = 256 / len;
-			value[i] = letters[Math.floor(rnd[i] / d)];
-
-		} else {
-			let len = Math.min(256, chars.length);
-			let d = 256 / len;
-			value[i] = chars[Math.floor(rnd[i] / d)];
-		}
-	}
-
-	return value.join('');
 }
 
 module.exports = app;
