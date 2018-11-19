@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-
 const config = require('../config');
 const db = require('../lib/db');
 const utils = require('../lib/utils');
+
+const express = require('express');
+const router = express.Router();
 
 router.get('/', async (req, rsp) => {
 

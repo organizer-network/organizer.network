@@ -18,8 +18,6 @@ const body_parser = require('body-parser');
 const session = require('express-session');
 const pg_session = require('connect-pg-simple')(session);
 
-const multer = require('multer')
-
 const slug_regex = /^[a-z][a-z0-9_-]+$/i;
 
 app.set('view engine', 'ejs');
@@ -50,81 +48,9 @@ app.use((req, rsp, next) => {
 });
 app.enable('trust proxy');
 
-const upload = multer();
-
 app.use(require('./routes/home'));				// /
 app.use(require('./routes/group_create'));		// /group
-
-let subgroup_path = '/group/:slug([a-z][a-z0-9_-]+/[a-z][a-z0-9_-]+)';
-app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
-
-	try {
-
-		let context = await db.get_context(req.params.slug);
-		if (! context) {
-			return utils.error_page(rsp, '404');
-		}
-
-		let person = await db.curr_person(req);
-		let member = await get_member(person, context.id, 'include inactive');
-		let parent_member = false;
-
-		if (context.parent_id) {
-			parent_member = await get_member(person, context.parent_id);
-		}
-
-		if (! member &&
-		    ! parent_member) {
-			return utils.error_page(rsp, '404');
-		}
-
-		if (! member.active ||
-		    (! member && parent_member)) {
-			let inactive = ! (! member && parent_member);
-			return rsp.render('page', {
-				title: context.name,
-				view: 'unsubscribed',
-				content: {
-					person: person,
-					context: context,
-					inactive: inactive
-				}
-			});
-		}
-
-		set_context(person, context);
-		let contexts = await db.get_contexts(person);
-
-		let then = req.query.then;
-		if (then && ! then.match(/^\//)) {
-			then = null;
-		}
-
-		let email = 'send';
-		if (member.facets && member.facets.email) {
-			email = member.facets.email;
-		}
-
-		rsp.render('page', {
-			title: context.name,
-			view: 'context',
-			content: {
-				person: person,
-				contexts: contexts,
-				context: contexts.current,
-				member: member,
-				base_url: config.base_url,
-				then: then,
-				email: email
-			}
-		});
-
-	} catch(err) {
-		console.log(err.stack);
-		utils.error_page(rsp, '500');
-	}
-
-});
+app.use(require('./routes/group_index'));		// /group/:slug
 
 let subthread_path = '/group/:slug([a-z][a-z0-9_-]+/[a-z][a-z0-9_-]+)/:id';
 app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
@@ -685,6 +611,9 @@ app.post('/api/send', async (req, rsp) => {
 	}
 
 });
+
+const multer = require('multer');
+const upload = multer();
 
 app.post('/api/reply', upload.none(), async (req, rsp) => {
 
@@ -1491,44 +1420,6 @@ function join_context(person, context_id, invited_by) {
 	});
 }
 
-function get_member(person, context_id, include_inactive) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			if (! person) {
-				return resolve(false);
-			}
-
-			let query = await db.query(`
-				SELECT *
-				FROM member
-				WHERE person_id = $1
-				  AND context_id = $2
-			`, [person.id, context_id]);
-
-
-			if (query.rows.length == 0) {
-				return resolve(false);
-			}
-
-			let member = query.rows[0];
-
-			if (! member.active && ! include_inactive) {
-				return resolve(false);
-			}
-
-			await db.add_facets(member, 'member');
-
-			resolve(member);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
-}
-
 function get_invite(slug) {
 	return new Promise(async (resolve, reject) => {
 		try {
@@ -1554,17 +1445,6 @@ function get_invite(slug) {
 			reject(err);
 		}
 	});
-}
-
-function set_context(person, context) {
-	if (person.context_id != context.id) {
-		person.context_id = context.id;
-		db.query(`
-			UPDATE person
-			SET context_id = $1
-			WHERE id = $2
-		`, [context.id, person.id]);
-	}
 }
 
 function get_message(id, revision) {
