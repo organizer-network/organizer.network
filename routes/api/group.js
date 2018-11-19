@@ -22,7 +22,7 @@ router.post('/api/group', async (req, rsp) => {
 		let topic = req.body.topic || '';
 		let parent_id = parseInt(req.body.parent_id) || null;
 
-		if (! utils.slug_match(slug)) {
+		if (! utils.url_slug_match(slug)) {
 			return rsp.status(400).send({
 				ok: false,
 				error: "The URL format is: at least 2 letters, numbers, hyphens, or underscores."
