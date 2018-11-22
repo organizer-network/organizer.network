@@ -47,78 +47,27 @@ app.use((req, rsp, next) => {
 });
 app.enable('trust proxy');
 
-app.use(require('./routes/home'));              // /
-app.use(require('./routes/group_create'));      // /group
-app.use(require('./routes/group_index'));       // /group/:slug
-app.use(require('./routes/group_thread'));      // /group/:slug/:id
-app.use(require('./routes/join'));              // /join/:slug
-app.use(require('./routes/settings_index'));    // /settings
-app.use(require('./routes/settings_group'));    // /settings/:slug
-app.use(require('./routes/person_css'));        // /person.css
-app.use(require('./routes/api/ping'));          // /api/ping
-app.use(require('./routes/api/login'));         // /api/login
-                                                // /login/:slug
-                                                // /logout
-app.use(require('./routes/api/group'));         // /api/group
-app.use(require('./routes/api/send'));          // /api/send
-app.use(require('./routes/api/reply'));         // /api/reply
-app.use(require('./routes/api/profile'));       // /api/profile
-app.use(require('./routes/api/message'));       // /api/message
-app.use(require('./routes/api/replies'));       // /api/replies
-app.use(require('./routes/api/update'));        // /api/update
-app.use(require('./routes/api/delete'));        // /api/delete
-
-app.get('/api/group/:slug', async (req, rsp) => {
-
-	try {
-
-		let person = await db.curr_person(req);
-
-		if (! person) {
-			return rsp.status(403).send({
-				ok: false,
-				error: 'You must be signed in to load group content.'
-			});
-		}
-
-		let context = await db.get_context(req.params.slug);
-
-		if (! context) {
-			return rsp.status(404).send({
-				ok: false,
-				error: 'Group not found.'
-			});
-		}
-
-		let member = await db.get_member(person, context.id);
-
-		if (! member) {
-			return rsp.status(403).send({
-				ok: false,
-				error: 'You are not authorized to load that group content.'
-			});
-		}
-
-		let before_id = null;
-		if ('before_id' in req.query) {
-			before_id = parseInt(req.query.before_id);
-		}
-		await db.get_context_details(context, before_id);
-
-		rsp.render('message-page', {
-			context: context,
-			member: member
-		});
-
-	} catch(err) {
-		console.log(err.stack);
-		rsp.status(500).send({
-			ok: false,
-			error: 'Could not load group messages.'
-		});
-	}
-
-});
+app.use(require('./routes/home'));                // /
+app.use(require('./routes/group_create'));        // /group
+app.use(require('./routes/group_index'));         // /group/:slug
+app.use(require('./routes/group_thread'));        // /group/:slug/:id
+app.use(require('./routes/join'));                // /join/:slug
+app.use(require('./routes/settings_index'));      // /settings
+app.use(require('./routes/settings_group'));      // /settings/:slug
+app.use(require('./routes/person_css'));          // /person.css
+app.use(require('./routes/api/ping'));            // /api/ping
+app.use(require('./routes/api/login'));           // /api/login
+                                                  // /login/:slug
+                                                  // /logout
+app.use(require('./routes/api/group'));           // /api/group
+app.use(require('./routes/api/group_messages'));  // /api/group/:slug
+app.use(require('./routes/api/send'));            // /api/send
+app.use(require('./routes/api/reply'));           // /api/reply
+app.use(require('./routes/api/profile'));         // /api/profile
+app.use(require('./routes/api/message'));         // /api/message
+app.use(require('./routes/api/replies'));         // /api/replies
+app.use(require('./routes/api/update'));          // /api/update
+app.use(require('./routes/api/delete'));          // /api/delete
 
 app.get('/leave/:id', async (req, rsp) => {
 
