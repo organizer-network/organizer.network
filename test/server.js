@@ -1,18 +1,30 @@
-var request = require('supertest');
-describe('loading express', function () {
+const request = require('supertest');
+const create_server = require('../lib/server');
+const db = require('../lib/db');
+
+describe('lib/server.js', () => {
+
 	var server;
-	beforeEach(function () {
-		server = require('../server')();
+
+	beforeEach(() => {
+		server = create_server();
 	});
-	afterEach(function () {
+
+	afterEach(() => {
 		server.close();
 	});
-	it('responds to /', function test_home(done) {
+
+	after(() => {
+		db.end();
+	});
+
+	it('responds to /', (done) => {
 		request(server)
 		.get('/')
 		.expect(200, done);
 	});
-	it('404 everything else', function test_404(done) {
+
+	it('404 everything else', (done) => {
 		request(server)
 		.get('/foo/bar')
 		.expect(404, done);

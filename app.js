@@ -11,7 +11,9 @@ if (! fs.existsSync(`${__dirname}/config.js`)) {
 	console.log('Please set up config.js');
 	return;
 }
+
 const config = require('./config');
+const db = require('./lib/db');
 
 // server
 const express = require('express');
@@ -25,8 +27,6 @@ const sharp = require('sharp');
 const session = require('express-session');
 const pg_session = require('connect-pg-simple')(session);
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const sendgrid = require('@sendgrid/mail');
 const mkdirp = require('mkdirp');
 const multer = require('multer')
 
@@ -44,7 +44,7 @@ app.use(body_parser.urlencoded({ extended: false }));
 app.use(body_parser.json());
 app.use(session({
 	store: new pg_session({
-		conString: config.db_dsn
+		pool: db.pool()
 	}),
 	secret: config.session_secret,
 	resave: false,
@@ -65,21 +65,6 @@ app.use((req, rsp, next) => {
 	next();
 });
 app.enable('trust proxy');
-
-// Connect to PostgreSQL
-const pg = require('pg');
-const db = new pg.Client(config.db_dsn);
-db.connect();
-
-// Setup SMTP if it's configured
-if ('smtp' in config) {
-	var smtp_transport = nodemailer.createTransport(config.smtp);
-}
-
-// Setup SendGrid if it's configured
-if ('sendgrid_api_key' in config) {
-	sendgrid.setApiKey(config.sendgrid_api_key);
-}
 
 const upload = multer();
 
@@ -118,7 +103,7 @@ app.get('/', async (req, rsp) => {
 
 			// If the person is logged in, and has a group context ID, redirect.
 
-			let context = await get_context(person.context_id);
+			let context = await db.get_context(person.context_id);
 			return rsp.redirect(`/group/${context.slug}`);
 		}
 
@@ -181,7 +166,7 @@ app.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 
 	try {
 
-		let context = await get_context(req.params.slug);
+		let context = await db.get_context(req.params.slug);
 		if (! context) {
 			return error_page(rsp, '404');
 		}
@@ -252,7 +237,7 @@ app.get(['/group/:slug/:id', subthread_path], async (req, rsp) => {
 
 	try {
 
-		let context = await get_context(req.params.slug);
+		let context = await db.get_context(req.params.slug);
 		if (! context) {
 			return error_page(rsp, '404');
 		}
@@ -354,7 +339,7 @@ app.get('/settings', async (req, rsp) => {
 
 		for (let context of contexts.member_of) {
 			let member = await get_member(person, context.id);
-			await add_facets(member, 'member', 'email');
+			await db.add_facets(member, 'member', 'email');
 			if (! member.facets) {
 				member.facets = {};
 			}
@@ -386,7 +371,7 @@ app.get('/settings/:slug', async (req, rsp) => {
 	try {
 
 		let person = await curr_person(req);
-		let context = await get_context(req.params.slug);
+		let context = await db.get_context(req.params.slug);
 
 		if (! context) {
 			return error_page(rsp, '404');
@@ -453,160 +438,6 @@ app.post('/api/ping', (req, rsp) => {
 		pong: ip
 	});
 });
-
-app.get('/api/digest', async (req, rsp) => {
-
-	try {
-
-		let count = 0;
-
-		let query = await db.query(`
-			SELECT member.person_id, member.context_id
-			FROM member, facet
-			WHERE member.active = true
-			  AND facet.target_id = member.id
-			  AND facet.target_type = 'member'
-			  AND facet.facet_type = 'email'
-			  AND facet.content = 'digest'
-		`);
-
-		let digests = {};
-		for (let member of query.rows) {
-			if (! digests[member.person_id]) {
-				digests[member.person_id] = [];
-			}
-			digests[member.person_id].push(member.context_id);
-		}
-
-		for (let person_id in digests) {
-			count += await send_digest_emails(person_id, digests[person_id]);
-		}
-
-		rsp.send(`Sent ${count} digest emails.`);
-
-	} catch(err) {
-		console.log(err.stack);
-		rsp.status(500).send("Could not send digest emails.");
-	}
-
-});
-
-function send_digest_emails(person_id, contexts) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let person = await get_person(parseInt(person_id));
-			let digest = [];
-			let msg_count = 0;
-
-			for (let context_id of contexts) {
-
-				let context = await get_context(parseInt(context_id));
-
-				let facet = `last_digest_message_${context_id}`;
-				await add_facets(person, 'person', facet);
-
-				let values = [context_id, person_id];
-
-				let id_clause = '';
-				if (person.facets && person.facets[facet]) {
-					id_clause = 'AND message.id > $3';
-					values.push(person.facets[facet]);
-				}
-
-				let query = await db.query(`
-					SELECT message.id, message.content, message.created,
-					       message.in_reply_to, person.name
-					FROM message, person
-					WHERE message.context_id = $1
-					  AND message.person_id != $2
-					  AND message.created > CURRENT_TIMESTAMP - interval '1 day'
-					  ${id_clause}
-					  AND person.id = message.person_id
-					ORDER BY message.created
-				`, values);
-
-				let messages = query.rows;
-				let reply_msgs = {};
-				let last_message_id = null;
-
-				if (messages.length == 0) {
-					continue;
-				}
-
-				let placeholders = [];
-				values = [];
-				for (let i = 0; i < messages.length; i++) {
-					if (messages[i].in_reply_to) {
-						placeholders.push('$' + (placeholders.length + 1));
-						values.push(messages[i].in_reply_to);
-					}
-					last_message_id = messages[i].id;
-				}
-
-				if (values.length > 0) {
-					placeholders = placeholders.join(', ');
-					query = await db.query(`
-						SELECT id, content
-						FROM message
-						WHERE id IN (${placeholders})
-					`, values);
-
-					for (let reply of query.rows) {
-						let content = reply.content;
-						content = content.replace(/\s+/g, ' ');
-						if (content.length > 48) {
-							content = content.substr(0, 48) + '...';
-						}
-						reply_msgs[reply.id] = content;
-					}
-				}
-
-				let context_digest = [];
-				for (let message of messages) {
-
-					let subject = '';
-					let message_url = `${config.base_url}/group/${context.slug}/${message.id}`;
-
-					if (message.in_reply_to) {
-						subject = `Re: ${reply_msgs[message.in_reply_to]}\n`;
-						message_url = `${config.base_url}/group/${context.slug}/${message.in_reply_to}#${message.id}`;
-					}
-
-					context_digest.push(`${subject}${message.name} at ${message.created}:
-
-${message.content}
-
-Message link:
-${message_url}`);
-				}
-
-				if (context_digest.length > 0) {
-					await set_facet(person, 'person', facet, last_message_id, 'single');
-					let context_txt = `${context.name}\n==================================================\n\n` + context_digest.join('\n\n---\n\n');
-					digest.push(context_txt);
-					msg_count += context_digest.length;
-				}
-			}
-
-			if (msg_count > 0) {
-				let plural = (msg_count == 1) ? '' : 's';
-				let subject = `Digest: ${msg_count} message${plural}`;
-				let body = digest.join('\n\n\n') + `\n\n---\nNotification settings:\n${config.base_url}/settings`;
-				await send_email(person.email, subject, body);
-				return resolve(1);
-			}
-
-			resolve(0);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-
-	});
-}
 
 // Because the login hashes are stored in memory (and not in the database), it
 // is important to check for pending logins when restarting the server. There is
@@ -803,7 +634,7 @@ app.get('/login/:hash', async (req, rsp) => {
 				let member = query.rows[0];
 				let invited_by = member.person_id;
 				await join_context(person, member.context_id, invited_by);
-				let context = await get_context(member.context_id);
+				let context = await db.get_context(member.context_id);
 
 				redirect = `/group/${context.slug}`;
 			}
@@ -860,7 +691,7 @@ app.post('/api/group', async (req, rsp) => {
 		}
 
 		if (parent_id) {
-			let parent = await get_context(parent_id);
+			let parent = await db.get_context(parent_id);
 			slug = `${parent.slug}/${slug}`;
 		}
 
@@ -872,7 +703,7 @@ app.post('/api/group', async (req, rsp) => {
 			});
 		}
 
-		let context = await get_context(slug);
+		let context = await db.get_context(slug);
 		if (context) {
 			return rsp.status(400).send({
 				ok: false,
@@ -1023,7 +854,7 @@ app.post('/api/reply', upload.none(), async (req, rsp) => {
 				in_reply_to = parseInt(in_reply_to_msg.in_reply_to);
 			}
 
-			let person = await get_person(person_id);
+			let person = await db.get_person(person_id);
 			let message = await send_message(person, context_id, in_reply_to, content);
 			message_id = message.id;
 		}
@@ -1087,7 +918,7 @@ app.post('/api/profile', async (req, rsp) => {
 			});
 		}
 
-		let person_with_slug = await get_person(req.body.slug);
+		let person_with_slug = await db.get_person(req.body.slug);
 		if (person_with_slug && person_with_slug.id !== person.id) {
 			return rsp.status(400).send({
 				ok: false,
@@ -1329,7 +1160,7 @@ app.get('/api/group/:slug', async (req, rsp) => {
 			});
 		}
 
-		let context = await get_context(req.params.slug);
+		let context = await db.get_context(req.params.slug);
 
 		if (! context) {
 			return rsp.status(404).send({
@@ -1400,7 +1231,7 @@ app.get('/leave/:id', async (req, rsp) => {
 			  AND context_id = $2
 		`, [member.person_id, member.context_id]);
 
-		let context = await get_context(member.context_id);
+		let context = await db.get_context(member.context_id);
 
 		rsp.redirect(`/group/${context.slug}`);
 
@@ -1434,7 +1265,7 @@ app.post('/api/join', async (req, rsp) => {
 		let member = await get_member(person, context_id, 'include_inactive');
 		if (! member) {
 
-			let context = await get_context(context_id);
+			let context = await db.get_context(context_id);
 			if (context.parent_id) {
 				let parent_member = await get_member(person, context.parent_id);
 				if (parent_member) {
@@ -1490,7 +1321,7 @@ app.post('/api/settings', async (req, rsp) => {
 		}
 
 		var person = await curr_person(req);
-		var context = await get_context(parseInt(req.body.context_id));
+		var context = await db.get_context(parseInt(req.body.context_id));
 
 		if (! person || ! context) {
 			return rsp.status(400).send({
@@ -1521,7 +1352,7 @@ app.post('/api/settings', async (req, rsp) => {
 			});
 		}
 
-		await set_facet(member, 'member', 'email', req.body.email, 'single');
+		await db.set_facet(member, 'member', 'email', req.body.email, 'single');
 
 		rsp.send({
 			ok: true,
@@ -1549,7 +1380,7 @@ app.use(async (req, rsp) => {
 		}
 
 		if (req.path.substr(1).match(slug_regex)) {
-			let person = await get_person(req.path.substr(1));
+			let person = await db.get_person(req.path.substr(1));
 			if (person) {
 				let then = req.query.then;
 				if (then && ! (/^\//)) {
@@ -1793,7 +1624,7 @@ function get_member(person, context_id, include_inactive) {
 				return resolve(false);
 			}
 
-			await add_facets(member, 'member');
+			await db.add_facets(member, 'member');
 
 			resolve(member);
 
@@ -1820,53 +1651,14 @@ function get_invite(slug) {
 				resolve(false);
 			} else {
 				invite = query.rows[0];
-				invite.person = await get_person(invite.person_id);
-				invite.context = await get_context(invite.context_id);
+				invite.person = await db.get_person(invite.person_id);
+				invite.context = await db.get_context(invite.context_id);
 				resolve(invite);
 			}
 		} catch(err) {
 			console.log(err.stack);
 			reject(err);
 		}
-	});
-}
-
-function get_person(id_or_slug) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let query;
-
-			if (typeof id_or_slug == 'string') {
-				let slug = id_or_slug;
-				query = await db.query(`
-					SELECT *
-					FROM person
-					WHERE slug = $1
-				`, [slug]);
-			} else if (typeof id_or_slug == 'number') {
-				let id = id_or_slug;
-				query = await db.query(`
-					SELECT *
-					FROM person
-					WHERE id = $1
-				`, [id]);
-			} else {
-				throw new Error('Argument should be a string or number type.');
-			}
-
-			if (query.rows.length > 0) {
-				return resolve(query.rows[0]);
-			}
-
-			return resolve(null);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-
 	});
 }
 
@@ -1889,45 +1681,6 @@ function curr_person(req) {
 				}
 			}
 			resolve(null);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-	});
-}
-
-function get_context(id_or_slug) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-			let query;
-
-			if (typeof id_or_slug == 'string') {
-				let slug = id_or_slug;
-				query = await db.query(`
-					SELECT *
-					FROM context
-					WHERE slug = $1
-				`, [slug]);
-			} else if (typeof id_or_slug == 'number') {
-				let id = id_or_slug;
-				query = await db.query(`
-					SELECT *
-					FROM context
-					WHERE id = $1
-				`, [id]);
-			} else {
-				throw new Error(`Argument ${id_or_slug} should be a string or number type.`);
-			}
-
-			if (query.rows.length == 0) {
-				// No context found, but we still resolve().
-				return resolve(null);
-			}
-
-			let context = query.rows[0];
-			resolve(context);
 
 		} catch(err) {
 			console.log(err.stack);
@@ -2140,7 +1893,7 @@ function add_context_details(context, before_id) {
 			context.subgroups = query.rows;
 
 			if (context.parent_id) {
-				context.parent = await get_context(context.parent_id);
+				context.parent = await db.get_context(context.parent_id);
 			}
 
 			resolve(context);
@@ -2233,126 +1986,6 @@ function add_message_details(messages) {
 		} catch(err) {
 			console.log(err.stack);
 			reject(err);
-		}
-	});
-}
-
-function add_facets(target, target_type, facet_type) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let facet_type_clause = '';
-			let values = [target.id, target_type];
-
-			if (facet_type) {
-				facet_type_clause = 'AND facet_type = $3';
-				values.push(facet_type);
-			}
-
-			let query = await db.query(`
-				SELECT *
-				FROM facet
-				WHERE target_id = $1
-				  AND target_type = $2
-				  ${facet_type_clause}
-				ORDER BY facet_num
-			`, values);
-
-			target.facets = {};
-
-			for (let facet of query.rows) {
-				if (facet.facet_num == -1) {
-					target.facets[facet.facet_type] = facet.content;
-				} else {
-					if (! target.facets[facet.facet_type]) {
-						target.facets[facet.facet_type] = [];
-					}
-					target.facets[facet.facet_type].push(facet.content);
-				}
-			}
-
-			resolve(target);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-
-	});
-}
-
-function set_facet(target, target_type, facet_type, content, is_single) {
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			let facet_num;
-
-			await add_facets(target, target_type);
-
-			if (is_single) {
-				facet_num = -1;
-				await db.query(`
-					DELETE FROM facet
-					WHERE target_id = $1
-					  AND target_type = $2
-					  AND facet_type = $3
-				`, [target.id, target_type, facet_type]);
-			} else {
-				facet_num = 0;
-				if (target.facets[facet_type]) {
-					facet_num = target.facets[facet_type].length;
-				}
-			}
-
-			await db.query(`
-				INSERT INTO facet
-				(target_id, target_type, facet_type, facet_num, content, created, updated)
-				VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-			`, [target.id, target_type, facet_type, facet_num, content]);
-
-			await add_facets(target, target_type);
-
-			resolve(target);
-
-		} catch(err) {
-			console.log(err.stack);
-			reject(err);
-		}
-
-	});
-}
-
-function send_email(to, subject, body, from) {
-	return new Promise((resolve, reject) => {
-
-		if (! from) {
-			from = config.email_from;
-		}
-
-		const message = {
-			from: from,
-			to: to,
-			subject: subject,
-			text: body
-		};
-
-		if ('sendgrid_api_key' in config) {
-			sendgrid.send(message)
-			.then((rsp) => {
-				resolve(rsp);
-			})
-			.catch(err => {
-				reject(err);
-			});
-		} else if ('smtp' in config) {
-			smtp_transport.sendMail(message, (err, info) => {
-				if (err) {
-					return reject(err);
-				}
-				return resolve(info);
-			});
 		}
 	});
 }
