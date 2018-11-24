@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS person (
 	about TEXT,
 	url VARCHAR(255),
 	slug VARCHAR(255),
-	context_id INTEGER DEFAULT 1,
+	context_id INTEGER,
 	created TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS person_idx ON person (email, slug);
