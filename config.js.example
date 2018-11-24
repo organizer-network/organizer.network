@@ -1,15 +1,15 @@
 module.exports = {
 
-	ssl: {
+	/*ssl: {
 		key: "ssl/key.pem",
 		cert: "ssl/cert.pem"
-	},
+	},*/
 
 	cors_origins: [
 		"*"
 	],
 
-	base_url: 'https://localhost:5000',
+	base_url: 'http://localhost:5000',
 	port: 5000,
 	db_dsn: "postgres://localhost:5432/jiji",
 
