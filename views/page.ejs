@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<title><%= title %></title>
 		<link rel="stylesheet" href="/css/app.css">
-		<link rel="stylesheet" href="/user.css">
+		<link rel="stylesheet" href="/person.css">
 	</head>
 	<body<% if (content.person) { %> class="logged-in person-<%= content.person.slug %>"<% } %>>
 		<%- include(view, content) %>
@@ -12,7 +12,7 @@
 			<div class="content">
 				<ul>
 					<li><a href="mailto:dan@phiffer.org">Need help?</a></li>
-					<li><a href="https://github.com/dphiffer/organizer.network">Source code</a></li>
+					<li><a href="https://github.com/organizer-network/organizer.network">Source code</a></li>
 				</ul>
 			</div>
 		</footer>
