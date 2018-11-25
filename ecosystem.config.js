@@ -1,9 +1,7 @@
 module.exports = {
   apps : [{
     name: 'organizer.network',
-    script: 'app.js',
-    autorestart: true,
-    watch: false,
+    script: './bin/start.js',
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'development'
