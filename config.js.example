@@ -11,7 +11,7 @@ module.exports = {
 
 	base_url: 'http://localhost:5000',
 	port: 5000,
-	db_dsn: "postgres://localhost:5432/jiji",
+	db_dsn: "postgres://localhost:5432/klatch",
 
 	session_secret: '', // openssl rand -hex 24
 	login_throttle_count: 5,               // 5 login attempts
