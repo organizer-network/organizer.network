@@ -168,25 +168,9 @@ input[type="submit"]:active,
 	position: relative;
 	width: 100vw;
 	min-height: calc(100vh - 2em);
-	background-image: linear-gradient(33deg, #6835E7, #4E6FFF, #1DDA4F), url("../img/bg.png");
-	background-size: 100vw auto, 100vw auto;
+	background-image: linear-gradient(33deg, #6835E7, #4E6FFF, #1DDA4F);
+	background-size: 100vw auto;
 	background-position: top center;
-	background-blend-mode: multiply;
-}
-
-#intro::after {
-	position: absolute;
-	bottom: -1.25em;
-	right: 2em;
-	content: "↓ scroll down for more";
-	color: rgba(255, 255, 255, 0.75);
-	background: #6835E7;
-	padding: 10px 15px;
-	border-radius: 4px;
-}
-
-#intro.above::after {
-	content: "↑ scroll up for more";;
 }
 
 #intro .options {
@@ -656,6 +640,27 @@ input[type="submit"]:active,
 	margin-top: 0.5em;
 }
 
+nav {
+	background-image: linear-gradient(90deg, #6835E7, #4E6FFF);
+	padding-left: 15px;
+}
+
+nav a {
+	float: left;
+	font-weight: bold;
+	display: inline-block;
+	padding: 20px 15px;
+	text-decoration: none;
+}
+
+nav a:hover {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+nav .profile {
+	float: right;
+}
+
 @media screen and (min-width: 760px) {
 
 	.heading {
@@ -663,7 +668,7 @@ input[type="submit"]:active,
 	}
 
 	#context {
-		padding-top: 1em;
+		padding-top: 3em;
 	}
 
 	#messages, #main {
@@ -690,9 +695,13 @@ input[type="submit"]:active,
 		float: right;
 	}
 
-	#intro .options,
 	#intro .contexts {
-		width: 50%;
+		width: 66%;
+		float: left;
+	}
+
+	#intro .options {
+		width: 33%;
 		float: left;
 	}
 

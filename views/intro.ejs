@@ -1,8 +1,25 @@
 <div id="intro">
 	<div class="content">
 		<div class="heading">
-			<h1>Organizer Network</h1>
-			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
+			<h1>Your groups</h1>
+		</div>
+		<div class="contexts">
+			<% if (! contexts.member_of.length) { %>
+				<p>You are not a member of any groups.</p>
+			<% } else { %>
+				<% for (let context of contexts.member_of) { %>
+					<% if (! context.parent_id) { %>
+						<h2><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
+						<% if (context.subgroups && context.subgroups.length > 0) { %>
+							<ul>
+								<% for (let subgroup of context.subgroups) { %>
+									<li><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></li>
+								<% } %>
+							</ul>
+						<% } %>
+					<% } %>
+				<% } %>
+			<% } %>
 		</div>
 		<div class="options">
 			<% if (person.name) { %>
@@ -16,29 +33,6 @@
 				<li><a href="/settings">Settings</a>
 				<li><a href="/logout">Logout</a></li>
 			</ul>
-		</div>
-		<div class="contexts">
-			<h2>You are a member of</h2>
-			<% if (! contexts.member_of.length) { %>
-				<p>You are not a member of any groups.</p>
-			<% } else { %>
-				<ul>
-					<% for (let context of contexts.member_of) { %>
-						<% if (! context.parent_id) { %>
-							<li>
-								<a href="/group/<%= context.slug %>"><%= context.name %></a>
-								<% if (context.subgroups && context.subgroups.length > 0) { %>
-									<ul>
-										<% for (let subgroup of context.subgroups) { %>
-											<li><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></li>
-										<% } %>
-									</ul>
-								<% } %>
-							</li>
-						<% } %>
-					<% } %>
-				</ul>
-			<% } %>
 		</div>
 		<br class="clear">
 	</div>

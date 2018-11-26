@@ -221,16 +221,6 @@
 			};
 		});*/
 
-		if ($('#context').length > 0) {
-			$('#intro').addClass('above');
-			var context_top = $("#context").offset().top - 32;
-			if ($('html, body').scrollTop() < context_top) {
-				$('html, body').animate({
-					scrollTop: context_top
-				}, 500);
-			}
-		}
-
 		$('.message-content').each(function(index, el) {
 			format_content(el);
 		});

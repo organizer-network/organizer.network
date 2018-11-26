@@ -1,0 +1,10 @@
+<nav>
+	<a href="/">Your groups</a>
+	<a href="/group">Create group</a>
+	<% if (person.name) { %>
+		<a href="/<%= person.slug %>" class="profile"><%= person.name %></a>
+	<% } else { %>
+		<a href="/<%= person.slug %>" class="profile">Profile</a>
+	<% } %>
+	<br class="clear">
+</nav>

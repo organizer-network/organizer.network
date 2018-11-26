@@ -26,14 +26,6 @@ router.get('/', async (req, rsp) => {
 			});
 		}
 
-		if (person.context_id) {
-
-			// If the person is logged in, and has a group context ID, redirect.
-
-			let context = await db.get_context(person.context_id);
-			return rsp.redirect(`/group/${context.slug}`);
-		}
-
 		let contexts = await db.get_contexts(person);
 
 		let then = req.query.then;
