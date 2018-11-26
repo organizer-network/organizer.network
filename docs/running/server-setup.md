@@ -1,103 +1,106 @@
-### [Organizer Network Docs](../README.md) → [Running Organizer Network](README.md)
+# Tutorial for setting up your own instance of organizer.network
 
-# Server setup
+organizer.network is a tool for organizers who might want to have more control over their tools and data. at its core it is open and decentralized messaging platform. the structure of organizer.net allows organizers to create private groups for their community, in order to exchange information.
 
-We run the public [organizer.network](https://organizer.network/) website on [pm2](http://pm2.keymetrics.io/) behind an [nginx reverse proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/). DigitalOcean has [a tutorial](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-16-04) that might be worth looking at.
+The public version of the [organizer.network](https://organizer.network/) website is run on a [pm2](http://pm2.keymetrics.io/) behind an [nginx reverse proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/). Below you will find instructions for setting this up your own Digital Ocean server.
 
-I'll describe the specific setup process we used as a reference.
+## Disclaimers
+* This tutorial will be based on DigitalOcean. This is an easy to use service, but **it costs money**. You are welcome to use your preferred hosting service (and to make a small guide for it!)
+* We also make use of [SendGrid](https://sendgrid.com), a free email service
+* This tutorial relies heavily on the terminal
 
-* Create a new Ubuntu 18.04 Droplet on [Digital Ocean](https://www.digitalocean.com/) (or on your preferred hosting provider). The smallest size should be sufficient.
+## Step One : setting up the server (using DigitalOcean)
+* Create a [Digital Ocean](https://www.digitalocean.com/) account if you do not already have one.
+* Create a new Ubuntu Droplet. The smallest size should be sufficient. The cheapest one if $5/mo if you keep it running constantly.
 
-![Create Droplet](img/1.png)
+![Create Droplet](1.png)
 
-* Copy/paste your a SSH public key.
+* DigitalOcean will ask you to upload a **copy of your SSH public key**.
+  * You can check to see if you already have a public key by running this in your terminal: `ls -al ~/.ssh`
+  * You can create a new SSH key by following [this GitHub tutorial](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+  * Copy the public key to your clipboard by running: `pbcopy < ~/.ssh/id_rsa.pub`
+  * And paste it into DigitalOcean
 
-![SSH public key](img/2.png)
+![SSH public key](2.png)
 
 * Give your droplet a name.
 
-![Hostname](img/3.png)
+![Hostname](3.png)
+
+
+## Step Two : configuring the server
 
 * Copy the IP address for your new droplet, once it finishes booting.
-* SSH into your new machine as `root`.
+* `$` `ssh root@[your ip address]`: to [SSH into your new machine as `root`](https://www.quora.com/What-does-it-mean-to-SSH-into-something).
+* Accept the SSH key fingerprint by typing `yes`. You only need to do this once.
+
+### System update
+* `apt update` : Update the system packages on your DigitalOcean instance. You might get a pink pop up screen warning you about updates. You can just press the enter key to select `keep the local version currently installed`
+![Warning popup](pink.png)
+* `apt upgrade -y` : Upgrade all of the packages.
+* `apt install -y fail2ban` : install `fail2ban` to protect against SSH brute force attacks.
+
+### New user and permissions
+* `adduser [username]` : to add yourself as a user. You can leave all of the contact information blank.
+* `mkdir /home/[username]/.ssh` : Create an ssh folder for your new user account.
+* `nano /home/[username]/.ssh/authorized_keys` : Opens the "nano" text editor in a new file called "autorized_keys"
+* Open a new terminal tab/window
+* `pbcopy < ~/.ssh/id_rsa.pub` : This will copy the key
+* Paste it on nano (the previous terminal tab/window)
+* Save and quit (`ctrl-O`, `[enter]`, `ctrl-X`)
+* `chown -R [username]:[username] /home/[username]/.ssh` : Changes the ownership of the folder
+* `chmod 700 /home/[username]/.ssh` : Modifies the permissions of the folder
+* `chmod 600 /home/[username]/.ssh/authorized_keys` : Modifies the permissions of the specific file
+* `usermod -a -G sudo [username]` : Add your user to the `sudo` group.
+* `exit` : Logout
 
 ```
-$ ssh root@[your ip address]
-```
-
-Accept the SSH key fingerprint by typing `yes`. You only need to do this once.
-
-Note: SSH keys will only "just work" if you use the default `id_rsa` key name. Otherwise you'll need to set a `-i ~/.ssh/[your private key]` argument for the `ssh` command.
-
-* Make sure the system software is up-to-date, and install `fail2ban` to protect against SSH brute force attacks.
-
-```
-$ apt update
-$ apt upgrade -y
-$ apt install -y fail2ban
-```
-
-* Add a user for yourself (set a password, add whatever contact info you want to).
-
-```
-$ adduser [username]
-```
-
-* Add a public key to your user account.
-
-```
-$ mkdir /home/[username]/.ssh
-$ nano /home/[username]/.ssh/authorized_keys
-```
-
-Paste in the contents of your public key, then save and quit (ctrl-O, [enter], ctrl-X).
-
-* Set the file permissions.
-
-```
-$ chown -R [username]:[username] /home/[username]/.ssh
-$ chmod 700 /home/[username]/.ssh
-$ chmod 600 /home/[username]/.ssh/authorized_keys
-```
-
-* Add your user to the `sudo` group.
-
-```
-$ usermod -a -G sudo [username]
-```
-
-* Logout, then log back in as your user.
-
-```
-$ exit
 logout
 Connection to [ip address] closed.
-$ ssh [username]@[ip address]
 ```
 
-Note: for future maintenance flexibility, you may want to add a separate `deploy` user at this point and set up your server from that account. We'll continue with a standard user account.
 
-* Clone the code repository.
+## Step three : install organizer.network
+* `ssh [username]@[ip address]` : Log back in as your user.
 
-```
-$ sudo mkdir -p /var/www/organizer.network
-$ sudo chown `whoami`:`whoami` /var/www/organizer.network
-$ cd /var/www/organizer.network
-$ git clone https://github.com/organizer-network/organizer.network.git .
-```
+### Clone the repository
+* `sudo mkdir -p /var/www/organizer.network` : Create a folder for the application
+* ``sudo chown `whoami`:`whoami` /var/www/organizer.network`` : Change ownership of the new folder
+* `cd /var/www/organizer.network` : Go to the new folder
+* `git clone https://github.com/organizer-network/organizer.network.git .` : Clone the repository into the new folder
 
-* Run the setup script.
+### Install the packages
+* `cd setup` : Go to the setup folder
+* `./ubuntu_setup.sh` : Run the setup script
 
-```
-$ cd setup
-$ ./ubuntu_setup.sh
-```
+### Configure the application
 
-Once the script finishes running you should be able to load up `http://[your ip address]` in a browser. There's one last part you need to configure in `config.js`:
+Before running these steps, you need to have a [SendGrid](https://sendgrid.com/) account and get an API key for the Web.
+1. ![Step 1: Setup Web API](sendgrid1.png)
+2. ![Step 2: Node.js integration](sendgrid2.png)
+3. ![Step 3: Create the key!](sendgrid3.png)
 
-* Either set up the `smtp` config details
-* Or set up a [SendGrid](https://sendgrid.com/) API key
+Now, back on the terminal:
+* `cd ..` : Go back to the main folder
+* `nano config.js` : To edit the configuration file
+  * Replace `dbname` version name inside quotes after `db_dsn:` with [current version] (https://github.com/organizer-network/organizer.network)
+  * Open a new terminal tab/window
+  * `openssl rand -hex 24` : This creates a random hash
+  * Copy the hash
+  * Go back to nano window and paste the hash inside the quotes after `session_secret:`
+  * Paste SendGrid API key inside quotes after `sendgrid_api_key:`
+  * Remove the comments (`//`) at the beginning of the line
+* Save and quit (`ctrl-O`, `[enter]`, `ctrl-X`).
 
-Then once you do that, restart the server with `pm2 restart organizer.network`.
+![Original config.js file](configfile.png)
 
-Note: for some reason my `~/.config` folder had `root` file permissions, so I had to do the following in order to `git pull` successfully: `sudo chown -R dphiffer:dphiffer ~/.config`
+* `pm2 restart organizer.network` : Restart the server
+
+
+Now you're ready to roll. Go to http://[ip address] and start organizing!
+
+
+## Troubleshooting
+* SSH keys will only "just work" if you use the default `id_rsa` key name. Otherwise you'll need to set a `-i ~/.ssh/[your private key]` argument for the `ssh` command.
+* For future maintenance flexibility, you may want to add a separate `deploy` user at this point and set up your server from that account. We'll continue with a standard user account.
+* For some reason my `~/.config` folder had `root` file permissions, so I had to do the following in order to `git pull` successfully: `sudo chown -R dphiffer:dphiffer ~/.config`
