@@ -60,7 +60,7 @@ The public version of the [organizer.network](https://organizer.network/) websit
 * `$` `chmod 700 /home/[username]/.ssh` : Modifies the permissions of the folder
 * `$` `chmod 600 /home/[username]/.ssh/authorized_keys` : Modifies the permissions of the specific file
 * `$` `usermod -a -G sudo [username]` : Add your user to the `sudo` group.
-* `$` `exit` : Logout
+* `$` `sudo reboot` : This will restart the system to complete the update and log you out
 
 ```
 logout
@@ -70,7 +70,6 @@ Connection to [ip address] closed.
 
 ## Step three : install organizer.network
 * `$` `ssh [username]@[ip address]` : Log back in as your user.
-  * If you see *** System restart required *** that means you should `$` `sudo reboot` for the `apt upgrade` security updates to take effect
 
 ### Clone the repository
 * `$` `sudo mkdir -p /var/www/organizer.network` : Create a folder for the application
