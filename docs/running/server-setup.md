@@ -13,7 +13,7 @@ The public version of the [organizer.network](https://organizer.network/) websit
 * Create a [Digital Ocean](https://www.digitalocean.com/) account if you do not already have one.
 * Create a new Ubuntu Droplet. The smallest size should be sufficient. The cheapest one if $5/mo if you keep it running constantly.
 
-![Create Droplet](1.png)
+![Create Droplet](img/1.png)
 
 * DigitalOcean will ask you to upload a **copy of your SSH public key**.
   * You can check to see if you already have a public key by running this in your terminal: `ls -al ~/.ssh`
@@ -21,11 +21,11 @@ The public version of the [organizer.network](https://organizer.network/) websit
   * Copy the public key to your clipboard by running: `pbcopy < ~/.ssh/id_rsa.pub`
   * And paste it into DigitalOcean
 
-![SSH public key](2.png)
+![SSH public key](img/2.png)
 
 * Give your droplet a name.
 
-![Hostname](3.png)
+![Hostname](img/3.png)
 
 
 ## Step Two : configuring the server
@@ -36,7 +36,7 @@ The public version of the [organizer.network](https://organizer.network/) websit
 
 ### System update
 * `apt update` : Update the system packages on your DigitalOcean instance. You might get a pink pop up screen warning you about updates. You can just press the enter key to select `keep the local version currently installed`
-![Warning popup](pink.png)
+![Warning popup](img/pink.png)
 * `apt upgrade -y` : Upgrade all of the packages.
 * `apt install -y fail2ban` : install `fail2ban` to protect against SSH brute force attacks.
 
@@ -76,9 +76,9 @@ Connection to [ip address] closed.
 ### Configure the application
 
 Before running these steps, you need to have a [SendGrid](https://sendgrid.com/) account and get an API key for the Web.
-1. ![Step 1: Setup Web API](sendgrid1.png)
-2. ![Step 2: Node.js integration](sendgrid2.png)
-3. ![Step 3: Create the key!](sendgrid3.png)
+1. ![Step 1: Setup Web API](img/sendgrid1.png)
+2. ![Step 2: Node.js integration](img/sendgrid2.png)
+3. ![Step 3: Create the key!](img/sendgrid3.png)
 
 Now, back on the terminal:
 * `cd ..` : Go back to the main folder
