@@ -104,7 +104,9 @@ Now, back on the terminal:
 * `$` `pm2 start` : Start server
 
 
-Now you're ready to roll. Go to http://[ip address] and start organizing!
+Now you're ready to roll. 
+
+Go to _http://[ip address]_ and start organizing!
 
 
 ## Troubleshooting
