@@ -1,9 +1,9 @@
 module.exports = {
 
-	/*ssl: {
-		key: "ssl/key.pem",
-		cert: "ssl/cert.pem"
-	},*/
+	//ssl: {
+	//	key: "ssl/key.pem",
+	//	cert: "ssl/cert.pem"
+	//},
 
 	cors_origins: [
 		"*"
@@ -20,16 +20,16 @@ module.exports = {
 	email_from: '"Your Name" <name@example.com>',
 
 	// EITHER ... use plain vanilla SMTP
-	smtp: {
-		host: 'smtp.example.com',
-		port: 465,
-		secure: true, // true for 465, false for other ports
-		auth: {
-			user: 'email username',
-			pass: 'email password'
-		}
-	}
+	//smtp: {
+	//	host: 'smtp.example.com',
+	//	port: 465,
+	//	secure: true, // true for 465, false for other ports
+	//	auth: {
+	//		user: 'email username',
+	//		pass: 'email password'
+	//	}
+	//}
 
 	// OR ... you can use SendGrid instead
-	// sendgrid_api_key: 'xxxxxxxxxxx'
+	//sendgrid_api_key: 'xxxxxxxxxxx'
 };
