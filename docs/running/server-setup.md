@@ -106,7 +106,7 @@ Now, back on the terminal:
 
 Now you're ready to roll. 
 
-Go to _http://[ip address]_ and start organizing!
+Go to **http://[ip address]** and start organizing!
 
 
 ## Troubleshooting
