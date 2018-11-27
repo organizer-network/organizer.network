@@ -7,7 +7,7 @@
 # cd /var/www/organizer.network
 # git clone https://github.com/organizer-network/organizer.network.git .
 #
-# See also: setup.md
+# See also: https://github.com/organizer-network/organizer.network/blob/develop/docs/running/server-setup.md
 
 PROJECT_PATH="/var/www/organizer.network"
 VERSION="klatch"
@@ -36,16 +36,7 @@ cd "$PROJECT_PATH/db"
 make setup
 
 cd "$PROJECT_PATH"
-cp setup/config.js.setup config.js
-SECRET=`openssl rand -hex 24`
-IP_ADDR=`curl -s -XPOST https://organizer.network/api/ping | jq -r ".pong"`
-BASE_URL="http://$IP_ADDR"
-sed -e "s/base_url: ''/base_url: '$BASE_URL'/" \
-    -e "s/\(db_dsn:.*\)dbname/\1$VERSION/" \
-    -e "s/session_secret: ''/session_secret: '$SECRET'/" \
-    -i.bak config.js
-
-pm2 start organizer.network.js
+cp config.js.example config.js
 
 sudo rm /etc/nginx/sites-enabled/default
 sudo ln -s "$PROJECT_PATH/setup/nginx.conf" /etc/nginx/sites-enabled/organizer.network
@@ -56,4 +47,6 @@ sudo ufw allow 443
 sudo ufw allow 22
 yes | sudo ufw enable
 
-echo "done"
+echo "Next steps:"
+echo "  * Edit config.js"
+echo "  * Start the service: pm2 start"
