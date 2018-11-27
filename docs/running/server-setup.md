@@ -92,8 +92,6 @@ Now, back on the terminal:
   * Remove the comments (`//`) at the beginning of the line
 * Save and quit (`ctrl-O`, `[enter]`, `ctrl-X`).
 
-![Original config.js file](configfile.png)
-
 * `pm2 restart organizer.network` : Restart the server
 
 
