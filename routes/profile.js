@@ -30,7 +30,8 @@ router.use(async (req, rsp) => {
 						edit: (req.query.edit == '1'),
 						base_url: config.base_url,
 						curr_id: curr_id,
-						then: then
+						then: then,
+						contexts: await db.get_contexts(person)
 					}
 				});
 				return;
