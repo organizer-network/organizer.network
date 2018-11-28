@@ -12,8 +12,11 @@ $ make backup
 Migrate during version upgrades:
 
 ```
+$ pm2 stop organizer.network
 $ cd db/
 $ make migrate
+$ cd ..
+$ pm2 start
 ```
 
 ## PostgreSQL on Ubuntu
