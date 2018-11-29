@@ -186,7 +186,7 @@ input[type="submit"]:active,
 #error {
 	position: relative;
 	width: 100vw;
-	min-height: calc(100vh - 2em);
+	min-height: 100vh;
 	background-image: url('../img/error.gif');
 	background-size: 100% auto;
 	background-repeat: no-repeat;
@@ -204,10 +204,16 @@ input[type="submit"]:active,
 	padding: 15px 30px 30px 30px;
 }
 
+#error.maintenance {
+	background-image: url('../img/maintenance.gif');
+	background-size: auto auto;
+	background-repeat: repeat;
+}
+
 #leave {
 	position: relative;
 	width: 100vw;
-	min-height: calc(100vh - 2em);
+	min-height: 100vh;
 	background-image: url('../img/leave.gif');
 	background-size: 100% auto;
 	background-repeat: no-repeat;
