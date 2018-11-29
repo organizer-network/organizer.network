@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "./bin/start.js",
+    "upgrade": "./bin/upgrade.sh",
     "test": "mocha"
   },
   "repository": {

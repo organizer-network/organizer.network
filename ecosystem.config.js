@@ -12,5 +12,5 @@ module.exports = {
 		env_maintenance: {
 			NODE_ENV: 'maintenance'
 		}
-	}],
+	}]
 };
