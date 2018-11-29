@@ -167,10 +167,10 @@ input[type="submit"]:active,
 #intro {
 	position: relative;
 	width: 100vw;
-	min-height: calc(100vh - 2em);
 	background-image: linear-gradient(33deg, #6835E7, #4E6FFF, #1DDA4F);
 	background-size: 100vw auto;
 	background-position: top center;
+	padding-bottom: 3em;
 }
 
 #intro .options {
@@ -641,8 +641,8 @@ input[type="submit"]:active,
 }
 
 nav {
-	background-image: linear-gradient(90deg, #6835E7, #4E6FFF);
-	padding-left: 15px;
+	background-image: linear-gradient(90deg, #0d4cbb, #112276);
+	padding: 0 15px;
 }
 
 nav a {
