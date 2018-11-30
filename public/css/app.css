@@ -197,15 +197,15 @@ input[type="submit"]:active,
 }
 
 #error .content {
+	position: absolute;
+	top: 33%;
 	background: rgba(0, 0, 0, 0.75);
-	transform: translateY(33%);
-	padding-top: 0;
-	width: auto;
+	width: 100%;
 	padding: 15px 30px 30px 30px;
 }
 
 #error.maintenance {
-	background-image: url('../img/maintenance.gif');
+	background-image: url('../img/maintenance.jpg');
 	background-size: auto auto;
 	background-repeat: repeat;
 }
