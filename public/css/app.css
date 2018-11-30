@@ -649,12 +649,22 @@ nav {
 	padding: 0 15px;
 }
 
+nav h1 {
+	font-size: 1em;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+}
+
 nav a {
 	float: left;
 	font-weight: bold;
 	display: inline-block;
 	padding: 20px 15px;
 	text-decoration: none;
+}
+
+nav h1 a {
+	font-weight: normal;
 }
 
 nav a:hover {
