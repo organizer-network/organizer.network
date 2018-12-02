@@ -5,7 +5,8 @@ const utils = require('../lib/utils');
 const express = require('express');
 const router = express.Router();
 
-router.get('/settings/:slug', async (req, rsp) => {
+let subgroup_path = '/settings/:slug([a-z][a-z0-9_-]+/[a-z][a-z0-9_-]+)';
+router.get(['/settings/:slug', subgroup_path], async (req, rsp) => {
 
 	try {
 
