@@ -28,6 +28,9 @@ router.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 			return utils.error_page(rsp, '404');
 		}
 
+		db.set_context(person, context);
+		let contexts = await db.get_contexts(person);
+
 		if (! member.active ||
 		    (! member && parent_member)) {
 			let inactive = ! (! member && parent_member);
@@ -36,14 +39,11 @@ router.get(['/group/:slug', subgroup_path], async (req, rsp) => {
 				view: 'unsubscribed',
 				content: {
 					person: person,
-					context: context,
+					context: contexts.current,
 					inactive: inactive
 				}
 			});
 		}
-
-		db.set_context(person, context);
-		let contexts = await db.get_contexts(person);
 
 		let then = req.query.then;
 		if (then && ! then.match(/^\//)) {

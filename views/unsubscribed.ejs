@@ -1,16 +1,25 @@
+<%- include('nav', {
+	person: person
+}) %>
 <div id="intro">
 	<div class="content">
-		<div class="heading">
-			<h1><%= context.name %></h1>
-			<% if (inactive) { %>
-				<h2 class="tagline">You are no longer a member of the group, but you can rejoin.</h2>
-			<% } else { %>
-				<h2 class="tagline">You can join this subgroup as a member of its parent group.</h2>
-			<% } %>
-		</div>
-		<form action="/api/join" id="unsubscribed">
+		<h1><%= context.name %></h1>
+		<p class="topic"><%= context.topic %></p>
+		<% if (context.parent) { %>
+			<ul class="back">
+				<li><a href="/group/<%= context.parent.slug %>">Group: <%= context.parent.name %></a></li>
+			</ul>
+		<% } %>
+		<form action="/api/join" id="unsubscribed" class="headroom">
 			<input type="hidden" name="context_id" value="<%= context.id %>">
-			<div class="headroom"><strong>You are not subscribed to this group.</strong></div>
+			<% if (inactive) { %>
+				<div><strong>You are no longer a member of this
+					<% if (context.parent_id) { %>
+						subgroup<% } else { %>
+						group<% } %>, but you can rejoin.</strong></div>
+			<% } else { %>
+				<div><strong>You can join this subgroup as a member of its parent group.</strong></div>
+			<% } %>
 			<% if (inactive) { %>
 				<input type="submit" value="Rejoin group →">
 			<% } else { %>
@@ -18,9 +27,5 @@
 			<% } %>
 			<div class="response"></div>
 		</form>
-		<div id="about">
-			We are a group of political organizers gathering on a decentralized computer network, working on a variety of social justice issues. Join us!
-		</div>
-		<br class="clear">
 	</div>
 </div>

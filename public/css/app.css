@@ -664,7 +664,7 @@ input[type="submit"]:active,
 }
 
 .headroom {
-	margin-top: 2em;
+	margin-top: 30px;
 }
 
 .clear {
@@ -741,7 +741,7 @@ nav .profile {
 		width: calc(33% - 1em);
 	}
 
-	#login, #about, #unsubscribed {
+	#login, #about {
 		float: left;
 		width: calc(50% - 1em);
 	}
