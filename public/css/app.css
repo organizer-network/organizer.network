@@ -10,7 +10,7 @@ body {
 }
 
 a {
-	color: #fff;
+	color: #4E6FFF;
 }
 
 p {
@@ -67,6 +67,10 @@ ul.back li::before {
 footer {
 	color: #ccc;
 	background: #222;
+}
+
+footer a {
+	color: #fff;
 }
 
 label {
@@ -157,6 +161,11 @@ input[type="submit"],
 	-moz-appearance: none;
 }
 
+.button.inline {
+	display: inline-block;
+	margin-top: 0;
+}
+
 .button.cancel {
 	display: inline-block;
 	background: #808080 !important;
@@ -209,6 +218,28 @@ input[type="submit"]:active,
 #intro .contexts {
 	width: 100%;
 	padding: 2em 0;
+}
+
+#intro .contexts .group {
+	margin-top: 2em;
+}
+
+#intro .latest {
+	margin-top: 1em;
+}
+
+#intro .latest .person {
+	font-weight: bold;
+}
+
+#intro .subgroup {
+	margin-top: 1em;
+	margin-left: 2em;
+}
+
+#intro .timestamp {
+	float: none;
+	margin-top: 0.5em;
 }
 
 #error {
@@ -360,22 +391,9 @@ input[type="submit"]:active,
 	margin-top: 2em;
 }
 
-#profile {
-	background-image: linear-gradient(120deg, #1DDA4F, #4E6FFF, #6835E7);
-}
-
 #profile input[type="submit"] {
-	background: #6835E7;
 	display: inline-block;
 	margin-right: 10px;
-}
-
-#profile input[type="submit"]:hover {
-	background: #1DDA4F;
-}
-
-#profile input[type="submit"]:active {
-	background: #fff;
 }
 
 #profile form {
@@ -674,6 +692,7 @@ nav {
 }
 
 nav a {
+	color: #fff;
 	font-size: 1em;
 	font-family: "source sans pro", sans-serif;
 	font-weight: bold;
@@ -749,5 +768,10 @@ nav .profile {
 	.clear {
 		display: block;
 		clear: both;
+	}
+
+	input[type="submit"],
+	.button {
+		font-size: 14px;
 	}
 }
