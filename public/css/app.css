@@ -260,7 +260,11 @@ input[type="submit"]:active,
 	color: #fff;
 	background: rgba(0, 0, 0, 0.75);
 	width: 100%;
-	padding: 15px 30px 30px 30px;
+	padding: 30px;
+}
+
+#error .content a {
+	color: #fff;
 }
 
 #error.maintenance {
