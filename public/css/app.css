@@ -7,8 +7,6 @@ body {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 	font-size: 16px;
 	line-height: 1.25em;
-	color: #fff;
-	background: #222;
 }
 
 a {
@@ -31,11 +29,14 @@ h1, h2, h3, h4, h5 {
 }
 
 h1 {
-	font-size: 2em;
+	font-size: 28px;
+	line-height: 28px;
+	margin-bottom: 10px;
 }
 
 h2 {
-	font-size: 1.25em;
+	font-size: 20px;
+	line-height: 20px;
 	font-style: italic;
 }
 
@@ -63,10 +64,15 @@ ul.back li::before {
 	content: "← ";
 }
 
+footer {
+	color: #ccc;
+	background: #222;
+}
+
 label {
 	font-weight: bold;
 	display: block;
-	margin: 2em 0 0.5em 0;
+	margin: 2em 0 0.75em 0;
 }
 
 b, strong {
@@ -94,10 +100,32 @@ select {
 	font-family: menlo, monospace;
 	font-size: 16px;
 	background: #fff;
-	padding: 10px;
-	border: 2px solid #4E6FFF;
+	padding: 15px;
+	border-left: 0;
+	border-right: 0;
+	border-top: 0;
+	border-bottom: 2px solid #ccc;
+	border-radius: 0;
 	width: 100%;
 	max-width: 100%;
+	background: #f2f2f2;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+}
+
+input[type="email"]:focus,
+input[type="text"]:focus,
+textarea:focus {
+	border-color: #1DDA4F;
+}
+
+input[type="email"]:invalid,
+input[type="text"]:invalid,
+textarea:invalid,
+select:invalid {
+	box-shadow: none;
+	border-color: #ff0000;
 }
 
 textarea {
@@ -109,12 +137,6 @@ select {
 	width: auto;
 }
 
-input[type="email"]:focus,
-input[type="text"]:focus,
-textarea:focus {
-	border: 2px solid #1DDA4F;
-}
-
 input[type="submit"],
 .button {
 	display: block;
@@ -122,14 +144,17 @@ input[type="submit"],
 	margin-top: 2em;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 	font-weight: bold;
-	font-size: 14px;
-	padding: 14px;
+	font-size: 16px;
+	padding: 16px;
 	border-radius: 4px;
 	color: #fff;
 	background: #4E6FFF;
 	cursor: pointer;
 	border: none;
 	text-decoration: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
 }
 
 .button.cancel {
@@ -167,10 +192,13 @@ input[type="submit"]:active,
 #intro {
 	position: relative;
 	width: 100vw;
-	background-image: linear-gradient(33deg, #6835E7, #4E6FFF, #1DDA4F);
-	background-size: 100vw auto;
-	background-position: top center;
 	padding-bottom: 3em;
+}
+
+#intro .heading {
+	color: #fff;
+	background-image: linear-gradient(33deg, #4E6FFF, #1DDA4F);
+	background-size: 100vw auto;
 }
 
 #intro .options {
@@ -198,6 +226,7 @@ input[type="submit"]:active,
 #error .content {
 	position: absolute;
 	top: 33%;
+	color: #fff;
 	background: rgba(0, 0, 0, 0.75);
 	width: 100%;
 	padding: 15px 30px 30px 30px;
@@ -284,13 +313,13 @@ input[type="submit"]:active,
 }
 
 #about {
-	padding-top: 1.5em;
+	padding-top: 1em;
 	font-size: 20px;
 	line-height: 1.5em;
 }
 
 #about h2 {
-	margin-top: 1em;
+	margin-bottom: 0.5em;
 }
 
 #about .button {
@@ -305,11 +334,11 @@ input[type="submit"]:active,
 }
 
 #login {
-	padding: 2em 0 0 0;
+	margin-top: 1em;
 }
 
 #login .controls {
-	max-height: 150px;
+	max-height: 175px;
 	transition: max-height 0.5s ease-out;
 	overflow: hidden;
 }
@@ -403,7 +432,7 @@ input[type="submit"]:active,
 	width: 100%;
 	max-width: 1024px;
 	margin: 0 auto;
-	padding: 15px;
+	padding: 20px;
 }
 
 .step {
@@ -425,25 +454,21 @@ input[type="submit"]:active,
 	font-size: 16px;
 	font-weight: bold;
 	display: inline-block;
-	background: #fff;
-	color: #6835E7;
-	width: 32px;
-	height: 32px;
-	line-height: 28px;
-	border-radius: 15px;
+	background: #4E6FFF;
+	color: #fff;
+	width: 36px;
+	height: 36px;
+	line-height: 32px;
+	border-radius: 18px;
 	text-align: center;
 	margin-right: 0.5em;
 	border: 2px solid #fff;
 }
 
-.step.selected .number {
-	background: #6835E7;
-	color: #fff;
-}
-
 .next-step {
+	color: #fff;
 	background: #6835E7;
-	padding: 10px 15px;
+	padding: 15px 20px;
 	border-radius: 4px;
 	margin-top: -15px;
 }
@@ -581,8 +606,7 @@ input[type="submit"]:active,
 }
 
 .heading {
-	margin: 2em 0 0 0;
-	padding: 0 0 2em 0;
+	padding: 6em 0 0 0;
 	border-bottom: 2px solid #fff;
 }
 
@@ -645,26 +669,20 @@ input[type="submit"]:active,
 }
 
 nav {
-	background-image: linear-gradient(90deg, #0d4cbb, #112276);
+	background-image: linear-gradient(90deg, #6835E7, #4E6FFF);
 	padding: 0 15px;
 }
 
-nav h1 {
-	font-size: 1em;
-	text-transform: uppercase;
-	letter-spacing: 2px;
-}
-
 nav a {
+	font-size: 1em;
+	font-family: "source sans pro", sans-serif;
+	font-weight: bold;
+	text-transform: uppercase;
 	float: left;
 	font-weight: bold;
 	display: inline-block;
 	padding: 20px 15px;
 	text-decoration: none;
-}
-
-nav h1 a {
-	font-weight: normal;
 }
 
 nav a:hover {
@@ -677,12 +695,16 @@ nav .profile {
 
 @media screen and (min-width: 760px) {
 
-	.heading {
-		margin: 8em 0 0 0;
+	#context, #intro > .content {
+		padding-top: 4em;
 	}
 
-	#context {
-		padding-top: 3em;
+	#intro .heading {
+		padding-top: 10em;
+	}
+
+	#login {
+		margin-top: 0;
 	}
 
 	#messages, #main {
@@ -707,6 +729,7 @@ nav .profile {
 
 	#about {
 		float: right;
+		padding-top: 0;
 	}
 
 	#intro .contexts {
