@@ -10,7 +10,21 @@
 			<form action="/api/topic" method="post" id="topic-form" class="hidden">
 				<input type="hidden" name="context_id" value="<%= context.id %>">
 				<input type="text" id="topic-input" name="topic" value="<%= context.topic %>">
+				<% if (context.topic_revision) { %>
+					<div class="topic-revision help">
+						Updated
+						<span class="timestamp"><%= context.topic_revision.updated %></span>
+						by <a href="/<%= context.topic_revision.person.slug %>" class="person"><%= context.topic_revision.person.name %></a>
+					</div>
+				<% } else { %>
+					<div class="topic-revision help hidden">
+						Updated
+						<span class="timestamp"></span>
+						by <a href="/" class="person"></a>
+					</div>
+				<% } %>
 				<input type="submit" value="Update topic →">
+				<input type="button" value="Cancel" class="cancel button">
 				<div class="response"></div>
 			</form>
 			<a href="#" id="edit-topic">Edit topic</a>

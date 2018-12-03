@@ -359,6 +359,7 @@
 		});
 
 		format_content('#context .topic');
+		format_timestamp('.topic-revision .timestamp');
 
 		$('#edit-topic').click(function(e) {
 			e.preventDefault();
@@ -367,12 +368,26 @@
 			$('#edit-topic').addClass('hidden');
 		});
 
+		$('#topic-form .cancel').click(function(e) {
+			e.preventDefault();
+			$('#topic-form').addClass('hidden');
+			$('#context .topic').removeClass('hidden');
+			$('#edit-topic').removeClass('hidden');
+			$('#topic-input').val($('#context .topic').html());
+		});
+
 		form_handler('#topic-form', function(data) {
 			$('#context .topic').html(data.topic);
 			format_content('#context .topic');
 			$('#topic-form').addClass('hidden');
 			$('#context .topic').removeClass('hidden');
 			$('#edit-topic').removeClass('hidden');
+
+			$('.topic-revision').removeClass('hidden');
+			$('.topic-revision .timestamp').html(data.topic_revision.updated);
+			$('.topic-revision .person').attr('href', '/' + data.topic_revision.person.slug);
+			$('.topic-revision .person').html(data.topic_revision.person.name);
+			format_timestamp('.topic-revision .timestamp');
 		});
 
 	});

@@ -726,6 +726,18 @@ input[type="submit"]:active,
 	margin-bottom: 1em;
 }
 
+.topic-revision {
+	margin-bottom: 1em;
+}
+
+.topic-revision a {
+	color: #808080 !important;
+}
+
+.topic-revision a:hover {
+	color: #4E6FFF !important;
+}
+
 nav {
 	background-image: linear-gradient(90deg, #6835E7, #4E6FFF);
 }
