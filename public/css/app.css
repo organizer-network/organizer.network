@@ -31,14 +31,14 @@ h1, h2, h3, h4, h5 {
 }
 
 h1 {
-	font-size: 24px;
-	line-height: 24px;
+	font-size: 28px;
+	line-height: 28px;
 	margin-bottom: 10px;
 }
 
 h2 {
-	font-size: 18px;
-	line-height: 18px;
+	font-size: 20px;
+	line-height: 20px;
 	font-style: italic;
 }
 
@@ -93,6 +93,7 @@ code {
 pre {
 	white-space: pre-wrap;
 	font-family: menlo, monospace;
+	font-size: 0.9em;
 }
 
 input[type="email"],
@@ -234,6 +235,17 @@ input[type="submit"]:active,
 
 #intro .latest .person {
 	font-weight: bold;
+	text-decoration: none;
+	color: #222;
+}
+
+#intro .latest .person:hover {
+	text-decoration: underline;
+	color: #4E6FFF;
+}
+
+#intro .latest .body {
+	margin-top: 0.5em;
 }
 
 #intro .subgroup {
@@ -323,7 +335,7 @@ input[type="submit"]:active,
 	color: #fff;
 	background: #4E6FFF;
 	display: inline-block;
-	margin-top: 1.5em;
+	margin-top: 0;
 }
 
 #context input[type="submit"]:hover,
@@ -401,6 +413,10 @@ input[type="submit"]:active,
 
 #send {
 	margin-top: 2em;
+}
+
+#send textarea {
+	margin-bottom: 1em;
 }
 
 #profile input[type="submit"] {
@@ -569,7 +585,7 @@ input[type="submit"]:active,
 }
 
 .message-content {
-	margin: 1em 0 3em 0;
+	margin: 1em 0;
 	line-height: 1.5em;
 }
 
@@ -742,6 +758,10 @@ nav .clear {
 
 	nav {
 		padding: 0 15px;
+	}
+
+	pre {
+		font-size: 1em;
 	}
 
 	.heading {

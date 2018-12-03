@@ -1,0 +1,36 @@
+<% let displayed = [] %>
+<% for (let context of groups) { %>
+	<% if (! context.parent_id) { %>
+		<% displayed.push(context.id) %>
+		<div class="group">
+			<h2><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
+			<%- include('intro-latest-message', {
+				latest: latest,
+				context: context
+			}) %>
+			<% if (context.subgroups && context.subgroups.length > 0) { %>
+				<% for (let subgroup of context.subgroups) { %>
+					<% displayed.push(subgroup.id) %>
+					<div class="subgroup">
+						<h2><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></h2>
+						<%- include('intro-latest-message', {
+							latest: latest,
+							context: context
+						}) %>
+					</div>
+				<% } %>
+			<% } %>
+		</div>
+	<% } %>
+<% } %>
+<% for (let context of groups) { %>
+	<% if (displayed.indexOf(context.id) == -1) { %>
+		<div class="group">
+			<h2><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
+			<%- include('intro-latest-message', {
+				latest: latest,
+				context: context
+			}) %>
+		</div>
+	<% } %>
+<% } %>

@@ -1,0 +1,12 @@
+<% if (latest[context.id]) { %>
+	<% let msg = latest[context.id] %>
+	<div class="latest">
+		<a href="/<%= msg.person_slug %>" class="person"><%= msg.person_name %></a>
+		<pre class="body"><%= msg.content %></pre>
+		<div class="meta timestamp">
+			<a href="/group/<%= context.slug %>/<%= msg.id %>">
+				<%= msg.created %>
+			</a>
+		</div>
+	</div>
+<% } %>

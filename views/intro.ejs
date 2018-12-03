@@ -23,66 +23,9 @@
 			<% if (! contexts.member_of.length) { %>
 				<p>You are not a member of any groups.</p>
 			<% } else { %>
-				<% let displayed = [] %>
-				<% for (let context of contexts.member_of) { %>
-					<% if (! context.parent_id) { %>
-						<% displayed.push(context.id) %>
-						<div class="group">
-							<h2><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
-							<% if (latest[context.id]) { %>
-								<% let msg = latest[context.id] %>
-								<div class="latest">
-									<span class="person"><%= msg.person_name %></span>:
-									<span class="body"><%= msg.content.length > 64 ? (msg.content.substr(0, 64) + '...') : msg.content %></span>
-									<div class="meta timestamp">
-										<a href="/group/<%= context.slug %>/<%= msg.id %>">
-											<%= msg.created %>
-										</a>
-									</div>
-								</div>
-							<% } %>
-							<% if (context.subgroups && context.subgroups.length > 0) { %>
-								<% for (let subgroup of context.subgroups) { %>
-									<% displayed.push(subgroup.id) %>
-									<div class="subgroup">
-										<h2><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></h2>
-										<% if (latest[subgroup.id]) { %>
-											<% let msg = latest[subgroup.id] %>
-											<div class="latest">
-												<span class="person"><%= msg.person_name %></span>:
-												<span class="body"><%= msg.content.length > 64 ? (msg.content.substr(0, 64) + '...') : msg.content %></span>
-												<div class="meta timestamp">
-													<a href="/group/<%= subgroup.slug %>/<%= msg.id %>">
-														<%= msg.created %>
-													</a>
-												</div>
-											</div>
-										<% } %>
-									</div>
-								<% } %>
-							<% } %>
-						</div>
-					<% } %>
-				<% } %>
-				<% for (let context of contexts.member_of) { %>
-					<% if (displayed.indexOf(context.id) == -1) { %>
-						<div class="group">
-							<h2><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
-							<% if (latest[context.id]) { %>
-								<% let msg = latest[context.id] %>
-								<div class="latest">
-									<span class="person"><%= msg.person_name %></span>:
-									<span class="body"><%= msg.content.length > 64 ? (msg.content.substr(0, 64) + '...') : msg.content %></span>
-									<div class="meta timestamp">
-										<a href="/group/<%= context.slug %>/<%= msg.id %>">
-											<%= msg.created %>
-										</a>
-									</div>
-								</div>
-							<% } %>
-						</div>
-					<% } %>
-				<% } %>
+				<%- include('intro-groups', {
+					groups: contexts.member_of
+				}) %>
 			<% } %>
 		</div>
 		<br class="clear">
