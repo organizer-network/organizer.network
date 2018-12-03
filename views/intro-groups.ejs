@@ -15,7 +15,7 @@
 						<h2><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></h2>
 						<%- include('intro-latest-message', {
 							latest: latest,
-							context: context
+							context: subgroup
 						}) %>
 					</div>
 				<% } %>
