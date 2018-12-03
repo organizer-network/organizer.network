@@ -719,7 +719,11 @@ input[type="submit"]:active,
 
 .topic {
 	font-style: italic;
-	margin-top: 0.5em;
+	margin: 0.5em 0;
+}
+
+#topic-input {
+	margin-bottom: 1em;
 }
 
 nav {

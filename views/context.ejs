@@ -6,7 +6,14 @@
 	<div class="content">
 		<div id="messages">
 			<h1><%= context.name %></h1>
-			<p class="topic"><%= context.topic %></p>
+			<pre class="topic"><%= context.topic %></pre>
+			<form action="/api/topic" method="post" id="topic-form" class="hidden">
+				<input type="hidden" name="context_id" value="<%= context.id %>">
+				<input type="text" id="topic-input" name="topic" value="<%= context.topic %>">
+				<input type="submit" value="Update topic →">
+				<div class="response"></div>
+			</form>
+			<a href="#" id="edit-topic">Edit topic</a>
 			<% if (context.parent) { %>
 				<ul class="back">
 					<li><a href="/group/<%= context.parent.slug %>">Parent group: <%= context.parent.name %></a></li>
