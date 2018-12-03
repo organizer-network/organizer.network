@@ -71,6 +71,7 @@ app.use(require('./routes/api/delete'));          // /api/delete
 app.use(require('./routes/api/leave'));           // /api/leave
 app.use(require('./routes/api/join'));            // /api/join
 app.use(require('./routes/api/settings'));        // /api/settings
+app.use(require('./routes/api/topic'));           // /api/topic
 app.use(require('./routes/profile.js'));          // /:slug
 
 module.exports = app;

@@ -358,6 +358,23 @@
 			}
 		});
 
+		format_content('#context .topic');
+
+		$('#edit-topic').click(function(e) {
+			e.preventDefault();
+			$('#topic-form').removeClass('hidden');
+			$('#context .topic').addClass('hidden');
+			$('#edit-topic').addClass('hidden');
+		});
+
+		form_handler('#topic-form', function(data) {
+			$('#context .topic').html(data.topic);
+			format_content('#context .topic');
+			$('#topic-form').addClass('hidden');
+			$('#context .topic').removeClass('hidden');
+			$('#edit-topic').removeClass('hidden');
+		});
+
 	});
 
 })();
