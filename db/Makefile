@@ -1,5 +1,5 @@
-VERSION := klatch
-VERSIONS = aarg bzzt craw dibdib eeeeee foom grrr hup ifff jiji klatch
+VERSION := lunk
+VERSIONS = aarg bzzt craw dibdib eeeeee foom grrr hup ifff jiji klatch lunk
 NOW := $(shell TZ=UTC date +%Y%m%d-%H%M%S)
 
 setup:
