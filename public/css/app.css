@@ -233,6 +233,11 @@ input[type="submit"]:active,
 	margin-top: 1em;
 }
 
+#intro .latest .help {
+	margin-bottom: 0.5em;
+	text-transform: uppercase;
+}
+
 #intro .latest .person {
 	font-weight: bold;
 	text-decoration: none;
@@ -244,8 +249,8 @@ input[type="submit"]:active,
 	color: #4E6FFF;
 }
 
-#intro .latest .body {
-	margin-top: 0.5em;
+#intro .latest .message-content {
+	margin-top: 1em;
 }
 
 #intro .subgroup {
