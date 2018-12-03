@@ -7,6 +7,8 @@ body {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 	font-size: 16px;
 	line-height: 1.25em;
+	color: #fff;
+	background: #222;
 }
 
 a {
@@ -29,14 +31,14 @@ h1, h2, h3, h4, h5 {
 }
 
 h1 {
-	font-size: 28px;
-	line-height: 28px;
+	font-size: 24px;
+	line-height: 24px;
 	margin-bottom: 10px;
 }
 
 h2 {
-	font-size: 20px;
-	line-height: 20px;
+	font-size: 18px;
+	line-height: 18px;
 	font-style: italic;
 }
 
@@ -56,12 +58,9 @@ ul ul li {
 	margin-left: 1.5em;
 }
 
-ul li::before {
-	content: "→ ";
-}
-
 ul.back li::before {
-	content: "← ";
+	font-family: arial;
+	content: "↩︎ ";
 }
 
 footer {
@@ -148,7 +147,7 @@ input[type="submit"],
 	margin-top: 2em;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 	font-weight: bold;
-	font-size: 16px;
+	font-size: 14px;
 	padding: 16px;
 	border-radius: 4px;
 	color: #fff;
@@ -194,6 +193,11 @@ input[type="submit"]:active,
 	margin-bottom: 0.5em;
 }
 
+#view {
+	color: #222;
+	background: #fff;
+}
+
 #unsubscribed .button {
 	display: inline-block;
 }
@@ -212,12 +216,12 @@ input[type="submit"]:active,
 
 #intro .options {
 	width: 100%;
-	padding: 2em 0;
+	padding: 1em 0 0 0;
 }
 
 #intro .contexts {
 	width: 100%;
-	padding: 2em 0;
+	padding: 1em 0 0 0;
 }
 
 #intro .contexts .group {
@@ -296,11 +300,14 @@ input[type="submit"]:active,
 #context {
 	color: #333;
 	background: #fff;
-	min-height: calc(100vh - 2em);
 }
 
 #context a {
 	color: #4E6FFF;
+}
+
+#context #sidebar {
+	margin-top: 2em;
 }
 
 #context #sidebar h2 {
@@ -334,7 +341,8 @@ input[type="submit"]:active,
 }
 
 #message-list {
-	padding: 1em 0;
+	margin: 2em 0;
+	padding-bottom: 1em;
 	border-bottom: 2px solid #333;
 }
 
@@ -422,10 +430,6 @@ input[type="submit"]:active,
 	font-weight: bold;
 }
 
-#more-messages {
-	margin-top: 3em !important;
-}
-
 #more-messages.disabled,
 #more-messages.disabled:hover {
 	background: #808080;
@@ -434,6 +438,10 @@ input[type="submit"]:active,
 
 #privacy {
 	margin-top: 5em;
+}
+
+#settings {
+	padding-bottom: 2em;
 }
 
 #settings form {
@@ -466,10 +474,6 @@ input[type="submit"]:active,
 	background: #6835E7;
 	color: #fff;
 	padding: 2px 5px;
-}
-
-.step.selected .text::before {
-	content: "→ ";
 }
 
 .step .number {
@@ -627,9 +631,13 @@ input[type="submit"]:active,
 	display: none !important;
 }
 
+.message .clear {
+	display: block;
+	clear: both;
+}
+
 .heading {
-	padding: 6em 0 0 0;
-	border-bottom: 2px solid #fff;
+	padding: 3em 0 0 0;
 }
 
 .about-person {
@@ -692,7 +700,6 @@ input[type="submit"]:active,
 
 nav {
 	background-image: linear-gradient(90deg, #6835E7, #4E6FFF);
-	padding: 0 15px;
 }
 
 nav a {
@@ -716,7 +723,30 @@ nav .profile {
 	float: right;
 }
 
+nav .clear {
+	display: block;
+	clear: both;
+}
+
 @media screen and (min-width: 760px) {
+
+	h1 {
+		font-size: 28px;
+		line-height: 28px;
+	}
+
+	h2 {
+		font-size: 20px;
+		line-height: 20px;
+	}
+
+	nav {
+		padding: 0 15px;
+	}
+
+	.heading {
+		padding: 6em 0 0 0;
+	}
 
 	#context, #intro > .content {
 		padding-top: 4em;
@@ -740,7 +770,8 @@ nav .profile {
 		padding-bottom: 5em;
 	}
 
-	#sidebar {
+	#context #sidebar {
+		margin-top: 0;
 		float: right;
 		width: calc(33% - 1em);
 	}
@@ -762,7 +793,7 @@ nav .profile {
 
 	#intro .options {
 		width: 33%;
-		float: left;
+		float: right;
 	}
 
 	#group-url {
@@ -772,10 +803,5 @@ nav .profile {
 	.clear {
 		display: block;
 		clear: both;
-	}
-
-	input[type="submit"],
-	.button {
-		font-size: 14px;
 	}
 }

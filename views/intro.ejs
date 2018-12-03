@@ -2,16 +2,31 @@
 	<div class="heading">
 		<div class="content">
 			<h1>Organizer Network</h1>
+			<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
 		</div>
 	</div>
 	<div class="content">
+		<div class="options">
+			<% if (person.name) { %>
+				<h2>Hello, <%= person.name %>.</h2>
+			<% } else { %>
+				<h2>Hello.</h2>
+			<% } %>
+			<ul>
+				<li><a href="/<%= person.slug %>">View your profile</a>
+				<li><a href="/settings">Settings</a>
+				<li><a href="/logout">Logout</a></li>
+			</ul>
+		</div>
 		<div class="contexts">
+			<a href="/group" class="button inline">Create group →</a>
 			<% if (! contexts.member_of.length) { %>
 				<p>You are not a member of any groups.</p>
 			<% } else { %>
-				<a href="/group" class="button inline">Create group →</a>
+				<% let displayed = [] %>
 				<% for (let context of contexts.member_of) { %>
 					<% if (! context.parent_id) { %>
+						<% displayed.push(context.id) %>
 						<div class="group">
 							<h2><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
 							<% if (latest[context.id]) { %>
@@ -28,6 +43,7 @@
 							<% } %>
 							<% if (context.subgroups && context.subgroups.length > 0) { %>
 								<% for (let subgroup of context.subgroups) { %>
+									<% displayed.push(subgroup.id) %>
 									<div class="subgroup">
 										<h2><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></h2>
 										<% if (latest[subgroup.id]) { %>
@@ -48,19 +64,26 @@
 						</div>
 					<% } %>
 				<% } %>
+				<% for (let context of contexts.member_of) { %>
+					<% if (displayed.indexOf(context.id) == -1) { %>
+						<div class="group">
+							<h2><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
+							<% if (latest[context.id]) { %>
+								<% let msg = latest[context.id] %>
+								<div class="latest">
+									<span class="person"><%= msg.person_name %></span>:
+									<span class="body"><%= msg.content.length > 64 ? (msg.content.substr(0, 64) + '...') : msg.content %></span>
+									<div class="meta timestamp">
+										<a href="/group/<%= context.slug %>/<%= msg.id %>">
+											<%= msg.created %>
+										</a>
+									</div>
+								</div>
+							<% } %>
+						</div>
+					<% } %>
+				<% } %>
 			<% } %>
-		</div>
-		<div class="options">
-			<% if (person.name) { %>
-				<h2>Hello, <%= person.name %>.</h2>
-			<% } else { %>
-				<h2>Hello.</h2>
-			<% } %>
-			<ul>
-				<li><a href="/<%= person.slug %>">View your profile</a>
-				<li><a href="/settings">Settings</a>
-				<li><a href="/logout">Logout</a></li>
-			</ul>
 		</div>
 		<br class="clear">
 	</div>

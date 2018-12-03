@@ -12,7 +12,7 @@ router.get('/person.css', async (req, rsp) => {
 	const person = await db.curr_person(req);
 	if (person) {
 		rsp.send(`
-			.message.person-${person.slug}:hover > .message-options {
+			.message.person-${person.slug} > .message-options {
 				display: block;
 			}
 		`);

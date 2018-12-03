@@ -8,7 +8,9 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
 	<body<% if (content.person) { %> class="logged-in person-<%= content.person.slug %>"<% } %>>
-		<%- include(view, content) %>
+		<div id="view">
+			<%- include(view, content) %>
+		</div>
 		<footer>
 			<div class="content">
 				<ul>
