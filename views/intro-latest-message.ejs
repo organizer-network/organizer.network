@@ -6,7 +6,7 @@
 		<pre class="message-content"><%= msg.content %></pre>
 		<div class="meta timestamp">
 			<a href="/group/<%= context.slug %>/<%= msg.id %>">
-				<%= msg.created %>
+				<%= msg.created.toJSON() %>
 			</a>
 		</div>
 	</div>
