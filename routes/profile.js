@@ -16,22 +16,23 @@ router.use(async (req, rsp) => {
 		}
 
 		if (utils.url_slug_match(req.path.substr(1))) {
-			let person = await db.get_person(req.path.substr(1));
-			if (person) {
+			let profile = await db.get_person(req.path.substr(1));
+			if (profile) {
 				let then = req.query.then;
 				if (then && ! (/^\//)) {
 					then = null;
 				}
 				rsp.render('page', {
-					title: person.name || 'Profile',
+					title: profile.name || 'Profile',
 					view: 'profile',
 					content: {
-						person: person,
+						profile: profile,
+						person: curr,
 						edit: (req.query.edit == '1'),
 						base_url: config.base_url,
 						curr_id: curr_id,
 						then: then,
-						contexts: await db.get_contexts(person)
+						contexts: await db.get_contexts(curr)
 					}
 				});
 				return;

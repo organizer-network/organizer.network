@@ -113,7 +113,11 @@
 	}
 
 	function format_timestamp(el) {
-		var iso_date = $(el).html().trim();
+		var iso_date = $(el).html();
+		if (! iso_date) {
+			return;
+		}
+		iso_date = iso_date.trim();
 		var full_timestamp = moment(iso_date).format('MMM D, YYYY, h:mma');
 		var relative_time = moment(iso_date).fromNow();
 		$(el).attr('data-orig', iso_date);
@@ -123,6 +127,9 @@
 
 	function format_content(el) {
 		var content = $(el).html();
+		if (! content) {
+			return;
+		}
 		$(el).data('content', content);
 		content = content.replace(/https?:\/\/\S+/g, function(url) {
 			var text = url;
@@ -195,11 +202,12 @@
 			if (redirect) {
 				window.location = redirect;
 			} else if (first_update) {
-				window.location = '/group/';
+				window.location = '/';
 			} else {
 				window.location = '/' + rsp.person.slug;
 			}
 		});
+		format_content('.about-person');
 
 		form_handler('#new-group', function(rsp) {
 			window.location = '/group/' + rsp.group.slug;
