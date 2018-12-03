@@ -668,12 +668,12 @@ input[type="submit"]:active,
 	padding: 2em 0;
 }
 
-.person a {
+.message .person a {
 	color: #333;
 	text-decoration: none;
 }
 
-.person a:hover {
+.message .person a:hover {
 	color: #4E6FFF;
 	text-decoration: underline;
 }
