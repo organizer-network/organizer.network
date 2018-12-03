@@ -1,5 +1,5 @@
 // organizer.network
-// v0.1.1 "klatch"
+// v0.1.2 "lunk"
 
 // versioning based on Tom Gauld's A Noisy Alphabet
 // http://myjetpack.tumblr.com/post/65442529656/a-noisy-alphabet-a-new-screenprint-by-tom

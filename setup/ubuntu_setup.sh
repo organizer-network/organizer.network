@@ -10,7 +10,7 @@
 # See also: https://github.com/organizer-network/organizer.network/blob/develop/docs/running/server-setup.md
 
 PROJECT_PATH="/var/www/organizer.network"
-VERSION="klatch"
+VERSION="lunk"
 
 curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add -
