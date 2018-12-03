@@ -254,13 +254,12 @@ input[type="submit"]:active,
 }
 
 #intro .subgroup {
-	margin-top: 1em;
-	margin-left: 2em;
+	margin-top: 1.5em;
+	margin-left: 2.5em;
 }
 
 #intro .timestamp {
 	float: none;
-	margin-top: 0.5em;
 }
 
 #error {
@@ -567,6 +566,10 @@ input[type="submit"]:active,
 
 .reply-form {
 	padding-top: 1.5em;
+}
+
+.reply-form textarea {
+	margin-bottom: 1em;
 }
 
 .reply-form input[type="submit"] {
