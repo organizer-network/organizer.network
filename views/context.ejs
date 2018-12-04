@@ -36,7 +36,7 @@
 			<% if (member) { %>
 				<form id="send" action="/api/send" method="post">
 					<input type="hidden" name="context_id" value="<%= context.id %>">
-					<textarea id="content" name="content" cols="40" rows="4" placeholder="type your message here."></textarea>
+					<textarea id="content" name="content" cols="40" rows="3" placeholder="type your message here."></textarea>
 					<input type="submit" value="Send message →">
 					<div class="response"></div>
 				</form>
