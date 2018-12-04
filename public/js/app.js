@@ -88,7 +88,7 @@
 			}
 
 			$message.find('.revision-select').html(
-				'Revisions → <select id="revisions-' + id + '">' +
+				'revisions → <select id="revisions-' + id + '">' +
 				options +
 				'</select>'
 			);
@@ -106,7 +106,7 @@
 			});
 
 		} else {
-			$link.html('Edited');
+			$link.html('edited');
 			$message.find('.revision-select').html('');
 			$message.find('.revision-content').html('');
 		}
@@ -346,7 +346,7 @@
 							$message.removeClass('editing');
 
 							var revisions = rsp.message.revision_dates.join(', ');
-							$message.find('.revisions').html('<a href="#revisions" class="revisions-link" data-revisions="' + revisions + '">Edited</a>');
+							$message.find('.revisions').html('<a href="#revisions" class="revisions-link" data-revisions="' + revisions + '">edited</a>');
 							$message.find('.revisions-link').click(revisions_handler);
 						}
 					});
