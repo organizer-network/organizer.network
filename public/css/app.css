@@ -98,8 +98,7 @@ pre {
 
 input[type="email"],
 input[type="text"],
-textarea,
-select {
+textarea {
 	display: block;
 	font-family: menlo, monospace;
 	font-size: 16px;
@@ -145,7 +144,7 @@ input[type="submit"],
 .button {
 	display: block;
 	text-transform: uppercase;
-	margin-top: 2em;
+	margin-top: 1em;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 	font-weight: bold;
 	font-size: 14px;
@@ -230,10 +229,11 @@ input[type="submit"]:active,
 }
 
 #intro .latest {
-	margin-top: 1em;
+	margin-top: 0.5em;
 }
 
 #intro .latest .help {
+	color: #6835E7;
 	margin-bottom: 0.5em;
 	text-transform: uppercase;
 }
@@ -247,6 +247,10 @@ input[type="submit"]:active,
 #intro .latest .person:hover {
 	text-decoration: underline;
 	color: #4E6FFF;
+}
+
+#intro .latest .timestamp {
+	margin-left: 5px;
 }
 
 #intro .latest .message-content {
@@ -339,7 +343,6 @@ input[type="submit"]:active,
 	color: #fff;
 	background: #4E6FFF;
 	display: inline-block;
-	margin-top: 0;
 }
 
 #context input[type="submit"]:hover,
@@ -419,10 +422,6 @@ input[type="submit"]:active,
 	margin-top: 2em;
 }
 
-#send textarea {
-	margin-bottom: 1em;
-}
-
 #profile input[type="submit"] {
 	display: inline-block;
 	margin-right: 10px;
@@ -451,8 +450,9 @@ input[type="submit"]:active,
 }
 
 #more-messages.disabled,
-#more-messages.disabled:hover {
-	background: #808080;
+#more-messages.disabled:hover,
+#more-messages.disabled:active {
+	background: #808080 !important;
 	cursor: default;
 }
 
@@ -568,10 +568,6 @@ input[type="submit"]:active,
 	padding-top: 1.5em;
 }
 
-.reply-form textarea {
-	margin-bottom: 1em;
-}
-
 .reply-form input[type="submit"] {
 	background: #6835E7 !important;
 }
@@ -611,10 +607,6 @@ input[type="submit"]:active,
 	text-decoration: underline;
 }
 
-.meta.reply {
-	float: left;
-}
-
 .reply a {
 	color: #999 !important;
 	text-decoration: none;
@@ -637,13 +629,8 @@ input[type="submit"]:active,
 	padding: 5px 10px 3px 10px;
 }
 
-.meta.timestamp,
 .meta.revisions {
-	float: right;
-}
-
-.meta.revisions {
-	margin-right: 1.5em;
+	margin-left: 5px;
 }
 
 .message.show-revisions .timestamp a,
@@ -655,9 +642,8 @@ input[type="submit"]:active,
 	display: none !important;
 }
 
-.message .clear {
-	display: block;
-	clear: both;
+.revision-select {
+	margin-left: 5px;
 }
 
 .heading {
@@ -669,13 +655,18 @@ input[type="submit"]:active,
 }
 
 .message .person a {
-	color: #333;
+	color: #222 !important;
+	font-weight: bold;
 	text-decoration: none;
 }
 
 .message .person a:hover {
-	color: #4E6FFF;
+	color: #4E6FFF !important;
 	text-decoration: underline;
+}
+
+.message .timestamp a {
+	margin-left: 5px;
 }
 
 .radio-group {
@@ -723,10 +714,6 @@ input[type="submit"]:active,
 }
 
 #topic-input {
-	margin-bottom: 1em;
-}
-
-.topic-revision {
 	margin-bottom: 1em;
 }
 

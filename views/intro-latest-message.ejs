@@ -3,11 +3,11 @@
 	<div class="latest">
 		<div class="help">Latest message</div>
 		<a href="/<%= msg.person_slug %>" class="person"><%= msg.person_name %></a>
-		<pre class="message-content"><%= msg.content %></pre>
-		<div class="meta timestamp">
+		<span class="meta timestamp">
 			<a href="/group/<%= context.slug %>/<%= msg.id %>">
 				<%= msg.created.toJSON() %>
 			</a>
-		</div>
+		</span>
+		<pre class="message-content"><%= msg.content %></pre>
 	</div>
 <% } %>
