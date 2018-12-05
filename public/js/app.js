@@ -165,11 +165,22 @@
 			return;
 		}
 		iso_date = iso_date.trim();
-		var full_timestamp = moment(iso_date).format('MMM D, YYYY, h:mma');
-		var relative_time = moment(iso_date).fromNow();
+		var full_timestamp = moment(iso_date).format('llll');
+
+		var formatted = moment(iso_date).format('ll');
+		var date = moment(iso_date).format('YYYYMMDD');
+		var today = moment().format('YYYYMMDD');
+		var yesterday = moment().subtract(1, 'days').format('YYYYMMDD');
+
+		if (date == today) {
+			formatted = moment(iso_date).format('LT');
+		} else if (date == yesterday) {
+			formatted = 'yesterday';
+		}
+
 		$(el).attr('data-orig', iso_date);
 		$(el).attr('title', full_timestamp);
-		$(el).html(relative_time);
+		$(el).html(formatted);
 	}
 
 	function format_content(el) {
