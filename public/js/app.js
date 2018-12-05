@@ -42,6 +42,11 @@
 	}
 
 	function is_mobile() {
+
+		// This is apparently deprecated, and should be replaced. This test is
+		// currently used to decide whether to show keyboard shortcut hints.
+		// (20181205/dphiffer)
+
 		return typeof window.orientation !== 'undefined';
 	}
 
