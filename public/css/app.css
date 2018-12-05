@@ -135,6 +135,11 @@ textarea {
 	line-height: 1.5em;
 }
 
+.keyboard-shortcut {
+	float: right;
+	margin-top: 10px;
+}
+
 select {
 	display: inline-block;
 	width: auto;
