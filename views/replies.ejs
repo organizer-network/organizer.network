@@ -12,6 +12,10 @@
 			<input type="hidden" name="in_reply_to" value="<%= message.id %>">
 			<input type="hidden" name="context_id" value="<%= context.id %>">
 			<textarea id="content" name="content" cols="80" rows="3" placeholder="type your message here."></textarea>
+			<div class="keyboard-shortcut hidden">
+				<div class="help macos hidden">⌘ + enter to send message</div>
+				<div class="help other hidden">ctrl + enter to send message</div>
+			</div>
 			<input type="submit" value="Send reply →">
 			<div class="response"></div>
 		</form>

@@ -36,6 +36,48 @@
 		});
 	}
 
+	function is_macos() {
+		return navigator && navigator.userAgent &&
+		       navigator.userAgent.indexOf('Macintosh') != -1;
+	}
+
+	function is_mobile() {
+		return typeof window.orientation !== 'undefined';
+	}
+
+	function textarea_handler(query) {
+
+		var $textarea = $(query).find('textarea');
+
+		if (is_macos()) {
+			var $msg = $(query).find('.keyboard-shortcut .help.macos');
+			$msg.removeClass('hidden');
+		} else if (! is_mobile()) {
+			var $msg = $(query).find('.keyboard-shortcut .help.other');
+			$msg.removeClass('hidden');
+		}
+
+		$textarea.focus(function(e) {
+			$(query).find('.keyboard-shortcut').removeClass('hidden');
+		});
+
+		$textarea.blur(function(e) {
+			$(query).find('.keyboard-shortcut').addClass('hidden');
+		});
+
+		$textarea.keydown(function(e) {
+			var event = e.originalEvent;
+			if (is_macos() &&
+			    event.metaKey && event.key == 'Enter') {
+				// Cmd + Enter on macOS
+				$(query).submit();
+			} else if (event.ctrlKey && event.key == 'Enter') {
+				// Ctrl + Enter on other OS's
+				$(query).submit();
+			}
+		});
+	}
+
 	function reply_form_handler(rsp, el) {
 		$(el).find('textarea[name="content"]').val('');
 		$.get('/api/message/' + rsp.message.id + '?format=html', function(rsp) {
@@ -157,6 +199,7 @@
 						$('#reply-' + id).find('.timestamp a').each(function(index, el) {
 							format_timestamp(el);
 						});
+						textarea_handler($('#reply-' + id));
 						form_handler($('#reply-' + id).find('form'), reply_form_handler);
 					})
 					.fail(function(rsp) {
@@ -183,6 +226,7 @@
 			$('#login .controls').addClass('hidden');
 		});
 
+		textarea_handler('#send');
 		form_handler('#send', function(rsp) {
 			$('#send .response').html('Your message has been sent.');
 			$('#send textarea[name="content"]').val('');
