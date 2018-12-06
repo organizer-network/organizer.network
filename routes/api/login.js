@@ -2,6 +2,7 @@ const config = require('../../config');
 const db = require('../../lib/db');
 const utils = require('../../lib/utils');
 const notify = require('../../lib/notify');
+const instance = require('../../lib/instance');
 
 const express = require('express');
 const router = express.Router();
@@ -79,7 +80,7 @@ router.post('/api/login', async (req, rsp) => {
 		}
 
 		const email = utils.normalize_email(req.body.email);
-		const subject = 'organizer.network login link';
+		const subject = `${instance.name} login link`;
 		const body = `Hello,
 
 Follow this link to login:

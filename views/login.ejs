@@ -3,10 +3,10 @@
 		<div class="content">
 			<% if (invite) { %>
 				<h1>Join <%= invite.context.name %></h1>
-				<h2 class="tagline"><%= invite.person.name %> invited you to join a group on organizer.network</h2>
+				<h2 class="tagline"><%= invite.person.name %> invited you to join a group on <%= instance.name %>.</h2>
 			<% } else { %>
-				<h1>Organizer Network</h1>
-				<h2 class="tagline">Tools and strategies for social justice organizing.</h2>
+				<h1><%= instance.name %></h1>
+				<h2 class="tagline"><%= instance.tagline %></h2>
 			<% } %>
 		</div>
 	</div>
@@ -31,8 +31,8 @@
 			<div class="step"><span class="number">3</span> Organize and raise hell!</div>
 		</form>
 		<div id="about">
-			<h2>About Organizer Network</h2>
-			We are a group of political organizers gathering on a decentralized computer network, working on a variety of social justice issues. Join us!
+			<h2>About <%= instance.name %></h2>
+			<%= instance.about %>
 		</div>
 		<br class="clear">
 	</div>

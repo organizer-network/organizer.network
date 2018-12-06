@@ -10,11 +10,10 @@ utils.check_config();
 const config = require('./config');
 const db = require('./lib/db');
 const notify = require('./lib/notify');
+const instance = require('./lib/instance');
 
-// server
 const express = require('express');
 const app = express();
-
 const body_parser = require('body-parser');
 const session = require('express-session');
 const pg_session = require('connect-pg-simple')(session);

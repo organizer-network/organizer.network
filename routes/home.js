@@ -1,6 +1,7 @@
 const config = require('../config');
 const db = require('../lib/db');
 const utils = require('../lib/utils');
+const instance = require('../lib/instance');
 
 const express = require('express');
 const router = express.Router();
@@ -20,6 +21,7 @@ router.get('/', async (req, rsp) => {
 				title: 'Welcome',
 				view: 'login',
 				content: {
+					instance: instance,
 					invite: null,
 					then: then
 				}
@@ -65,6 +67,7 @@ router.get('/', async (req, rsp) => {
 			title: 'Hello',
 			view: 'home',
 			content: {
+				instance: instance,
 				person: person,
 				contexts: contexts,
 				latest: latest,
