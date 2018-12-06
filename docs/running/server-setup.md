@@ -11,7 +11,7 @@ The public version of the [organizer.network](https://organizer.network/) websit
 
 ## Step One : setting up the server (using DigitalOcean)
 * Create a [Digital Ocean](https://www.digitalocean.com/) account if you do not already have one.
-* Create a new Ubuntu Droplet. The smallest size should be sufficient. The cheapest one if $5/mo if you keep it running constantly.
+* Create a new Ubuntu Droplet. The smallest size should be sufficient. The cheapest one is $5/mo if you keep it running constantly.
   * Create button -> Droplets
   * Choose an image -> Ubuntu
   * Choose a size -> $5/mo
