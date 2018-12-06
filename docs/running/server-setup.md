@@ -1,12 +1,12 @@
 # Tutorial for setting up your own instance of organizer.network
 
-organizer.network is a tool for organizers who might want to have more control over their tools and data. at its core it is open and decentralized messaging platform. the structure of organizer.net allows organizers to create private groups for their community, in order to exchange information.
+organizer.network is a tool for organizers who might want to have more control over their tools and data. at its core it is open and decentralized messaging platform. the structure of organizer.network allows organizers to create private groups for their community, in order to exchange information.
 
 The public version of the [organizer.network](https://organizer.network/) website is run on a [pm2](http://pm2.keymetrics.io/) behind an [nginx reverse proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/). Below you will find instructions for setting this up your own Digital Ocean server.
 
 ## Disclaimers
 * This tutorial will be based on DigitalOcean. This is an easy to use service, but **it costs money**. You are welcome to use your preferred hosting service (and to make a small guide for it!)
-* We also make use of [SendGrid](https://sendgrid.com), a free email service
+* We also make use of [SendGrid](https://sendgrid.com), an email-sending service that offers a free plan that allows for sending [100 messages/day](https://sendgrid.com/pricing/)
 * This tutorial relies heavily on the terminal
 
 ## Step One : setting up the server (using DigitalOcean)
@@ -23,7 +23,7 @@ The public version of the [organizer.network](https://organizer.network/) websit
 * DigitalOcean will ask you to upload a **copy of your SSH public key**.
   * You can check to see if you already have a public key by running this in your terminal: `ls -al ~/.ssh`
   * You can create a new SSH key by following [this GitHub tutorial](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
-  * Copy the public key to your clipboard. Mac users can do this by running: `pbcopy < ~/.ssh/id_rsa.pub` 
+  * Copy the public key to your clipboard. Mac users can do this by running: `pbcopy < ~/.ssh/id_rsa.pub`
   * And paste it into DigitalOcean
 
 
@@ -43,7 +43,7 @@ The public version of the [organizer.network](https://organizer.network/) websit
 * Accept the SSH key fingerprint by typing `yes`. You only need to do this once.
 
 ### System update
-* `$` `apt update` : Update the system packages on your DigitalOcean instance. 
+* `$` `apt update` : Update the system packages on your DigitalOcean instance.
 * `$` `apt upgrade -y` : Upgrade all of the packages. You might get a pink pop up screen warning you about updates. You can just press the enter key to select `keep the local version currently installed`
 ![Warning popup](img/pink.png)
 * `$` `apt install -y fail2ban` : install `fail2ban` to protect against SSH brute force attacks.
@@ -104,7 +104,7 @@ Now, back on the terminal:
 * `$` `pm2 start` : Start server
 
 
-Now you're ready to roll. 
+Now you're ready to roll.
 
 Go to **http://[ip address]** and start organizing!
 
