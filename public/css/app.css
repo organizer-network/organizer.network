@@ -194,7 +194,6 @@ input[type="submit"]:active,
 
 .message.editing .button,
 .message.editing input[type="submit"] {
-	margin-top: 0;
 	margin-bottom: 0.5em;
 }
 
@@ -237,7 +236,21 @@ input[type="submit"]:active,
 	margin-top: 0.5em;
 }
 
-#intro .latest .help {
+#intro .latest .message {
+	margin-top: 0;
+	border-color: #6835E7;
+}
+
+#intro .latest .replies .message {
+	margin-top: 1em;
+}
+
+#intro .message-list {
+	border-bottom: 0;
+	margin: 0;
+}
+
+#intro .latest > .help {
 	color: #6835E7;
 	margin-bottom: 0.5em;
 	text-transform: uppercase;
@@ -364,7 +377,7 @@ input[type="submit"]:active,
 	color: #6835E7;
 }
 
-#message-list {
+.message-list {
 	margin: 2em 0;
 	padding-bottom: 1em;
 	border-bottom: 2px solid #333;
