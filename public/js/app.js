@@ -91,17 +91,17 @@
 			var $message = $(el).closest('.message');
 			var $link = $message.find('> .reply a');
 
-			$replies.find('.message-list').append(rsp);
-			var $msg_content = $replies.find('.message-list .message:last-child .message-content');
+			$replies.find('.replies-list').append(rsp);
+			var $msg_content = $replies.find('.replies-list .message:last-child .message-content');
 			format_content($msg_content);
 
-			var $timestamp = $replies.find('.message-list .message:last-child .timestamp a');
+			var $timestamp = $replies.find('.replies-list .message:last-child .timestamp a');
 			format_timestamp($timestamp);
 
 			$('#members li:eq(0)').before($('#members li.curr-person'));
 			$(el).find('.response').html('');
 
-			var count = $replies.find('.message-list .message').length;
+			var count = $replies.find('.replies-list .message').length;
 			var label = (count == 1) ? ' reply' : ' replies';
 
 			$link.html(count + label);
@@ -215,7 +215,7 @@
 						$('#reply-' + id).find('.timestamp a').each(function(index, el) {
 							format_timestamp(el);
 						});
-						textarea_handler($('#reply-' + id));
+						textarea_handler($('#reply-' + id).find('form'));
 						form_handler($('#reply-' + id).find('form'), reply_form_handler);
 					})
 					.fail(function(rsp) {
@@ -247,11 +247,11 @@
 			$('#send .response').html('Your message has been sent.');
 			$('#send textarea[name="content"]').val('');
 			$.get('/api/message/' + rsp.message.id + '?format=html', function(rsp) {
-				$('#message-list .page:first-child').prepend(rsp);
-				format_content($('#message-list .message:first-child .message-content'));
-				format_timestamp($('#message-list .message:first-child .timestamp a'));
+				$('.message-list .page:first-child').prepend(rsp);
+				format_content($('.message-list .message:first-child .message-content'));
+				format_timestamp($('.message-list .message:first-child .timestamp a'));
 				$('#members li:eq(0)').before($('#members li.curr-person'));
-				setup_replies('#message-list .message:first-child .reply a');
+				setup_replies('.message-list .message:first-child .reply a');
 			});
 			$('#no-messages').remove();
 		});
@@ -320,6 +320,7 @@
 			$('.page > .message > .reply a').click(function(e) {
 				e.preventDefault();
 			});
+			textarea_handler($('.reply-form'));
 			form_handler($('.reply-form'), reply_form_handler);
 		} else {
 			setup_replies('.reply a');
@@ -335,20 +336,20 @@
 			var before_id = $('#more-messages').data('before-id');
 			var group = $('#more-messages').data('group');
 			$.get('/api/group/' + group + '?before_id=' + before_id, function(rsp) {
-				$('#message-list').append(rsp);
-				$('#message-list .page:last-child .message-content').each(function(index, el) {
+				$('.message-list').append(rsp);
+				$('.message-list .page:last-child .message-content').each(function(index, el) {
 					format_content(el);
 				});
-				$('#message-list .page:last-child .timestamp a').each(function(index, el) {
+				$('.message-list .page:last-child .timestamp a').each(function(index, el) {
 					format_timestamp(el);
 				});
-				setup_replies('#message-list .page:last-child .reply a');
+				setup_replies('.message-list .page:last-child .reply a');
 
-				var $last = $('#message-list .page:last-child .message:last-child');
+				var $last = $('.message-list .page:last-child .message:last-child');
 				$('#more-messages').data('before-id', $last.data('id'));
 
 				var total = parseInt($('#more-messages').data('total-messages'));
-				if ($('#message-list .message').length == total) {
+				if ($('.message-list .message').length == total) {
 					$('#more-messages').addClass('disabled');
 					$('#more-messages').html('End of messages');
 				}
@@ -362,7 +363,7 @@
 		}
 
 		if ($(document.body).hasClass('logged-in')) {
-			$('#message-list').click(function(e) {
+			$('.message-list').click(function(e) {
 				if ($(e.target).hasClass('delete')) {
 					if (! confirm('Are you sure you want to delete your message?')) {
 						return;

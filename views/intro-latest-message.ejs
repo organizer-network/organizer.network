@@ -1,13 +1,8 @@
 <% if (latest[context.id]) { %>
-	<% let msg = latest[context.id] %>
 	<div class="latest">
 		<div class="help">Latest message</div>
-		<a href="/<%= msg.person_slug %>" class="person"><%= msg.person_name %></a>
-		<span class="meta timestamp">
-			<a href="/group/<%= context.slug %>/<%= msg.id %>">
-				<%= msg.created.toJSON() %>
-			</a>
-		</span>
-		<pre class="message-content"><%= msg.content %></pre>
+		<%- include('message', {
+			message: latest[context.id]
+		}) %>
 	</div>
 <% } %>

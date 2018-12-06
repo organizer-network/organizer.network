@@ -6,11 +6,11 @@
 		</a>
 		<span class="revision-select"></span>
 	</span>
-	<% if (message.revisions.length > 1) { %>
-		<span class="meta revisions">
+	<span class="meta revisions">
+		<% if (message.revisions.length > 1) { %>
 			<a href="#revisions" class="revisions-link" data-revisions="<%= message.revision_dates.join(', ') %>">edited</a>
-		</span>
-	<% } %>
+		<% } %>
+	</span>
 	<div class="message-options meta">
 		<a href="#edit" class="edit" title="Edit this message">Edit</a>
 		<a href="#delete" class="delete" title="Delete this message">&times;</a>
@@ -18,18 +18,14 @@
 	<pre class="message-content"><%= message.content %></pre>
 	<div class="revision-content"></div>
 	<div class="meta reply">
-		<% if (member || message.reply_count > 0) { %>
-			<a href="/group/<%= context.slug %>/<%= message.id %>#reply-<%= message.id %>" data-id="<%= message.id %>"<% if (message.replies && message.reply_count > 0) { %> class="selected"<% } %>>
-		<% } %>
-		<%= message.reply_count %>
-		<% if (message.reply_count == 1) { %>
-			reply
-		<% } else { %>
-			replies
-		<% } %>
-		<% if (member || message.reply_count > 0) { %>
-			</a>
-		<% } %>
+		<a href="/group/<%= context.slug %>/<%= message.id %>#reply-<%= message.id %>" data-id="<%= message.id %>"<% if (message.replies && message.reply_count > 0) { %> class="selected"<% } %>>
+			<%= message.reply_count %>
+			<% if (message.reply_count == 1) { %>
+				reply
+			<% } else { %>
+				replies
+			<% } %>
+		</a>
 	</div>
 	<div id="reply-<%= message.id %>">
 		<% if (message.replies) { %>

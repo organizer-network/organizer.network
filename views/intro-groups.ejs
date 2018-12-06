@@ -4,10 +4,12 @@
 		<% displayed.push(context.id) %>
 		<div class="group">
 			<h2><a href="/group/<%= context.slug %>"><%= context.name %></a></h2>
-			<%- include('intro-latest-message', {
-				latest: latest,
-				context: context
-			}) %>
+			<div class="message-list">
+				<%- include('intro-latest-message', {
+					latest: latest,
+					context: context
+				}) %>
+			</div>
 			<% if (context.subgroups && context.subgroups.length > 0) { %>
 				<% for (let subgroup of context.subgroups) { %>
 					<% displayed.push(subgroup.id) %>
