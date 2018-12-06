@@ -47,6 +47,8 @@ sudo ufw allow 443
 sudo ufw allow 22
 yes | sudo ufw enable
 
+$PROJECT_PATH/bin/install.sh
+
 echo "Next steps:"
 echo "  * Edit config.js"
 echo "  * Start the service: pm2 start"
