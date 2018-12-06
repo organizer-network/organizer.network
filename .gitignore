@@ -1,6 +1,8 @@
 .DS_Store
 /node_modules
 /config.js
+/instance.yml
+/setup/nginx.conf
 /ssl/*.pem
 /db/*/*.sql
 !/db/schema/*.sql
