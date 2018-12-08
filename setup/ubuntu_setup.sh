@@ -9,8 +9,8 @@
 #
 # See also: https://github.com/organizer-network/organizer.network/blob/develop/docs/running/server-setup.md
 
-PROJECT_PATH="/var/www/organizer.network"
-VERSION="lunk"
+WHOAMI=`python -c 'import os, sys; print os.path.realpath(sys.argv[1])' $0`
+PROJECT_PATH=`dirname $WHOAMI`
 
 curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add -
@@ -29,14 +29,7 @@ sudo -u postgres createuser -d `whoami`
 sudo -u postgres createdb `whoami`
 sudo systemctl restart postgresql
 
-cd "$PROJECT_PATH"
-npm install
-
-cd "$PROJECT_PATH/db"
-make setup
-
-cd "$PROJECT_PATH"
-cp config.js.example config.js
+"$PROJECT_PATH/bin/install.sh"
 
 sudo rm /etc/nginx/sites-enabled/default
 sudo ln -s "$PROJECT_PATH/setup/nginx.conf" /etc/nginx/sites-enabled/organizer.network
@@ -47,8 +40,7 @@ sudo ufw allow 443
 sudo ufw allow 22
 yes | sudo ufw enable
 
-"$PROJECT_PATH/bin/install.sh"
-
 echo "Next steps:"
 echo "  * Edit config.js"
+echo "  * Edit instance.yml"
 echo "  * Start the service: pm2 start"
