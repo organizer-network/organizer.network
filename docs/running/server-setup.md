@@ -76,6 +76,7 @@ Connection to [ip address] closed.
 * `$` ``sudo chown `whoami`:`whoami` /var/www/organizer.network`` : Change ownership of the new folder
 * `$` `cd /var/www/organizer.network` : Go to the new folder
 * `$` `git clone https://github.com/organizer-network/organizer.network.git .` : Clone the repository into the new folder
+* `$ git checkout master` : checkout the master (release) branch
 
 ### Install the packages
 * `$` `cd setup` : Go to the setup folder
