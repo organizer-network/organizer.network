@@ -6,6 +6,8 @@ PROJECT=`dirname $WHOAMI`
 cd "$PROJECT"
 pm2 restart ecosystem.config.js --env maintenance
 
+npm install
+
 cd "$PROJECT/db"
 make migrate
 
