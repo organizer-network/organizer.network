@@ -49,8 +49,7 @@
 			<% } %>
 			<div class="message-list">
 				<%- include('message-page', {
-					context: context,
-					member: member
+					context: context
 				}) %>
 				<% if (context.total_messages == 0) { %>
 					<h2 id="no-messages">Nobody has sent messages here yet.</h2>

@@ -41,8 +41,7 @@ router.get('/api/group/:slug', async (req, rsp) => {
 		await db.add_context_details(context, before_id);
 
 		rsp.render('message-page', {
-			context: context,
-			member: member
+			context: context
 		});
 
 	} catch(err) {
