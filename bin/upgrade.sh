@@ -6,6 +6,10 @@ PROJECT=`dirname $BIN`
 
 cd "$PROJECT"
 
+git stash
+git checkout master
+git pull origin master
+
 if [ ! -f instance.yml ] ; then
 	cp instance.yml.example instance.yml
 fi
