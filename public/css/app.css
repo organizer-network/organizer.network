@@ -46,6 +46,19 @@ h2.group {
 	margin-top: 1.5em;
 }
 
+.message-list .page:first-child h2.group:first-child {
+	margin-top: 0;
+}
+
+h2.group a {
+	text-decoration: none;
+}
+
+h2.group a:hover {
+	color: #4E6FFF;
+	text-decoration: underline;
+}
+
 ul {
 	margin: 1em 0;
 }
