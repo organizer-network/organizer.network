@@ -81,6 +81,8 @@
 				$(query).submit();
 			}
 		});
+
+		autosize($textarea);
 	}
 
 	function reply_form_handler(rsp, el) {

@@ -20,6 +20,7 @@
   "homepage": "https://github.com/organizer-network/organizer.network#readme",
   "dependencies": {
     "@sendgrid/mail": "^6.3.1",
+    "autosize": "^4.0.2",
     "body-parser": "^1.18.3",
     "connect-pg-simple": "^5.0.0",
     "ejs": "^2.6.1",
