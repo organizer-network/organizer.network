@@ -29,7 +29,7 @@ router.get('/', async (req, rsp) => {
 		}
 
 		let contexts = await db.get_contexts(person);
-		let latest = await db.get_latest_messages(contexts.member_of);
+		let latest_messages = await db.get_latest_messages(contexts.member_of);
 
 		let by_last_updated = (a, b) => {
 			if (a.last_updated > b.last_updated) {
@@ -41,15 +41,9 @@ router.get('/', async (req, rsp) => {
 
 		for (let group of contexts.member_of) {
 			group.last_updated = group.created;
-			if (latest[group.id]) {
-				group.last_updated = latest[group.id].created;
-			}
 			if (group.subgroups) {
 				for (let subgroup of group.subgroups) {
 					subgroup.last_updated = subgroup.created;
-					if (latest[subgroup.id]) {
-						subgroup.last_updated = latest[subgroup.id].created;
-					}
 					group.last_updated = Math.max(group.last_updated, subgroup.last_updated);
 				}
 				group.subgroups.sort(by_last_updated);
@@ -70,7 +64,7 @@ router.get('/', async (req, rsp) => {
 				instance: instance,
 				person: person,
 				contexts: contexts,
-				latest: latest,
+				latest_messages: latest_messages,
 				base_url: config.base_url,
 				then: then
 			}

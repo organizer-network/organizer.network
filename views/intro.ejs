@@ -6,7 +6,7 @@
 		</div>
 	</div>
 	<div class="content">
-		<div class="options">
+		<div id="sidebar">
 			<% if (person.name) { %>
 				<h2>Hello, <%= person.name %>.</h2>
 			<% } else { %>
@@ -17,16 +17,39 @@
 				<li><a href="/settings">Settings</a>
 				<li><a href="/logout">Logout</a></li>
 			</ul>
-		</div>
-		<div class="contexts">
-			<a href="/group" class="button inline">Create group →</a>
+			<h2 class="headroom">Groups</h2>
+			<p><a href="/group" class="button inline">Create group →</a></p>
 			<% if (! contexts.member_of.length) { %>
 				<p>You are not a member of any groups.</p>
 			<% } else { %>
-				<%- include('intro-groups', {
-					groups: contexts.member_of
-				}) %>
+				<ul>
+				<% for (let group of contexts.member_of) { %>
+					<% if (! group.parent_id) { %>
+						<li><a href="/group/<%= group.slug %>"><%= group.name %></a>
+							<% if (group.subgroups.length > 0) { %>
+								<ul>
+									<% for (let subgroup of group.subgroups) { %>
+										<li><a href="/group/<%= subgroup.slug %>"><%= subgroup.name %></a></li>
+									<% } %>
+								</ul>
+							<% } %>
+						</li>
+					<% } %>
+				<% } %>
+				</ul>
 			<% } %>
+		</div>
+		<div id="main">
+			<h1>Latest messages</h1>
+			<div class="message-list">
+				<%- include('message-page', {
+					show_group: true,
+					context: latest_messages
+				}) %>
+				<% if (latest_messages.total_messages == 0) { %>
+					<h2 id="no-messages">There are no messages for you to see here.</h2>
+				<% } %>
+			</div>
 		</div>
 		<br class="clear">
 	</div>

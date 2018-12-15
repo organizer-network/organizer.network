@@ -1,8 +1,11 @@
 <div class="page">
 	<% for (let message of context.messages) { %>
+		<% if (typeof show_group != 'undefined') { %>
+			<% let group = context.groups[message.context_id] %>
+			<h2 class="group"><a href="/group/<%= group.slug %>"><%= group.name %></a></h2>
+		<% } %>
 		<%- include('message', {
-			message: message,
-			member: member
+			message: message
 		}) %>
 	<% } %>
 </div>

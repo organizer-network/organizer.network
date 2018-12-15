@@ -42,6 +42,10 @@ h2 {
 	font-style: italic;
 }
 
+h2.group {
+	margin-top: 1.5em;
+}
+
 ul {
 	margin: 1em 0;
 }
@@ -218,12 +222,12 @@ input[type="submit"]:active,
 	background-size: 100vw auto;
 }
 
-#intro .options {
+#intro .sidebar {
 	width: 100%;
 	padding: 1em 0 0 0;
 }
 
-#intro .contexts {
+#intro .messages {
 	width: 100%;
 	padding: 1em 0 0 0;
 }
@@ -344,15 +348,15 @@ input[type="submit"]:active,
 	color: #4E6FFF;
 }
 
-#context #sidebar {
+#sidebar {
 	margin-top: 2em;
 }
 
-#context #sidebar h2 {
+#sidebar h2 {
 	margin-top: 1.5em;
 }
 
-#context #sidebar h2:first-child {
+#sidebar h2:first-child {
 	margin-top: 0;
 }
 
@@ -819,7 +823,7 @@ nav .clear {
 		padding-bottom: 5em;
 	}
 
-	#context #sidebar {
+	#sidebar {
 		margin-top: 0;
 		float: right;
 		width: calc(33% - 1em);
@@ -840,7 +844,7 @@ nav .clear {
 		float: left;
 	}
 
-	#intro .options {
+	#intro .sidebar {
 		width: 33%;
 		float: right;
 	}
