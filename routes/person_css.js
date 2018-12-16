@@ -15,10 +15,6 @@ router.get('/person.css', async (req, rsp) => {
 			.message.person-${person.slug} > .message-options {
 				display: block;
 			}
-
-			#intro .message.person-${person.slug} > .message-options {
-				display: none;
-			}
 		`);
 	} else {
 		rsp.send('');
