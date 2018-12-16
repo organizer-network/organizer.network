@@ -263,7 +263,6 @@ input[type="submit"]:active,
 }
 
 #intro .message-list {
-	border-bottom: 0;
 	margin: 0;
 }
 
@@ -397,7 +396,7 @@ input[type="submit"]:active,
 .message-list {
 	margin: 2em 0;
 	padding-bottom: 1em;
-	border-bottom: 2px solid #333;
+	border-bottom: 2px dotted #333;
 }
 
 #context.thread #message-list {
@@ -562,7 +561,7 @@ input[type="submit"]:active,
 
 .message {
 	position: relative;
-	border-top: 2px solid #333;
+	border-top: 2px dotted #333;
 	padding-top: 1em;
 	margin-top: 1em;
 }

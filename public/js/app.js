@@ -285,12 +285,6 @@
 			window.location = $('input[name="then"]').val();
 		});
 
-		/*$("#send #content").keyup(function(e) {
-			while ($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css("borderTopWidth")) + parseFloat($(this).css("borderBottomWidth"))) {
-				$(this).height($(this).height() + 1);
-			};
-		});*/
-
 		$('.message-content').each(function(index, el) {
 			format_content(el);
 		});
@@ -367,6 +361,7 @@
 		if ($(document.body).hasClass('logged-in')) {
 			$('.message-list').click(function(e) {
 				if ($(e.target).hasClass('delete')) {
+					e.preventDefault();
 					if (! confirm('Are you sure you want to delete your message?')) {
 						return;
 					}
@@ -379,10 +374,21 @@
 						    $('#context').data('id') == id) {
 							window.location = $('#group-link').attr('href');
 						} else if (rsp.ok) {
+							if ($('#' + id).prev('h2.group') &&
+							    $('#' + id).next('h2.group')) {
+
+								// Deleting a homepage message with only this
+								// one item in the group, so remove the group
+								// h2 as well. (20181216/dphiffer)
+
+								$('#' + id).prev('h2.group').remove();
+
+							}
 							$('#' + id).remove();
 						}
 					});
 				} else if ($(e.target).hasClass('edit')) {
+					e.preventDefault();
 					var id = $(e.target).closest('.message').attr('id');
 					id = parseInt(id);
 					var $message = $(e.target).closest('.message');
