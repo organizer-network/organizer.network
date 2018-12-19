@@ -330,8 +330,8 @@
 			}
 
 			var before_id = $('#more-messages').data('before-id');
-			var group = $('#more-messages').data('group');
-			$.get('/api/group/' + group + '?before_id=' + before_id, function(rsp) {
+			var path = $('#more-messages').data('path');
+			$.get('/api/messages' + path + '?before_id=' + before_id, function(rsp) {
 				$('.message-list').append(rsp);
 				$('.message-list .page:last-child .message-content').each(function(index, el) {
 					format_content(el);

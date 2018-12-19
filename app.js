@@ -59,7 +59,7 @@ app.use(require('./routes/api/login'));           // /api/login
                                                   // /login/:slug
                                                   // /logout
 app.use(require('./routes/api/group'));           // /api/group
-app.use(require('./routes/api/group_messages'));  // /api/group/:slug
+app.use(require('./routes/api/messages'));        // /api/messages/:slug
 app.use(require('./routes/api/send'));            // /api/send
 app.use(require('./routes/api/reply'));           // /api/reply
 app.use(require('./routes/api/profile'));         // /api/profile

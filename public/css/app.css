@@ -263,7 +263,7 @@ input[type="submit"]:active,
 }
 
 #intro .message-list {
-	margin: 0;
+	margin-top: 0;
 }
 
 #intro .latest > .help {

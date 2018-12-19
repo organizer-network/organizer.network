@@ -50,6 +50,12 @@
 						<h2 id="no-messages">There are no messages for you to see here.</h2>
 					<% } %>
 				</div>
+				<% if (latest_messages.total_messages > latest_messages.messages.length) { %>
+					<% let last_message = latest_messages.messages.pop() %>
+					<a href="#more-messages" id="more-messages" class="button" data-before-id="<%= last_message.id %>" data-path="/" data-total-messages="<%= latest_messages.total_messages %>">More messages →</a>
+				<% } else { %>
+					<a href="#more-messages" id="more-messages" class="button disabled">End of messages</a>
+				<% } %>
 			</div>
 			<br class="clear">
 		</div>
