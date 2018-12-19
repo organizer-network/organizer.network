@@ -3,7 +3,7 @@ const db = require('../../lib/db');
 const express = require('express');
 const router = express.Router();
 
-router.get('/api/group/:slug', async (req, rsp) => {
+router.get(['/api/messages', '/api/messages/:slug'], async (req, rsp) => {
 
 	try {
 
@@ -16,22 +16,26 @@ router.get('/api/group/:slug', async (req, rsp) => {
 			});
 		}
 
-		let context = await db.get_context(req.params.slug);
+		let context;
+		if (req.params.slug) {
+			context = await db.get_context(req.params.slug);
+			if (! context) {
+				return rsp.status(404).send({
+					ok: false,
+					error: 'Context not found.'
+				});
+			}
 
-		if (! context) {
-			return rsp.status(404).send({
-				ok: false,
-				error: 'Group not found.'
-			});
-		}
-
-		let member = await db.get_member(person, context.id);
-
-		if (! member) {
-			return rsp.status(403).send({
-				ok: false,
-				error: 'You are not authorized to load that group content.'
-			});
+			let member = await db.get_member(person, context.id);
+			if (! member) {
+				return rsp.status(403).send({
+					ok: false,
+					error: 'You are not authorized to load that group content.'
+				});
+			}
+		} else {
+			let contexts = await db.get_contexts(person);
+			context = await db.get_latest_messages(contexts.member_of);
 		}
 
 		let before_id = null;

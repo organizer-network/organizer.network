@@ -56,12 +56,8 @@
 				<% } %>
 			</div>
 			<% if (context.total_messages > context.messages.length) { %>
-				<% if (! member) { %>
-					<a href="#more-messages" id="more-messages" class="button disabled">Login to view more</a>
-				<% } else { %>
-					<% let last_message = context.messages.pop() %>
-					<a href="#more-messages" id="more-messages" class="button" data-before-id="<%= last_message.id %>" data-group="<%= context.slug %>" data-total-messages="<%= context.total_messages %>">More messages →</a>
-				<% } %>
+				<% let last_message = context.messages.pop() %>
+				<a href="#more-messages" id="more-messages" class="button" data-before-id="<%= last_message.id %>" data-path="/<%= context.slug %>" data-total-messages="<%= context.total_messages %>">More messages →</a>
 			<% } else { %>
 				<a href="#more-messages" id="more-messages" class="button disabled">End of messages</a>
 			<% } %>
