@@ -2,6 +2,7 @@ const config = require('../config');
 const db = require('../lib/db');
 const utils = require('../lib/utils');
 
+const instance = require('../lib/instance');
 const express = require('express');
 const router = express.Router();
 
@@ -25,7 +26,8 @@ router.get('/join/:slug', async (req, rsp) => {
 			rsp.render('page', {
 				title: 'Welcome',
 				view: 'login',
-				content: {
+			    content: {
+				instance: instance,
 					invite: invite,
 					then: then
 				}
