@@ -70,6 +70,14 @@ Uncomment the `smtp` setting and update the keys with your personal email creden
 * [How To Use Google's SMTP Server](https://www.digitalocean.com/community/tutorials/how-to-use-google-s-smtp-server)
 * [Sign up for a new SendGrid account](https://signup.sendgrid.com/)
 
+Make a copy of the example instance file:
+
+```
+$ cp instance.yml.example instance.yml
+```
+
+Edit the instance file to your liking.
+
 ## Database setup
 
 Make sure you have an instance of PostgreSQL running.
