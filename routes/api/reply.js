@@ -13,7 +13,7 @@ router.post('/api/reply', upload.none(), async (req, rsp) => {
 
 		let reply = req.body;
 
-		if (! reply.headers || reply.text) {
+		if (! reply.headers || ! reply.text) {
 			return rsp.status(400).send({
 				ok: false,
 				error: 'Please post a valid JSON reply object.'
