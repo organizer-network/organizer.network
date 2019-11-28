@@ -6,9 +6,14 @@
 			<h2 class="group">
 				<% if (group.parent_id) { %>
 					<% let parent = context.groups[group.parent_id] %>
-					<% context.slug = `${parent.slug}/${group.slug}` %>
-					<a href="/group/<%= parent.slug %>"><%= parent.name %></a>
-					→ <a href="/group/<%= parent.slug %>/<%= group.slug %>"><%= group.name %></a>
+					<% if (parent) { %>
+						<% context.slug = `${parent.slug}/${group.slug}` %>
+						<a href="/group/<%= parent.slug %>"><%= parent.name %></a>
+						→ <a href="/group/<%= parent.slug %>/<%= group.slug %>"><%= group.name %></a>
+					<% } else { %>
+						<% context.slug = group.slug %>
+						<a href="/group/<%= group.slug %>"><%= group.name %></a>
+					<% } %>
 				<% } else { %>
 					<% context.slug = group.slug %>
 					<a href="/group/<%= group.slug %>"><%= group.name %></a>
