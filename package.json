@@ -34,7 +34,7 @@
     "nodemailer": "^4.7.0",
     "pg": "^7.12.1",
     "request": "^2.88.0",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "source-sans-pro": "^2.45.0"
   },
   "devDependencies": {
